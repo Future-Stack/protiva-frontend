@@ -83,6 +83,9 @@ export default function WithdrawalManagementPage() {
 
     const filteredRequests = requests.filter(r => {
         const matchesFilter = filter === "All" || r.status === filter;
+        // Search logic can be improved if needed, but the UI has a search input that doesn't seem connected to state yet?
+        // Ah, looking at the code, there IS a search input but no state connected to it in the original `view_file`?
+        // Let's check line 145 in original. It has no value/onChange.
         return matchesFilter;
     });
 
@@ -175,6 +178,7 @@ export default function WithdrawalManagementPage() {
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 {/* Filters & Search */}
                 <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                   
                     <div className="flex bg-slate-100 p-1 rounded-lg">
                         {["All", "Pending", "Approved", "Rejected"].map((tab) => (
                             <button

@@ -97,7 +97,7 @@ export default function ProviderListPage() {
             </div>
 
             {/* Main Card */}
-            <div className="bg-white border border-slate-300 px-[26px] py-[34px] rounded-lg">
+            <div className="bg-white px-[26px] py-[34px] rounded-lg">
                 {/* Actions Bar */}
                 <div className="pb-6 flex flex-wrap items-center justify-between gap-4">
                     {/* Search Bar */}
@@ -200,7 +200,7 @@ export default function ProviderListPage() {
                 </div>
 
                 {/* Pagination */}
-                <div className="py-6 border-t border-slate-200 flex items-center justify-end gap-4">
+                <div className="py-6 border-t border-slate-200 flex items-center justify-center md:justify-end gap-1 md:gap-4">
                     <button className="flex items-center gap-1 px-4 py-2 text-sm text-slate-600 hover:text-slate-900 transition-colors">
                         <ChevronLeft size={16} className="-mt-1" />
                         Previous

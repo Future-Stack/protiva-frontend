@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Edit2, Trash2, ChevronLeft, ChevronRight, Upload, Pencil, PencilLine } from "lucide-react";
 import ImageIcon2 from "@/app/assets/ImageIcon2.png"
 import DeleteModal from "@/components/DeleteModal";
@@ -25,6 +25,18 @@ export default function CategoriesPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const [preview, setPreview] = useState<string | null>(null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) return;
+        if (file.size > 2 * 1024 * 1024) return;
+
+        setPreview(URL.createObjectURL(file));
+    };
 
     const handleSubmit = () => {
         if (!categoryName) return;
@@ -113,7 +125,7 @@ export default function CategoriesPage() {
                         {/* <label className="block text-sm font-medium text-slate-700 mb-2">
                             Upload image
                         </label> */}
-                        <div className="w-fit border-2 border-dashed border-slate-300 rounded-lg px-10 py-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
+                        {/* <div className="w-fit border-2 border-dashed border-slate-300 rounded-lg px-10 py-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
                             <div className="flex flex-col items-center gap-2">
                                 <h6 className="text-base text-bold text-[#18181A] mb-2">Upload Image</h6>
                                 <div className="">
@@ -132,11 +144,75 @@ export default function CategoriesPage() {
                                 </div>
                             </div>
 
-                        </div>
+                        </div> */}
+
+                         {/* Hidden Input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png, image/jpeg, image/jpg"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      {/* Upload Box */}
+      <div
+        onClick={() => fileInputRef.current?.click()}
+        className="w-fit border-2 border-dashed border-slate-300 rounded-lg
+                   px-10 py-6 text-center hover:border-blue-400
+                   transition-colors cursor-pointer"
+      >
+        <div className="flex flex-col items-center gap-2">
+          <h6 className="text-base font-semibold text-[#18181A] mb-2">
+            Upload Image
+          </h6>
+
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="relative w-16 h-16 bg-slate-100 rounded-lg
+                            flex items-center justify-center mb-4">
+
+              {preview ? (
+                <img
+                  src={preview}
+                  alt="preview"
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              ) : (
+                <>
+                  <Upload className="w-8 h-8 text-slate-400" />
+                  <img src={ImageIcon2.src} alt="" />
+                </>
+              )}
+
+              {/* Pencil */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+                className="absolute -bottom-5 -right-2 w-4 h-4
+                           flex items-center justify-center
+                           bg-[#4153B395] hover:bg-primary/80
+                           text-white rounded-full transition-colors mb-3"
+              >
+                <Pencil className="w-2 h-2" />
+              </button>
+            </div>
+
+            <p className="text-sm xl:text-base text-[#5E6472] opacity-75">
+              Image format - jpg, png, jpeg
+            </p>
+            <p className="text-sm xl:text-base text-[#5E6472] opacity-75">
+              Image Size - maximum size 2 MB • Image Ratio - 1:1
+            </p>
+          </div>
+        </div>
+      </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-3 mt-10">
+                    <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 mt-10">
                         <button
                             onClick={handleSubmit}
                             className="px-20 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
@@ -191,7 +267,7 @@ export default function CategoriesPage() {
                     </div>
 
                     {/* Pagination */}
-                    <div className=" py-4 border-t border-slate-300 flex items-center justify-end gap-3">
+                    <div className=" py-4 border-t border-slate-300 flex items-center justify-center md:justify-end gap-1 md:gap-3">
                         <button className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors">
                             <ChevronLeft size={16} />
                             Previous
