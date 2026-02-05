@@ -168,7 +168,7 @@ export default function UsersPage() {
                 </div>
 
                 {/* Pagination */}
-                <div className=" py-4 border-t border-slate-300 flex items-center justify-end gap-3">
+                <div className="py-4 border-t border-slate-300 flex items-center md:justify-end gap-1 md:gap-3">
                     <button className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors">
                         <ChevronLeft size={16} />
                         Previous

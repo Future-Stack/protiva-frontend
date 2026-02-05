@@ -67,22 +67,7 @@ export default function BackgroundCheckPage() {
             </div>
 
             {/* Main Card */}
-            <div className="bg-white border border-slate-300 px-[26px] py-[34px] rounded-lg">
-
-
-                {/* Actions Bar */}
-                <div className="pb-6">
-                    <div className="flex items-center max-w-md relative group">
-                        <input
-                            type="text"
-                            placeholder="Search..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                        />
-                        <Search className="absolute left-3 text-slate-400" size={18} />
-                    </div>
-                </div>
+            <div className="bg-white  px-[26px] py-[34px] rounded-lg">
 
                 {/* Table */}
                 <div className="overflow-x-auto">
@@ -159,7 +144,7 @@ export default function BackgroundCheckPage() {
                 </div>
 
                 {/* Pagination */}
-                <div className="pt-4 flex items-center justify-center gap-3">
+                <div className="pt-4 flex items-center justify-center md:justify-end gap-1 md:gap-3">
                     <button className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors">
                         <ChevronLeft size={16} />
                         Previous

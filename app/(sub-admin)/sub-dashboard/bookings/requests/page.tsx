@@ -90,7 +90,7 @@ export default function BookingRequestsPage() {
             {/* Main Card */}
             <div className="  overflow-hidden">
                 {/* Tabs */}
-                <div className="flex">
+                <div className="flex overflow-x-auto">
                     {tabs.map(tab => (
                         <button
                             key={tab.name}
@@ -107,7 +107,7 @@ export default function BookingRequestsPage() {
                         </button>
                     ))}
                 </div>
-                <div className=" mt-[34px] bg-white border border-slate-300 px-[26px] py-[34px] rounded-lg">
+                <div className=" mt-[34px] bg-white  px-[26px] py-[34px] rounded-lg">
 
                     {/* Actions Bar */}
                     <div className="pb-6 flex flex-wrap items-center justify-between gap-4 ">
@@ -197,7 +197,7 @@ export default function BookingRequestsPage() {
                     </div>
 
                     {/* Pagination */}
-                    <div className="py-6 border-t border-slate-200 flex items-center justify-end gap-4">
+                    <div className="py-6 border-t border-slate-200 flex items-center justify-center md:justify-end md:gap-3 gap-1">
                         <button className="flex items-center gap-1 px-4 py-2 text-sm text-slate-600 hover:text-slate-900 transition-colors">
                             <ChevronLeft size={16} className="-mt-1" />
                             Previous

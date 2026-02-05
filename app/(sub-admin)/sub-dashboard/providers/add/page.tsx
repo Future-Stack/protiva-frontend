@@ -64,7 +64,7 @@ const handleIdImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             {/* Main Card */}
             <div className="bg-white border border-slate-300 p-[50px] rounded-lg">
                 {/* Progress Steps */}
-                <div className="flex items-center gap-4 mb-[26px]">
+                <div className="flex flex-col md:flex-row items-center gap-4 mb-[26px]">
                     <div className="flex items-center gap-2">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${step === 1 ? 'bg-primary text-white' : 'bg-white border border-primary text-primary'
                             }`}>
@@ -176,11 +176,7 @@ const handleIdImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           >
             <Pencil className="w-4 h-4" />
           </button>
-                                    {/* <Upload className="w-8 h-8 text-slate-400" />
-                                    <img src={ImageIcon2.src} alt="" />
-                                <button className="absolute -bottom-5 -right-5 w-8 h-8 flex items-center justify-center  bg-primary opacity-[0.95] text-white rounded-full hover:bg-primary transition-colors mb-3">
-                                    <Pencil className="w-4 h-4" />
-                                </button> */}
+                                    
                                 </div>
                                 <p className="text-sm xl:text-base  text-[#5E6472] opacity-[0.75]">Image format - jpg,png, jpeg</p>
                                 <p className="text-sm xl:text-base text-[#5E6472] opacity-[0.75]">Image Size - maximum size 2 MB</p>
@@ -219,26 +215,9 @@ const handleIdImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-[#666666] mb-2">Identification Image</label>
-                                    {/* <div className="border-2 border-slate-300 rounded-sm p-5 w-fit pb-2">
-                                        <div className="flex gap-5 ">
-                                            <div className="w-[100px] h-[100px] bg-slate-100 rounded-sm flex items-center justify-center mb-3">
-                                                <Upload className="w-6 h-6 text-slate-400" />
-                                                <img src={ImageIcon.src} alt="" />
-
-                                            </div>
-                                            <div>
-                                                <p className="text-sm text-[#000000]">Please upload square image less than 500kb</p>
-                                                <div className="py-2.5 flex gap-[30px] items-center">
-                                                    <button className="px-5 py-2 bg-white border border-slate-800 rounded-sm text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors mt-2">
-                                                        Choose File
-                                                    </button>
-                                                    <p className="text-sm text-slate-400 mt-2">No File Chosen</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div> */}
+                                    
                                     <div className="border-2 border-slate-300 rounded-sm p-5 w-fit pb-2">
-  <div className="flex gap-5">
+  <div className="flex flex-col md:flex-row gap-5">
     <div className="w-[100px] h-[100px] bg-slate-100 rounded-sm flex items-center justify-center mb-3 overflow-hidden">
       
       {idImage ? (
@@ -287,11 +266,11 @@ const handleIdImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                     </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-3 mt-8">
-                    <button className=" px-20 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                <div className="flex md:justify-start justify-center items-center gap-3 mt-8">
+                    <button className=" px-10 md:px-20 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
                         Submit
                     </button>
-                    <button className="px-20 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
+                    <button className="px-10 md:px-20 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
                         Reset
                     </button>
                 </div>
