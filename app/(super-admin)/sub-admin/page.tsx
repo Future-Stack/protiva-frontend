@@ -230,7 +230,7 @@ export default function SubAdminManagementPage() {
                             <div className="grid grid-cols-2 gap-4 px-3.5 py-3 bg-blue-50 rounded-[50px] w-full">
                                 <button
                                     onClick={() => setActiveTab("basic")}
-                                    className={`px-6 py-3 text-base font-normal rounded-full transition-all
+                                    className={`px-3 md:px-6 md:py-3 py-1.5 md:text-base text-xs font-normal rounded-full transition-all
     ${activeTab === "basic"
                                             ? "bg-primary text-white shadow-sm"
                                             : "text-black hover:text-slate-700 hover:bg-slate-100"
@@ -266,7 +266,7 @@ export default function SubAdminManagementPage() {
                                 </button>
                                 <button
                                     onClick={() => setActiveTab("permission")}
-                                    className={`px-6 py-2 text-base font-normal rounded-full transition-all
+                                    className={`px-3 md:px-6 md:py-3 py-1.5 md:text-base text-xs font-normal rounded-full transition-all
     ${activeTab === "permission"
                                             ? "bg-[#6366F1] text-white shadow-sm"
                                             : "text-black hover:text-slate-700 hover:bg-slate-100"
@@ -391,7 +391,7 @@ export default function SubAdminManagementPage() {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="flex gap-8 h-full">
+                                <div className="flex flex-col md:flex-row gap-8 h-full">
                                     {/* Sidebar Roles */}
                                     <div className="w-1/3 min-w-[200px] border-r border-slate-100 pr-6 space-y-1">
                                         {ROLES.map((role) => (
