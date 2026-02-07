@@ -239,7 +239,7 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
                                             >
                                                 <item.icon size={20} className={pathname.startsWith(item.href) ? "text-[#4F46E5]" : "text-slate-500"} />
                                                 <span className="text-[14px] font-semibold flex-1 text-left">{item.title}</span>
-                                                <ChevronDown size={16} className={`transition-transform duration-200 ${expandedItems.includes(item.title) ? "rotate-180" : ""}`} />
+                                                <ChevronDown size={16} className={`transition-transform duration-500 ${expandedItems.includes(item.title) ? "rotate-180 " : ""}`} />
                                             </button>
                                         ) : (
                                             <Link

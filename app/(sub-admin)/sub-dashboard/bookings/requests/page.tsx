@@ -14,16 +14,16 @@ import StatusBadge, { StatusType } from "@/components/StatusBadge";
 import { X } from "lucide-react";
 
 const BOOKINGS = [
-    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50$", status: "Pending" as StatusType },
-    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50$", status: "Cancelled" as StatusType },
-    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50$", status: "Rejected" as StatusType },
-    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50$", status: "Accepted" as StatusType },
-    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50$", status: "In-Progress" as StatusType },
-    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50$", status: "In-Progress" as StatusType },
-    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50$", status: "In-Progress" as StatusType },
-    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50$", status: "In-Progress" as StatusType },
-    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50$", status: "In-Progress" as StatusType },
-    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50$", status: "In-Progress" as StatusType },
+    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50৳", status: "Pending" as StatusType },
+    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50৳", status: "Cancelled" as StatusType },
+    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50৳", status: "Rejected" as StatusType },
+    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50৳", status: "Accepted" as StatusType },
+    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50৳", status: "In-Progress" as StatusType },
+    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50৳", status: "In-Progress" as StatusType },
+    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50৳", status: "In-Progress" as StatusType },
+    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50৳", status: "In-Progress" as StatusType },
+    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50৳", status: "In-Progress" as StatusType },
+    { id: "100129", date: "25-Aug-2025\n11:25am", location: "Customer Location", customer: "Charlotte Davis\n+5596965", provider: "Jemmi Kelly (Handyman service)\n+5596965", amount: "482.50৳", status: "In-Progress" as StatusType },
 ];
 
 export default function BookingRequestsPage() {
