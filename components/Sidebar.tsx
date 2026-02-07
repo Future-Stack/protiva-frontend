@@ -18,6 +18,8 @@ import {
     ChevronDown,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import user from "@/app/assets/user1.png";
+
 
 interface SidebarProps {
     role: "super-admin" | "sub-admin";
@@ -205,7 +207,7 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
                 <div className="bg-[#F8FAFC] rounded-xl p-4 flex items-center gap-3">
                     <div className="relative">
                         <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
-                            <img src="/user-avatar.png" alt="Profile" className="w-full h-full object-cover" />
+                            <img src={user.src} alt="Profile" className="w-full h-full object-cover" />
                         </div>
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#22C55E] border-2 border-white rounded-full"></div>
                     </div>

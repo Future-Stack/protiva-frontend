@@ -14,6 +14,8 @@ type ModalType = "language" | "notification" | "user" | null;
 export default function Navbar({ onMenuClick }: NavbarProps) {
   const [openModal, setOpenModal] = useState<ModalType>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const [mobileSearch, setMobileSearch] = useState(false);
+
 
   const toggle = (type: ModalType) => {
     setOpenModal((prev) => (prev === type ? null : type));
@@ -30,11 +32,23 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   }, []);
 
   return (
-    <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between mx-6 my-5 px-4 md:px-5 py-3 sticky top-0 z-20 rounded-[10px]">
+
+    // <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between mx-6 my-5 px-4 md:px-5 py-3 sticky top-0 z-20 rounded-[10px]">
+    <header className="
+  h-16 md:h-20
+  bg-white border-b border-slate-100
+  flex items-center justify-between
+  mx-3 my-3 md:mx-6 md:my-5
+  px-3 md:px-5
+  sticky top-0 z-20 rounded-[10px]
+">
+
       <div className="hidden lg:block cursor-pointer w-[100px] h-[20px] lg:w-[245px] lg:h-[57px] ">
         <Logo />
       </div>
-      <div className="flex gap-[29px]">
+      <div className="flex gap-[29px] w-full md:w-fit  items-center justify-between">
+      {/* <div className="flex items-center justify-between w-full gap-3"> */}
+
         <div className="flex items-center gap-4 flex-1">
           {/* Mobile Menu Toggle */}
           <button
@@ -57,9 +71,32 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           </div>
 
           {/* Mobile Search Button */}
-          <button className="sm:hidden p-2 text-slate-600 hover:bg-slate-50 rounded-lg">
+          <button
+            onClick={() => setMobileSearch(true)}
+            className="sm:hidden p-2 text-slate-600 hover:bg-slate-50 rounded-lg"
+          >
             <Search size={20} />
           </button>
+
+          {mobileSearch && (
+            <div className="fixed  bg-white z-50 p-4">
+              <div className="flex items-center gap-2">
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Search..."
+                  className="flex-1 h-10 px-4 text-black border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                />
+                <button
+                  onClick={() => setMobileSearch(false)}
+                  className="text-sm text-slate-600"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* Right Actions */}
@@ -141,35 +178,35 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
               {/* Menu */}
               {/* User Actions */}
-  <div className="py-1">
-    <button
-      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium
+              <div className="py-1">
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium
                  text-slate-800 hover:bg-slate-100 transition-colors"
-    >
-      <User size={16} className="text-slate-500" />
-      Profile
-    </button>
+                >
+                  <User size={16} className="text-slate-500" />
+                  Profile
+                </button>
 
-    <button
-      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium
                  text-slate-800 hover:bg-slate-100 transition-colors"
-    >
-      <Settings size={16} className="text-slate-500" />
-      Settings
-    </button>
-  </div>
+                >
+                  <Settings size={16} className="text-slate-500" />
+                  Settings
+                </button>
+              </div>
 
-  {/* Divider */}
-  <div className="h-px bg-slate-200" />
+              {/* Divider */}
+              <div className="h-px bg-slate-200" />
 
-  {/* Logout */}
-  <button
-    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium
+              {/* Logout */}
+              <button
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium
                text-red-600 hover:bg-red-50 transition-colors"
-  >
-    <LogOut size={16} className="text-red-500" />
-    Logout
-  </button>
+              >
+                <LogOut size={16} className="text-red-500" />
+                Logout
+              </button>
             </div>
           )}
         </div>
