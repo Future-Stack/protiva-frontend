@@ -10,25 +10,25 @@ export const ImgIcon = () => {
   </g>
   <defs>
     <linearGradient id="paint0_linear_311_5382" x1="19.294" y1="19.2949" x2="5.46629" y2="5.46716" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#BCE4ED"/>
-      <stop offset="0.49" stop-color="white"/>
-      <stop offset="1" stop-color="white"/>
+      <stop stopColor="#BCE4ED"/>
+      <stop offset="0.49" stopColor="white"/>
+      <stop offset="1" stopColor="white"/>
     </linearGradient>
     <linearGradient id="paint1_linear_311_5382" x1="19.2365" y1="19.2369" x2="5.40875" y2="5.40914" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#34344F"/>
-      <stop offset="0.99" stop-color="#666684"/>
+      <stop stopColor="#34344F"/>
+      <stop offset="0.99" stopColor="#666684"/>
     </linearGradient>
     <linearGradient id="paint2_linear_311_5382" x1="18.4775" y1="21.4008" x2="10.5615" y2="13.4842" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#13B601"/>
-      <stop offset="0.49" stop-color="#13B601"/>
-      <stop offset="0.68" stop-color="#5BCE47"/>
-      <stop offset="0.9" stop-color="#ABE995"/>
-      <stop offset="1" stop-color="#CBF4B4"/>
+      <stop stopColor="#13B601"/>
+      <stop offset="0.49" stopColor="#13B601"/>
+      <stop offset="0.68" stopColor="#5BCE47"/>
+      <stop offset="0.9" stopColor="#ABE995"/>
+      <stop offset="1" stopColor="#CBF4B4"/>
     </linearGradient>
     <linearGradient id="paint3_linear_311_5382" x1="11.0467" y1="12.7103" x2="8.76736" y2="10.4309" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FE7838"/>
-      <stop offset="0.43" stop-color="#FE7636"/>
-      <stop offset="0.97" stop-color="#FFAD8A"/>
+      <stop stopColor="#FE7838"/>
+      <stop offset="0.43" stopColor="#FE7636"/>
+      <stop offset="0.97" stopColor="#FFAD8A"/>
     </linearGradient>
     <clipPath id="clip0_311_5382">
       <rect width="28" height="28" fill="white"/>
@@ -49,20 +49,20 @@ export const PdfIcon = () => {
   </g>
   <defs>
     <linearGradient id="paint0_linear_311_5389" x1="20.6919" y1="22.132" x2="5.86777" y2="7.30843" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#EF3739"/>
-      <stop offset="0.54" stop-color="#EF3739"/>
-      <stop offset="1" stop-color="#FF8C8B"/>
+      <stop stopColor="#EF3739"/>
+      <stop offset="0.54" stopColor="#EF3739"/>
+      <stop offset="1" stopColor="#FF8C8B"/>
     </linearGradient>
     <linearGradient id="paint1_linear_311_5389" x1="21.0996" y1="12.2806" x2="14.3118" y2="5.49281" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#34344F"/>
-      <stop offset="0.26" stop-color="#3B3B57"/>
-      <stop offset="0.66" stop-color="#50506D"/>
-      <stop offset="1" stop-color="#666684"/>
+      <stop stopColor="#34344F"/>
+      <stop offset="0.26" stopColor="#3B3B57"/>
+      <stop offset="0.66" stopColor="#50506D"/>
+      <stop offset="1" stopColor="#666684"/>
     </linearGradient>
     <linearGradient id="paint2_linear_311_5389" x1="16.4374" y1="20.4255" x2="9.91206" y2="13.9001" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFD2D2"/>
-      <stop offset="0.57" stop-color="white"/>
-      <stop offset="1" stop-color="white"/>
+      <stop stopColor="#FFD2D2"/>
+      <stop offset="0.57" stopColor="white"/>
+      <stop offset="1" stopColor="white"/>
     </linearGradient>
     <clipPath id="clip0_311_5389">
       <rect width="28" height="28" fill="white"/>
