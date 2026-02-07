@@ -15,6 +15,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const [openModal, setOpenModal] = useState<ModalType>(null);
   const ref = useRef<HTMLDivElement>(null);
   const [mobileSearch, setMobileSearch] = useState(false);
+  const [language, setLanguage] = useState("English");
 
 
   const toggle = (type: ModalType) => {
@@ -101,27 +102,55 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 md:gap-4">
-          <button
+         <button
             onClick={() => toggle("language")}
-            className="hidden md:flex items-center gap-2 text-[#09090B] hover:text-slate-900 transition-colors"
+            className="hidden w-[120px] md:flex items-center gap-2 text-[#09090B] hover:text-slate-900 transition-colors"
           >
             <Globe size={20} />
             <span className="text-base font-medium text-[#18181A]">
-              English (en)
+              {language}
             </span>
             <MdArrowDropDown size={24} className="text-[#000]" />
           </button>
 
+
+          {/* {openModal === "language" && (
+            <select className="absolute top-[60px] right-[180px] bg-white border border-slate-200 rounded-md shadow-md w-[140px]">
+              <option  value="English" className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-100 transition">
+                English
+              </option>
+              <option  value="বাংলা" className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-100 transition">
+                বাংলা
+              </option>
+            </select>
+          )} */}
           {openModal === "language" && (
-            <div className="absolute top-[60px] right-[180px] bg-white border border-slate-200 rounded-md shadow-md w-[140px]">
-              <button className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-100 transition">
+            <div
+              ref={ref}
+              className="absolute top-[60px] right-[180px] bg-white border border-slate-200 rounded-md shadow-md w-[140px]"
+            >
+              <button
+                onClick={() => {
+                  setLanguage("English");
+                  setOpenModal(null);
+                }}
+                className="w-full text-left text-black cursor-pointer duration-300 px-4 py-2.5 text-sm hover:bg-slate-100"
+              >
                 English
               </button>
-              <button className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-100 transition">
+
+              <button
+                onClick={() => {
+                  setLanguage("বাংলা");
+                  setOpenModal(null);
+                }}
+                className="w-full text-left text-black cursor-pointer duration-300 px-4 py-2.5 text-sm hover:bg-slate-100"
+              >
                 বাংলা
               </button>
             </div>
           )}
+
 
           <button
             onClick={() => toggle("notification")}
@@ -133,7 +162,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             </span>
           </button>
           {openModal === "notification" && (
-            <div className="absolute top-[60px] right-[80px] bg-white border rounded-lg shadow-md w-[250px] p-4">
+            <div className="absolute top-[60px] right-[80px] bg-white rounded-lg shadow-md w-[250px] p-4">
               <p className="text-sm text-slate-600">No new notifications</p>
             </div>
           )}
@@ -155,10 +184,10 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             </div>
           </div>
           {openModal === "user" && (
-            <div className="absolute top-[60px] right-0 bg-white border rounded-lg shadow-md w-[260px] overflow-hidden">
+            <div className="absolute top-[60px] right-0 bg-white rounded-lg shadow-md w-[260px] overflow-hidden">
               {/* User Info */}
               <div className="flex items-center gap-3 px-4 py-3 bg-slate-50">
-                <div className="w-12 h-12 rounded-full overflow-hidden border">
+                <div className="w-12 h-12 rounded-full overflow-hidden ">
                   <img
                     src={user.src}
                     alt="user"
