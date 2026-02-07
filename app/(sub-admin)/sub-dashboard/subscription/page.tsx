@@ -224,7 +224,7 @@ export default function SubscriptionPage() {
                                     <select
                                         value={editingSubscription.activeStatus}
                                         onChange={(e) => setEditingSubscription({ ...editingSubscription, activeStatus: e.target.value as "Basic" | "Unlimited" })}
-                                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                        className="w-full text-slate-900 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                                     >
                                         <option value="Basic">Basic</option>
                                         <option value="Unlimited">Unlimited</option>
