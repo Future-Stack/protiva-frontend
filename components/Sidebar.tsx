@@ -99,6 +99,8 @@ const SUB_ADMIN_MENU: MenuSection[] = [
         items: [
             { title: "Subscription", href: "/sub-dashboard/subscription", icon: CreditCard },
             { title: "Transaction", href: "/sub-dashboard/transactions", icon: History },
+            { title: "Withdrawals", href: "/sub-dashboard/transactions/withdrawals", icon: Wallet, badge: "2" },
+
         ]
     },
    
