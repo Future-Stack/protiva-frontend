@@ -22,8 +22,8 @@ export default function SubAdminLayout({
                     </div>
                     {/* Footer */}
                     <div className="flex px-6 py-4 border-t border-[#F1F5F9] justify-between gap-1">
-                        <p className="text-base font-semibold text-slate-600">All Right reserved by@2026</p>
-                        <p className="text-base font-medium text-blue-800">Software version 3.3</p>
+                        <p className="text-sm font-semibold text-slate-600">All Right reserved by@2026</p>
+                        <p className="text-sm font-medium text-blue-800">Software version 3.3</p>
                     </div>
         
                     {/* Mobile Overlay */}
@@ -34,22 +34,5 @@ export default function SubAdminLayout({
                         ></div>
                     )}
                 </div>
-        // <div className="flex h-screen bg-slate-50 overflow-hidden relative">
-        //     <Sidebar role="sub-admin" isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-        //     <div className="flex-1 flex flex-col overflow-hidden">
-        //         <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
-        //         <main className="flex-1 overflow-y-auto p-4 md:p-8">
-        //             {children}
-        //         </main>
-        //     </div>
-
-        //     {/* Mobile Overlay */}
-        //     {isSidebarOpen && (
-        //         <div
-        //             className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-30 lg:hidden"
-        //             onClick={() => setIsSidebarOpen(false)}
-        //         ></div>
-        //     )}
-        // </div>
     );
 }
