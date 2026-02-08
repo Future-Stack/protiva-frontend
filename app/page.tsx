@@ -42,6 +42,7 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 relative">
+
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">
@@ -124,10 +125,16 @@ export default function LoginPage() {
         </form>
       </div>
 
-      <div className="flex justify-between w-full max-w-7xl absolute bottom-6 px-6 text-xs text-slate-800 font-medium">
+      {/* Footer */}
+            <div className="w-full flex px-6 py-4 border-t border-[#F1F5F9] justify-between  absolute bottom-2">
+                <p className="text-sm font-semibold text-slate-600">All Right reserved by@2026</p>
+                <p className="text-sm font-medium text-blue-800">Software version 3.3</p>
+            </div>
+
+      {/* <div className="flex justify-between w-full max-w-7xl absolute bottom-6 px-6 text-xs text-slate-800 font-medium">
         <div>All Right reserved by@2026</div>
         <div className="text-blue-600">Software version 3.3</div>
-      </div>
+      </div> */}
     </main>
   );
 }

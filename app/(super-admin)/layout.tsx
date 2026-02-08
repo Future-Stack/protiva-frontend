@@ -23,8 +23,8 @@ export default function SuperAdminLayout({
             </div>
             {/* Footer */}
             <div className="flex px-6 py-4 border-t border-[#F1F5F9] justify-between gap-1">
-                <p className="text-base font-semibold text-slate-600">All Right reserved by@2026</p>
-                <p className="text-base font-medium text-blue-800">Software version 3.3</p>
+                <p className="text-sm font-semibold text-slate-600">All Right reserved by@2026</p>
+                <p className="text-sm font-medium text-blue-800">Software version 3.3</p>
             </div>
 
             {/* Mobile Overlay */}
