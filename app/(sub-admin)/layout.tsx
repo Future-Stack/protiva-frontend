@@ -16,7 +16,7 @@ export default function SubAdminLayout({
                     <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
                     <div className="flex-1 flex overflow-hidden mx-6">
                         <Sidebar role="sub-admin" isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-                        <main className="flex-1 overflow-y-auto  md:pl-8 md:pr-0 pb-6">
+                        <main className="flex-1 overflow-y-auto  md:pl-8 md:pr-0 pb-6 scrollbar-hide">
                             {children}
                         </main>
                     </div>
