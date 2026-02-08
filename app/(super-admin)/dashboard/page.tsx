@@ -161,13 +161,13 @@ export default function SuperAdminDashboard() {
                         <h3 className="text-lg font-semibold text-slate-900">Recent Transactions</h3>
                         <p className="text-sm font-medium text-slate-400 mt-1">05 Transactions this month</p>
                     </div>
-                    <div className="relative pl-6 space-y-10 max-h-[350px] overflow-y-auto scrollbar-hide">
+                    <div className="relative pl-6 space-y-10 overflow-y-auto scrollbar-hide">
                         {/* Timeline Line */}
-                        <div className="absolute left-[4.5px] top-2 bottom-2 w-px bg-slate-100"></div>
+                        <div className="absolute left-[10.3px] top-2 bottom-1 w-px bg-slate-100"></div>
 
                         {[1, 2, 3, 4, 5].map((i) => (
                             <div key={i} className="relative">
-                                <div className="absolute -left-[26px] top-1.5 w-3.5 h-3.5 rounded-full border-2 border-[#787BEB] bg-white z-10 shadow-sm"></div>
+                                <div className="absolute -left-[20px] top-1.5 w-3.5 h-3.5 rounded-full border-2 border-[#787BEB] bg-white z-10 shadow-sm"></div>
                                 <div>
                                     <p className="text-[15px] font-semibold text-slate-900 leading-tight">3,564.00৳ Credited</p>
                                     <p className="text-sm font-medium text-slate-400 mt-1">25 Aug 11:30 am</p>
