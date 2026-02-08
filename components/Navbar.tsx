@@ -32,6 +32,11 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
+  const handleLogout = () => {
+    // localStorage.removeItem("token");
+    window.location.href = "/";
+  }
+
   return (
 
     // <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between mx-6 my-5 px-4 md:px-5 py-3 sticky top-0 z-20 rounded-[10px]">
@@ -196,9 +201,9 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-slate-900">
-                    Sahara Islam
+                    Admin Panel
                   </p>
-                  <p className="text-xs text-slate-500">sahara@email.com</p>
+                  <p className="text-xs text-slate-500">admin@admin.com</p>
                   <span className="inline-block mt-1 px-2 py-[2px] text-[10px] rounded-full bg-indigo-100 text-indigo-600">
                     Super Admin
                   </span>
@@ -230,6 +235,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
               {/* Logout */}
               <button
+              onClick={handleLogout}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium
                text-red-600 hover:bg-red-50 transition-colors"
               >

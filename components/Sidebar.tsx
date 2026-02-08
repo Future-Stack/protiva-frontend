@@ -219,7 +219,7 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
+            <nav className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide">
                 {sections.map((section) => (
                     <div key={section.title} className="mb-6 last:mb-0">
                         <h3 className="px-3 text-sm font-bold text-slate-900  tracking-tight mb-2">
