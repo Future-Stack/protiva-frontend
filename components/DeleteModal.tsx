@@ -6,6 +6,7 @@ interface DeleteModalProps {
     onConfirm: () => void;
     title?: string;
     description?: string;
+    loading?: boolean;
 }
 
 export default function DeleteModal({
@@ -13,7 +14,8 @@ export default function DeleteModal({
     onClose,
     onConfirm,
     title = "Delete Item",
-    description = "Are you sure you want to delete this item? This action cannot be undone."
+    description = "Are you sure you want to delete this item? This action cannot be undone.",
+    loading = false
 }: DeleteModalProps) {
     if (!isOpen) return null;
 
@@ -41,7 +43,7 @@ export default function DeleteModal({
                             }}
                             className="px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 transition-colors"
                         >
-                            Delete
+                            {loading ? "Deleting..." : "Delete"}
                         </button>
                     </div>
                 </div>

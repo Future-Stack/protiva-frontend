@@ -1,9 +1,46 @@
 "use client";
 
 import DashboardCard from "@/components/DashboardCard";
-import { FileText, CheckCircle2 } from "lucide-react";
+import { FileText, CheckCircle2, Loader2,ChevronRight, ChevronLeft,  } from "lucide-react";
+import { useGetSubAdminDashboardQuery } from "@/lib/features/sub-admin/dashboard/dashboardAPI";
+import { useState } from "react";
+
+// Helper to format relative time
+function timeAgo(dateString: string) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return "Just now";
+    
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 30) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+    
+    const diffInMonths = Math.floor(diffInDays / 30);
+    return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
+}
 
 export default function SubAdminDashboard() {
+    const { data: dashboardData, isLoading } = useGetSubAdminDashboardQuery();
+
+    const meta = dashboardData?.data?.meta;
+    const activities = dashboardData?.data?.userRecentActivity || [];
+    const [currentPage, setCurrentPage] = useState(0);
+
+    if (isLoading) {
+        return (
+            <div className="flex justify-center py-20 min-h-[50vh] items-center">
+                <Loader2 className="w-8 h-8 animate-spin text-[#6366F1]" />
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Business Analytics Heading */}
@@ -14,22 +51,22 @@ export default function SubAdminDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                     <DashboardCard
                         title="Total Bookings"
-                        value="234"
+                        value={meta?.totalBooking?.toString() || "0"}
                         variant="cyan"
                     />
                     <DashboardCard
                         title="Completed"
-                        value="189"
+                        value={meta?.totalCompliteBooking?.toString() || "0"}
                         variant="green"
                     />
                     <DashboardCard
                         title="Pending"
-                        value="32"
+                        value={meta?.totalInProgressBooking?.toString() || "0"}
                         variant="orange"
                     />
                     <DashboardCard
                         title="Issues"
-                        value="13"
+                        value={meta?.totalRejectBooking?.toString() || "0"}
                         variant="pink"
                     />
                 </div>
@@ -110,57 +147,49 @@ export default function SubAdminDashboard() {
 
                 {/* Recent Activity */}
                 <div className="bg-white border border-slate-100 rounded-[10px] p-6 h-full">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-base font-bold text-slate-900">Recent Activity</h3>
-                        <button className="text-slate-400 hover:text-slate-600">
-                            <FileText size={18} />
-                        </button>
-                    </div>
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-base font-bold text-slate-900">Recent Activity</h3>
+                    <button className="text-slate-400 hover:text-slate-600">
+                    <FileText size={18} />
+                    </button>
+                </div>
 
-                    <div className="relative pl-2 space-y-8">
-                        {/* Custom Timeline Line */}
-                        <div className="absolute left-[3px] top-2 bottom-2 w-px bg-slate-100"></div>
+                <div className="relative pl-2 space-y-8">
+                    <div className="absolute left-[3px] top-2 bottom-2 w-px bg-slate-100"></div>
 
-                        {/* Activity 1 */}
-                        <div className="relative pl-6">
-                            <div className="absolute left-[-4px] top-1.5 w-3.5 h-3.5 rounded-full bg-[#6366F1] border-2 border-white shadow-sm z-10"></div>
-                            <div>
-                                <p className="text-sm font-semibold text-slate-900">Updated booking status</p>
-                                <p className="text-xs text-slate-500 mt-0.5">Booking #1245</p>
-                                <p className="text-[10px] text-slate-400 mt-1">10 min ago</p>
-                            </div>
-                        </div>
-
-                        {/* Activity 2 */}
-                        <div className="relative pl-6">
-                            <div className="absolute left-[-4px] top-1.5 w-3.5 h-3.5 rounded-full bg-[#6366F1] border-2 border-white shadow-sm z-10"></div>
-                            <div>
-                                <p className="text-sm font-semibold text-slate-900">Viewed provider profile</p>
-                                <p className="text-xs text-slate-500 mt-0.5">Michael Brown</p>
-                                <p className="text-[10px] text-slate-400 mt-1">25 min ago</p>
-                            </div>
-                        </div>
-
-                        {/* Activity 3 */}
-                        <div className="relative pl-6">
-                            <div className="absolute left-[-4px] top-1.5 w-3.5 h-3.5 rounded-full bg-[#6366F1] border-2 border-white shadow-sm z-10"></div>
-                            <div>
-                                <p className="text-sm font-semibold text-slate-900">Exported booking data</p>
-                                <p className="text-xs text-slate-500 mt-0.5">Weekly Report</p>
-                                <p className="text-[10px] text-slate-400 mt-1">1 hour ago</p>
-                            </div>
-                        </div>
-
-                        {/* Activity 4 */}
-                        <div className="relative pl-6">
-                            <div className="absolute left-[-4px] top-1.5 w-3.5 h-3.5 rounded-full bg-[#6366F1] border-2 border-white shadow-sm z-10"></div>
-                            <div>
-                                <p className="text-sm font-semibold text-slate-900">Approved booking request</p>
-                                <p className="text-xs text-slate-500 mt-0.5">Booking #232</p>
-                                <p className="text-[10px] text-slate-400 mt-1">2 hours ago</p>
-                            </div>
+                    {activities.length > 0 ? activities.slice(currentPage * 5, currentPage * 5 + 5).map((activity) => (
+                    <div key={activity.id} className="relative pl-6">
+                        <div className="absolute left-[-4px] top-1.5 w-3.5 h-3.5 rounded-full bg-[#6366F1] border-2 border-white shadow-sm z-10"></div>
+                        <div>
+                        <p className="text-sm font-semibold text-slate-900">{activity.title}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{activity.message}</p>
+                        <p className="text-[10px] text-slate-400 mt-1">{timeAgo(activity.createdAt)}</p>
                         </div>
                     </div>
+                    )) : (
+                    <div className="text-sm text-slate-500 pl-6">No recent activity</div>
+                    )}
+
+                    <div className="flex justify-between items-center pt-2">
+                        {currentPage > 0 ? (
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                                className="text-sm text-slate-500 flex items-center gap-1 cursor-pointer hover:text-[#6366F1] transition-colors"
+                            >
+                                <ChevronLeft size={16} /> previous activities
+                            </button>
+                        ) : <div />}
+
+                        {(currentPage + 1) * 5 < activities.length && (
+                            <button
+                                onClick={() => setCurrentPage(prev => prev + 1)}
+                                className="text-sm text-slate-500 flex items-center gap-1 cursor-pointer hover:text-[#6366F1] transition-colors"
+                            >
+                                more activities <ChevronRight size={16} />
+                            </button>
+                        )}
+                    </div>
+                </div>
                 </div>
             </div>
         </div>

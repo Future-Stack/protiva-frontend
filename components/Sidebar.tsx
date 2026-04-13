@@ -18,7 +18,10 @@ import {
     ChevronDown,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import user from "@/app/assets/user1.png";
+import user1 from "@/app/assets/user1.png";
+import { useSelector } from "react-redux";
+import { RootState } from "@/lib/store";
+import { useGetSubAdminProfileQuery } from "@/lib/features/sub-admin/profile/profileAPI";
 
 
 interface SidebarProps {
@@ -54,7 +57,7 @@ const SUB_ADMIN_MENU: MenuSection[] = [
                 href: "/sub-dashboard/bookings",
                 icon: Calendar,
                 children: [
-                    { title: "Booking Requests", href: "/sub-dashboard/bookings/requests", icon: FileText, badge: "88" }
+                    { title: "Booking Requests", href: "/sub-dashboard/bookings/requests", icon: FileText }
                 ]
             },
         ]
@@ -83,6 +86,7 @@ const SUB_ADMIN_MENU: MenuSection[] = [
                 icon: Shapes,
                 children: [
                     { title: "Category Setup", href: "/sub-dashboard/categories", icon: Shapes },
+                    { title: "Job List", href: "/sub-dashboard/jobs", icon: FileText },
                     // { title: "Sub Category Setup", href: "/sub-categories", icon: Shapes },
                 ]
             },
@@ -97,9 +101,9 @@ const SUB_ADMIN_MENU: MenuSection[] = [
     {
         title: "Business Management",
         items: [
-            { title: "Subscription", href: "/sub-dashboard/subscription", icon: CreditCard },
+            // { title: "Subscription", href: "/sub-dashboard/subscription", icon: CreditCard },
             { title: "Transaction", href: "/sub-dashboard/transactions", icon: History },
-            { title: "Withdrawals", href: "/sub-dashboard/transactions/withdrawals", icon: Wallet, badge: "2" },
+            { title: "Withdrawals", href: "/sub-dashboard/transactions/withdrawals", icon: Wallet },
 
         ]
     },
@@ -121,7 +125,7 @@ const SUPER_ADMIN_MENU: MenuSection[] = [
                 href: "/bookings",
                 icon: Calendar,
                 children: [
-                    { title: "Booking Requests", href: "/bookings/requests", icon: FileText, badge: "88" }
+                    { title: "Booking Requests", href: "/bookings/requests", icon: FileText }
                 ]
             },
         ]
@@ -150,6 +154,7 @@ const SUPER_ADMIN_MENU: MenuSection[] = [
                 icon: Shapes,
                 children: [
                     { title: "Category Setup", href: "/categories", icon: Shapes },
+                    { title: "Job List", href: "/jobs", icon: FileText },
                     // { title: "Sub Category Setup", href: "/sub-categories", icon: Shapes },
                 ]
             },
@@ -164,9 +169,9 @@ const SUPER_ADMIN_MENU: MenuSection[] = [
     {
         title: "Business Management",
         items: [
-            { title: "Subscription", href: "/subscription", icon: CreditCard },
+            // { title: "Subscription", href: "/subscription", icon: CreditCard },
             { title: "Transaction", href: "/transactions", icon: History },
-            { title: "Withdrawals", href: "/transactions/withdrawals", icon: Wallet, badge: "2" },
+            { title: "Withdrawals", href: "/transactions/withdrawals", icon: Wallet },
         ]
     },
     {
@@ -185,6 +190,10 @@ const SUPER_ADMIN_MENU: MenuSection[] = [
 ];
 
 export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
+    const user = useSelector((state: RootState) => state.auth.user);
+    const { data: profile } = useGetSubAdminProfileQuery();
+    const permissions = profile?.data?.user?.adminPermissions;
+    console.log(permissions);
     const pathname = usePathname();
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
     
@@ -200,7 +209,18 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
         if (onClose) onClose();
     }, [pathname]);
 
-    const sections = role === "super-admin" ? SUPER_ADMIN_MENU : SUB_ADMIN_MENU;
+    const getFilteredSubAdminMenu = () => {
+        return SUB_ADMIN_MENU.filter(section => {
+            if (section.title === "Booking Management") return permissions?.isViewBooking;
+            if (section.title === "Provider Management") return permissions?.isViewProvider;
+            if (section.title === "Service Management") return permissions?.isViewCategory;
+            if (section.title === "User Management") return permissions?.isViewUser;
+            if (section.title === "Business Management") return permissions?.isViewTransaction || permissions?.isViewWithdrawal;
+            return true;
+        });
+    };
+
+    const sections = role === "super-admin" ? SUPER_ADMIN_MENU : getFilteredSubAdminMenu();
 
     return (
         <aside className={`fixed lg:sticky top-0 left-0 bottom-0 z-40 w-[280px] bg-white  flex flex-col transition-transform duration-300 transform ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} border-r border-[#F1F5F9] mb-6`}>
@@ -209,13 +229,13 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
                 <div className="bg-[#F8FAFC] rounded-xl p-4 flex items-center gap-3">
                     <div className="relative">
                         <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
-                            <img src={user.src} alt="Profile" className="w-full h-full object-cover" />
+                            <img src={user?.avatar || user1.src} alt="Profile" className="w-full h-full object-cover" />
                         </div>
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#22C55E] border-2 border-white rounded-full"></div>
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-[12px] text-slate-500 truncate">admin@admin.com</p>
-                        <p className="text-[14px] font-semibold text-slate-900 truncate capitalize">{role}</p>
+                        <p className="text-[12px] text-slate-500 truncate">{user?.email}</p>
+                        <p className="text-[14px] font-semibold text-slate-900 truncate capitalize">{user?.role?.replace("_", " ")}</p>
                     </div>
                 </div>
             </div>

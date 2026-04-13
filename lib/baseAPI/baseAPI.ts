@@ -1,0 +1,21 @@
+import { createApi,fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { RootState } from "../store";
+
+const baseQueryAPI = fetchBaseQuery({
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://protiva-backend.onrender.com',
+  credentials: "include",
+  prepareHeaders: (headers, { getState }) => {
+    const token = (getState() as RootState).auth?.accessToken;
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+    return headers;
+  },
+});
+
+ export const baseAPI = createApi({
+   reducerPath: "baseAPI",
+   baseQuery: baseQueryAPI,
+   tagTypes: ["Auth", "User","Admin","Payment","Notification","Bookings", "Marketing", "Provider", "Category", "SubCategory","Transaction", "Dashboard","Job"],
+   endpoints: () => ({}),
+ });

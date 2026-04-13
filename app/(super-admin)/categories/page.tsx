@@ -1,71 +1,131 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Edit2, Trash2, ChevronLeft, ChevronRight, Upload, Pencil, PencilLine } from "lucide-react";
-import ImageIcon2 from "@/app/assets/ImageIcon2.png"
 import DeleteModal from "@/components/DeleteModal";
+import { useCreateCategoryMutation, useDeleteCategoryMutation, useGetAllCategoriesQuery, useGetSubCategoriesQuery, useUpdateCategoryMutation } from "@/lib/features/super-admin/category/categoryAPI";
+import Swal from "sweetalert2";
+import { ChevronLeft, ChevronRight, Loader2, Pencil, PencilLine, Trash2, Upload, Plus, Eye, ListFilter } from "lucide-react";
+import { Fragment, useRef, useState } from "react";
+import SubCategoryModal from "@/components/SubCategoryModal";
+import SubCategoryRowList from "@/components/SubCategoryRowList";
+import { CategoryItem } from "@/lib/features/super-admin/category/category.type";
+import { SubCategoryItem } from "@/lib/features/super-admin/sub-category/subCategory.type";
+import ImageIcon2 from "@/app/assets/ImageIcon2.png";
+import { useCreateSubCategoryMutation, useDeleteSubCategoryMutation } from "@/lib/features/super-admin/sub-category/subCategoryAPI";
 
-const CATEGORIES = [
-    { id: "01", name: "Shifting", subCount: 10 },
-    { id: "02", name: "Plumbing", subCount: 10 },
-    { id: "03", name: "Handyman", subCount: 10 },
-    { id: "04", name: "Shifting", subCount: 10 },
-    { id: "05", name: "Shifting", subCount: 10 },
-    { id: "06", name: "Shifting", subCount: 10 },
-    { id: "07", name: "Shifting", subCount: 10 },
-    { id: "08", name: "Shifting", subCount: 10 },
-    { id: "09", name: "Shifting", subCount: 10 },
-    { id: "10", name: "Shifting", subCount: 10 },
-];
 
 export default function CategoriesPage() {
-    const [categories, setCategories] = useState(CATEGORIES);
+    const [page, setPage] = useState(1);
+    const { data: categoriesData, isLoading: isCategoriesLoading } = useGetAllCategoriesQuery({ page, limit: 10 });
+    // const SubCategoriesLength = categoriesData?.data?.length;
     const [categoryName, setCategoryName] = useState("");
-    const [subcategoryName, setSubcategoryName] = useState("");
-    const [editingId, setEditingId] = useState<string | null>(null);
+    const [description, setDescription] = useState("");
+    const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
+
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const [preview, setPreview] = useState<string | null>(null);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Sub-category modal and expandable list state
+    const [isSubModalOpen, setIsSubModalOpen] = useState(false);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>();
+    const [selectedSubCategory, setSelectedSubCategory] = useState<SubCategoryItem | null>(null);
+    const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+    const [subCategoryToDelete, setSubCategoryToDelete] = useState<string | null>(null);
+    const [isSubDeleteModalOpen, setIsSubDeleteModalOpen] = useState(false);
+
+    const imageInputRef = useRef<HTMLInputElement | null>(null);
+    const iconInputRef = useRef<HTMLInputElement | null>(null);
+
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [iconFile, setIconFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [iconPreview, setIconPreview] = useState<string | null>(null);
+
+    const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation();
+    const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation();
+    const [deleteCategory] = useDeleteCategoryMutation();
+    const [deleteSubCategory] = useDeleteSubCategoryMutation();
+
+    const categories = categoriesData?.data?.data?.data || [];
+    console.log(categories);
+    const meta = categoriesData?.data?.data;
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
         if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) return;
         if (file.size > 2 * 1024 * 1024) return;
-
-        setPreview(URL.createObjectURL(file));
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
     };
 
-    const handleSubmit = () => {
-        if (!categoryName) return;
+    const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setIconFile(file);
+        setIconPreview(URL.createObjectURL(file));
+    };
 
-        if (editingId) {
-            setCategories(categories.map(c =>
-                c.id === editingId ? { ...c, name: categoryName } : c
-            ));
-            setEditingId(null);
-        } else {
-            const newCategory = {
-                id: String(categories.length + 1).padStart(2, '0'),
-                name: categoryName,
-                subCount: subcategoryName ? 1 : 0
-            };
-            setCategories([...categories, newCategory]);
+    const handleSubmit = async () => {
+        if (!categoryName) {
+            Swal.fire({ icon: "warning", title: "Required Field", text: "Please provide a category name." });
+            return;
         }
-        handleReset();
+
+        const formData = new FormData();
+        formData.append("name", categoryName);
+        formData.append("description", description || "Category Description");
+        formData.append("isActive", "true");
+
+        if (imageFile) formData.append("image", imageFile);
+        if (iconFile) formData.append("icon", iconFile);
+
+        try {
+            if (editingCategory) {
+                await updateCategory({ id: editingCategory.id, formData }).unwrap();
+                Swal.fire({
+                    icon: "success",
+                    title: "Category Updated",
+                    text: `Category "${categoryName}" has been updated successfully.`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
+                const result = await createCategory(formData).unwrap();
+                Swal.fire({
+                    icon: "success",
+                    title: "Category Created",
+                    text: `Category "${result.data?.name}" has been created successfully.`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+            handleReset();
+        } catch (err: any) {
+            Swal.fire({
+                icon: "error",
+                title: editingCategory ? "Update Failed" : "Creation Failed",
+                text: err?.data?.message || "Something went wrong.",
+            });
+        }
     };
 
     const handleReset = () => {
         setCategoryName("");
-        setSubcategoryName("");
-        setEditingId(null);
+        setDescription("");
+        setImageFile(null);
+        setIconFile(null);
+        setImagePreview(null);
+        setIconPreview(null);
+        setEditingCategory(null);
     };
 
-    const handleEdit = (category: typeof CATEGORIES[0]) => {
+    const handleEdit = (category: CategoryItem) => {
         setCategoryName(category.name);
-        setEditingId(category.id);
+        setDescription(category.description);
+        setImagePreview(category.image);
+        setIconPreview(category.icon);
+        setEditingCategory(category);
+        window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     const handleDelete = (id: string) => {
@@ -73,12 +133,51 @@ export default function CategoriesPage() {
         setIsDeleteModalOpen(true);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (itemToDelete) {
-            setCategories(categories.filter(c => c.id !== itemToDelete));
+            try {
+                await deleteCategory(itemToDelete).unwrap();
+                Swal.fire("Deleted!", "Category has been deleted.", "success");
+            } catch (err: any) {
+                Swal.fire("Error", err?.data?.message || "Failed to delete.", "error");
+            }
             setItemToDelete(null);
         }
         setIsDeleteModalOpen(false);
+    };
+
+    const handleAddSubCategory = (id: string) => {
+        setSelectedCategoryId(id);
+        setSelectedSubCategory(null);
+        setIsSubModalOpen(true);
+    };
+
+    const handleEditSubCategory = (subCategory: SubCategoryItem) => {
+        setSelectedSubCategory(subCategory);
+        setSelectedCategoryId(subCategory.categoryId);
+        setIsSubModalOpen(true);
+    };
+
+    const handleDeleteSubCategory = (id: string) => {
+        setSubCategoryToDelete(id);
+        setIsSubDeleteModalOpen(true);
+    };
+
+    const confirmDeleteSubCategory = async () => {
+        if (subCategoryToDelete) {
+            try {
+                await deleteSubCategory(subCategoryToDelete).unwrap();
+                Swal.fire("Deleted!", "Sub-category has been deleted.", "success");
+            } catch (err: any) {
+                Swal.fire("Error", err?.data?.message || "Failed to delete sub-category.", "error");
+            }
+            setSubCategoryToDelete(null);
+        }
+        setIsSubDeleteModalOpen(false);
+    };
+
+    const toggleExpand = (id: string) => {
+        setExpandedCategoryId(expandedCategoryId === id ? null : id);
     };
 
     return (
@@ -106,117 +205,150 @@ export default function CategoriesPage() {
                         />
                     </div>
 
-                    {/* Subcategory Name Input */}
+                    {/* Description Input */}
                     <div>
                         <label className="block text-sm font-medium text-black mb-1">
-                            Subcategory name
+                            Description
                         </label>
-                        <input
-                            type="text"
-                            value={subcategoryName}
-                            onChange={(e) => setSubcategoryName(e.target.value)}
-                            className="w-full px-4 py-2.5 text-black border border-[#66666659] rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Enter subcategory name"
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            className="w-full px-4 py-2.5 text-black border border-[#66666659] rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px]"
+                            placeholder="Enter category description"
                         />
                     </div>
 
-                    {/* Upload Image */}
-                    <div className="mt-6">
-                        {/* <label className="block text-sm font-medium text-slate-700 mb-2">
-                            Upload image
-                        </label> */}
-                        {/* <div className="w-fit border-2 border-dashed border-slate-300 rounded-lg px-10 py-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
-                            <div className="flex flex-col items-center gap-2">
-                                <h6 className="text-base text-bold text-[#18181A] mb-2">Upload Image</h6>
-                                <div className="">
+                    {/* Upload Image and Icon */}
+                    <div className="mt-6 flex flex-wrap gap-8">
+                        <div>
+                            <input
+                                ref={imageInputRef}
+                                type="file"
+                                accept="image/png, image/jpeg, image/jpg"
+                                className="hidden"
+                                onChange={handleImageChange}
+                            />
+
+                            <div
+                                onClick={() => imageInputRef.current?.click()}
+                                className="w-fit border-2 border-dashed border-slate-300 rounded-lg
+                                           px-10 py-6 text-center hover:border-blue-400
+                                           transition-colors cursor-pointer"
+                            >
+                                <div className="flex flex-col items-center gap-2">
+                                    <h6 className="text-base font-semibold text-[#18181A] mb-2">
+                                        Category Image
+                                    </h6>
+
                                     <div className="flex flex-col items-center justify-center text-center">
-                                        <div className="relative w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center mb-4">
-                                            <Upload className="w-8 h-8 text-slate-400" />
-                                            <img src={ImageIcon2.src} alt="" />
-                                            <button className="absolute -bottom-5 -right-2 w-4 h-4 flex items-center justify-center  bg-[#4153B395] hover:bg-primary/80 text-white rounded-full transition-colors mb-3">
+                                        <div className="relative w-16 h-16 bg-slate-100 rounded-lg
+                                                        flex items-center justify-center mb-4">
+
+                                            {imagePreview ? (
+                                                <img
+                                                    src={imagePreview}
+                                                    alt="preview"
+                                                    className="w-full h-full object-cover rounded-lg"
+                                                />
+                                            ) : (
+                                                <>
+                                                    <Upload className="w-8 h-8 text-slate-400" />
+                                                    <img src={ImageIcon2.src} alt="" />
+                                                </>
+                                            )}
+
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    imageInputRef.current?.click();
+                                                }}
+                                                className="absolute -bottom-5 -right-2 w-4 h-4
+                                                           flex items-center justify-center
+                                                           bg-[#4153B395] hover:bg-primary/80
+                                                           text-white rounded-full transition-colors mb-3"
+                                            >
                                                 <Pencil className="w-2 h-2" />
                                             </button>
                                         </div>
 
-                                        <p className="text-sm xl:text-base  text-[#5E6472] opacity-[0.75]">Image format - jpg,png, jpeg</p>
-                                        <p className="text-sm xl:text-base text-[#5E6472] opacity-[0.75]">Image Size - maximum size 2 MB Image Ratio - 1:1</p>
+                                        <p className="text-xs text-[#5E6472] opacity-75">
+                                            (jpg, png, jpeg - Max 2MB)
+                                        </p>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                        </div> */}
+                        <div>
+                            <input
+                                ref={iconInputRef}
+                                type="file"
+                                accept="image/png, image/jpeg, image/jpg, image/svg+xml"
+                                className="hidden"
+                                onChange={handleIconChange}
+                            />
 
-                         {/* Hidden Input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/png, image/jpeg, image/jpg"
-        className="hidden"
-        onChange={handleFileChange}
-      />
+                            <div
+                                onClick={() => iconInputRef.current?.click()}
+                                className="w-fit border-2 border-dashed border-slate-300 rounded-lg
+                                           px-10 py-6 text-center hover:border-blue-400
+                                           transition-colors cursor-pointer"
+                            >
+                                <div className="flex flex-col items-center gap-2">
+                                    <h6 className="text-base font-semibold text-[#18181A] mb-2">
+                                        Category Icon
+                                    </h6>
 
-      {/* Upload Box */}
-      <div
-        onClick={() => fileInputRef.current?.click()}
-        className="w-fit border-2 border-dashed border-slate-300 rounded-lg
-                   px-10 py-6 text-center hover:border-blue-400
-                   transition-colors cursor-pointer"
-      >
-        <div className="flex flex-col items-center gap-2">
-          <h6 className="text-base font-semibold text-[#18181A] mb-2">
-            Upload Image
-          </h6>
+                                    <div className="flex flex-col items-center justify-center text-center">
+                                        <div className="relative w-16 h-16 bg-slate-100 rounded-lg
+                                                        flex items-center justify-center mb-4">
 
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="relative w-16 h-16 bg-slate-100 rounded-lg
-                            flex items-center justify-center mb-4">
+                                            {iconPreview ? (
+                                                <img
+                                                    src={iconPreview}
+                                                    alt="preview"
+                                                    className="w-full h-full object-cover rounded-lg"
+                                                />
+                                            ) : (
+                                                <>
+                                                    <Upload className="w-8 h-8 text-slate-400" />
+                                                    <img src={ImageIcon2.src} alt="" />
+                                                </>
+                                            )}
 
-              {preview ? (
-                <img
-                  src={preview}
-                  alt="preview"
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              ) : (
-                <>
-                  <Upload className="w-8 h-8 text-slate-400" />
-                  <img src={ImageIcon2.src} alt="" />
-                </>
-              )}
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    iconInputRef.current?.click();
+                                                }}
+                                                className="absolute -bottom-5 -right-2 w-4 h-4
+                                                           flex items-center justify-center
+                                                           bg-[#4153B395] hover:bg-primary/80
+                                                           text-white rounded-full transition-colors mb-3"
+                                            >
+                                                <Pencil className="w-2 h-2" />
+                                            </button>
+                                        </div>
 
-              {/* Pencil */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  fileInputRef.current?.click();
-                }}
-                className="absolute -bottom-5 -right-2 w-4 h-4
-                           flex items-center justify-center
-                           bg-[#4153B395] hover:bg-primary/80
-                           text-white rounded-full transition-colors mb-3"
-              >
-                <Pencil className="w-2 h-2" />
-              </button>
-            </div>
-
-            <p className="text-sm xl:text-base text-[#5E6472] opacity-75">
-              Image format - jpg, png, jpeg
-            </p>
-            <p className="text-sm xl:text-base text-[#5E6472] opacity-75">
-              Image Size - maximum size 2 MB • Image Ratio - 1:1
-            </p>
-          </div>
-        </div>
-      </div>
+                                        <p className="text-xs text-[#5E6472] opacity-75">
+                                            (svg, png, jpg - Max 2MB)
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Action Buttons */}
                     <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 mt-10">
                         <button
+                            disabled={isCreating || isUpdating}
                             onClick={handleSubmit}
-                            className="px-20 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
-                            {editingId ? "Update" : "Submit"}
+                            className="px-20 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                            {(isCreating || isUpdating) ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                            {editingCategory ? ((isCreating || isUpdating) ? "Updating..." : "Update") : ((isCreating || isUpdating) ? "Submitting..." : "Submit")}
                         </button>
                         <button
                             onClick={handleReset}
@@ -241,52 +373,112 @@ export default function CategoriesPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {categories.map((category) => (
-                                    <tr key={category.id} className="border-t border-slate-300 hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-4 py-4 text-sm text-[#2C2C2C] border-r border-slate-300 text-center ">{category.id}</td>
-                                        <td className="px-4 py-4 text-sm text-[#0F172A] border-r border-slate-300 text-center ">{category.name}</td>
-                                        <td className="px-4 py-4 text-sm text-[#2C2C2C] border-r border-slate-300 text-center ">{category.subCount}</td>
-                                        <td className="px-4 py-4">
-                                            <div className="flex items-center gap-2 justify-center">
-                                                <button
-                                                    onClick={() => handleEdit(category)}
-                                                    className="p-2 text-blue-700 hover:bg-blue-50 rounded-lg transition-colors">
-                                                    <PencilLine size={18} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(category.id)}
-                                                    className="p-2 text-red-800 hover:bg-red-50 rounded-lg transition-colors">
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            </div>
+                                {isCategoriesLoading ? (
+                                    <tr>
+                                        <td colSpan={4} className="py-10 text-center">
+                                            <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+                                            <p className="mt-2 text-sm text-slate-500 font-medium">Loading categories...</p>
                                         </td>
                                     </tr>
-                                ))}
+                                ) : categories.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4} className="py-10 text-center text-slate-500">No categories found.</td>
+                                    </tr>
+                                ) : (
+                                    categories.map((category: CategoryItem, index: number) => (
+                                        <Fragment key={category.id}>
+                                            <tr className={`border-t border-slate-300 hover:bg-slate-50/50 transition-colors ${expandedCategoryId === category.id ? 'bg-slate-50' : ''}`}>
+                                                <td className="px-4 py-4 text-sm text-[#2C2C2C] border-r border-slate-300 text-center ">{index + 1 + (page - 1) * 10}</td>
+                                                <td className="px-4 py-4 text-sm text-[#0F172A] border-r border-slate-300 text-center ">
+                                                    <div className="flex items-center gap-3 justify-center">
+                                                        {category.icon && <img src={category.icon} className="w-6 h-6 object-contain" alt="" />}
+                                                        {category.name}
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-4 text-sm text-[#2C2C2C] border-r border-slate-300 text-center cursor-pointer hover:text-primary transition-colors font-medium" onClick={() => toggleExpand(category.id)}>
+                                                    <div className="flex items-center justify-center gap-2">
+
+                                                        <span className="text-[10px] text-slate-400 font-normal">(Click to view)</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    <div className="flex items-center gap-2 justify-center">
+                                                        <button
+                                                            onClick={() => toggleExpand(category.id)}
+                                                            className={`p-2 rounded-lg transition-colors ${expandedCategoryId === category.id ? 'bg-primary text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+                                                            title="View Sub-categories"
+                                                        >
+                                                            <Eye size={18} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleEdit(category)}
+                                                            className="p-2 text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                                                            title="Edit Category"
+                                                        >
+                                                            <PencilLine size={18} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(category.id)}
+                                                            className="p-2 text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                                                            title="Delete Category"
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleAddSubCategory(category.id)}
+                                                            className="inline-flex items-center gap-1 text-primary hover:underline font-medium text-xs border border-primary/20 px-2 py-1 rounded"
+                                                        >
+                                                            <Plus size={12} /> Sub
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {expandedCategoryId === category.id && (
+                                                <tr>
+                                                    <td colSpan={4} className="p-0 border-b border-slate-200">
+                                                        <SubCategoryRowList
+                                                            categoryId={category.id}
+                                                            onEdit={handleEditSubCategory}
+                                                            onDelete={handleDeleteSubCategory}
+
+                                                        />
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </Fragment>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
 
                     {/* Pagination */}
                     <div className=" py-4 border-t border-slate-300 flex items-center justify-center md:justify-end gap-1 md:gap-3">
-                        <button className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors">
+                        <button
+                            disabled={page === 1}
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50">
                             <ChevronLeft size={16} />
                             Previous
                         </button>
                         <div className="flex items-center gap-1">
-                            {[1, 2, 3].map(i => (
+                            {Array.from({ length: meta?.totalPages || 0 }, (_, i) => i + 1).map(i => (
                                 <button
                                     key={i}
-                                    className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${i === 1
-                                        ? 'bg-slate-100 text-slate-900'
+                                    onClick={() => setPage(i)}
+                                    className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${i === page
+                                        ? 'bg-slate-100 text-slate-900 border border-slate-300'
                                         : 'text-slate-600 hover:bg-slate-50'
                                         }`}
                                 >
                                     {i}
                                 </button>
                             ))}
-                            <span className="px-1 text-slate-400">...</span>
                         </div>
-                        <button className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors">
+                        <button
+                            disabled={page === meta?.totalPages}
+                            onClick={() => setPage(p => p + 1)}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50">
                             Next
                             <ChevronRight size={16} />
                         </button>
@@ -301,6 +493,21 @@ export default function CategoriesPage() {
                 onConfirm={confirmDelete}
                 title="Delete Category"
                 description="Are you sure you want to delete this category? This action cannot be undone."
+            />
+
+            <SubCategoryModal
+                isOpen={isSubModalOpen}
+                onClose={() => setIsSubModalOpen(false)}
+                categoryId={selectedCategoryId}
+                subCategory={selectedSubCategory}
+            />
+
+            <DeleteModal
+                isOpen={isSubDeleteModalOpen}
+                onClose={() => setIsSubDeleteModalOpen(false)}
+                onConfirm={confirmDeleteSubCategory}
+                title="Delete Sub-category"
+                description="Are you sure you want to delete this sub-category? This action cannot be undone."
             />
         </div>
     );

@@ -1,16 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { useAppSelector } from "@/lib/hooks";
+import { useRouter } from "next/navigation";
 
 export default function SuperAdminLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+    const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (!isAuthenticated) {
+            router.push("/");
+        } else {
+            setIsLoading(false);
+        }
+    }, [isAuthenticated, router]);
+
+    if (isLoading || !isAuthenticated) {
+        return (
+            <div className="h-screen w-full flex items-center justify-center bg-slate-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="h-screen bg-slate-50 flex flex-col overflow-hidden relative">

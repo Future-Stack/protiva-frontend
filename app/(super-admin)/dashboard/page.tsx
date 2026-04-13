@@ -1,28 +1,79 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import DashboardCard from "@/components/DashboardCard";
 import {
-
     ChevronDown,
-    ArrowRight
+    Link,
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-const earningData = [
-    { month: 'Jan', value: 40 },
-    { month: 'Feb', value: 55 },
-    { month: 'Mar', value: 30 },
-    { month: 'Apr', value: 105 },
-    { month: 'May', value: 60 },
-    { month: 'Jun', value: 110 },
-    { month: 'Jul', value: 45 },
-    { month: 'Aug', value: 110 },
-];
+import { useGetSuperAdminDashboardQuery } from "@/lib/features/super-admin/dashboard/dashboardAPI";
+import { useRouter } from "next/navigation";
 
 export default function SuperAdminDashboard() {
-    const [selectedYear, setSelectedYear] = useState("2025");
+    const router = useRouter();
+    const { data: response, isLoading, isError } = useGetSuperAdminDashboardQuery();
+    const dashboardData = response?.data;
+
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
     const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
+
+    const chartData = useMemo(() => {
+        if (!dashboardData?.analytics) return [];
+        return dashboardData.analytics.map(item => ({
+            month: item.month_name,
+            value: parseFloat(item.completed_payment_total) || 0
+        }));
+    }, [dashboardData?.analytics]);
+
+    const formatDate = (dateString: string) => {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        return date.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+        });
+    };
+
+    const fromNow = (dateString: string) => {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+        
+        if (diffInSeconds < 60) return 'just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+        return date.toLocaleDateString();
+    };
+
+    if (isLoading) {
+        return (
+            <div className="space-y-8 p-6 animate-pulse">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="h-32 w-full bg-slate-100 rounded-xl" />
+                    ))}
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <div className="lg:col-span-8 h-[400px] bg-slate-100 rounded-xl" />
+                    <div className="lg:col-span-4 h-[400px] bg-slate-100 rounded-xl" />
+                </div>
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <p className="text-red-500 font-medium">Failed to load dashboard data. Please try again later.</p>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Business Analytics Heading */}
@@ -33,22 +84,22 @@ export default function SuperAdminDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                     <DashboardCard
                         title="Total earning"
-                        value="80,190.15৳"
+                        value={`${parseFloat(dashboardData?.meta?.totalProviderEarningPayment || '0').toLocaleString()}৳`}
                         variant="cyan"
                     />
                     <DashboardCard
-                        title="Total subscription"
-                        value="25"
+                        title="Total Users"
+                        value={dashboardData?.meta?.totalUser?.toString() || "0"}
                         variant="green"
                     />
                     <DashboardCard
                         title="Total Provider"
-                        value="3"
+                        value={dashboardData?.meta?.totalProvider?.toString() || "0"}
                         variant="orange"
                     />
                     <DashboardCard
-                        title="Total booking served"
-                        value="33"
+                        title="Accepted Bookings"
+                        value={dashboardData?.meta?.totalAcceptBooking?.toString() || "0"}
                         variant="pink"
                     />
                 </div>
@@ -94,7 +145,7 @@ export default function SuperAdminDashboard() {
                     <div className="w-full h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart
-                                data={earningData}
+                                data={chartData}
                                 margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
                             >
                                 <CartesianGrid
@@ -114,8 +165,6 @@ export default function SuperAdminDashboard() {
                                     axisLine={false}
                                     tickLine={false}
                                     tick={{ fill: '#64748B', fontSize: 12, fontWeight: 600 }}
-                                    domain={[0, 200]}
-                                    ticks={[0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200]}
                                     dx={-5}
                                 />
                                 <Tooltip
@@ -134,8 +183,7 @@ export default function SuperAdminDashboard() {
                                     strokeWidth={2}
                                     dot={(props) => {
                                         const { cx, cy, index } = props;
-                                        // Only show dots at first and last points
-                                        if (index === 0 || index === earningData.length - 1) {
+                                        if (index === 0 || index === chartData.length - 1) {
                                             return (
                                                 <circle
                                                     cx={cx}
@@ -159,46 +207,54 @@ export default function SuperAdminDashboard() {
                 <div className="lg:col-span-4 bg-white p-6 rounded-[10px] border border-slate-100">
                     <div className="mb-8">
                         <h3 className="text-lg font-semibold text-slate-900">Recent Transactions</h3>
-                        <p className="text-sm font-medium text-slate-400 mt-1">05 Transactions this month</p>
+                        <p className="text-sm font-medium text-slate-400 mt-1">{dashboardData?.recentTransection?.length || 0} Transactions this month</p>
                     </div>
-                    <div className="relative pl-6 space-y-10 overflow-y-auto scrollbar-hide">
+                    <div className="relative pl-6 space-y-10 overflow-y-auto max-h-[300px] scrollbar-hide">
                         {/* Timeline Line */}
                         <div className="absolute left-[10.3px] top-2 bottom-1 w-px bg-slate-100"></div>
 
-                        {[1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} className="relative">
+                        {dashboardData?.recentTransection?.map((txn) => (
+                            <div key={txn.id} className="relative">
                                 <div className="absolute -left-[20px] top-1.5 w-3.5 h-3.5 rounded-full border-2 border-[#787BEB] bg-white z-10 shadow-sm"></div>
                                 <div>
-                                    <p className="text-[15px] font-semibold text-slate-900 leading-tight">3,564.00৳ Credited</p>
-                                    <p className="text-sm font-medium text-slate-400 mt-1">25 Aug 11:30 am</p>
+                                    <p className="text-[15px] font-semibold text-slate-900 leading-tight">
+                                        {parseFloat(txn.amount).toLocaleString()} {txn.currency} {txn.status}
+                                    </p>
+                                    <p className="text-sm font-medium text-slate-400 mt-1">
+                                        {formatDate(txn.createdAt)}
+                                    </p>
                                 </div>
                             </div>
                         ))}
+                        {(!dashboardData?.recentTransection || dashboardData.recentTransection.length === 0) && (
+                            <p className="text-sm text-slate-400">No recent transactions</p>
+                        )}
                     </div>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Subscription Providers List */}
+                {/* User Activity List */}
                 <div className="bg-white p-6 rounded-[10px] border border-slate-100">
                     <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-base font-semibold text-slate-900">Subscription Providers</h3>
-                        <button className="text-sm font-semibold text-[#4153B3] hover:underline">View all</button>
+                        <h3 className="text-base font-semibold text-slate-900">User Last Activity</h3>
+                        <button
+                            onClick={() => router.push("/bookings/requests")}
+                            className="text-sm font-semibold text-[#4153B3] hover:underline"
+                        >
+                            View all
+                        </button>
                     </div>
-                    <div className="divide-y divide-slate-200 max-h-[350px] overflow-y-auto scrollbar-hide">
-                        {[1, 2, 3, 4, 5].map(i => (
-                            <div key={i} className="flex items-center justify-between py-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-slate-100 rounded-[8px] overflow-hidden">
-                                        <img src={`https://picsum.photos/seed/${i + 15}/100/100`} alt="provider" className="w-full h-full object-cover" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-slate-900">Microwave Repair Ser...</p>
-                                        <p className="text-xs font-medium text-[#4B5864] mt-1.5">2 Services</p>
-                                    </div>
+                    <div className="divide-y divide-slate-200 max-h-[400px] overflow-y-auto scrollbar-hide">
+                        {dashboardData?.userLastActivity?.map(activity => (
+                            <div key={activity.id} className="flex items-start gap-3 py-4">
+                                <div className="w-10 h-10 bg-slate-50 flex items-center justify-center rounded-full shrink-0">
+                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-base font-medium text-[#4B5864]">5 Bookings Completed</p>
+                                <div className="flex-1">
+                                    <p className="text-sm font-semibold text-slate-900">{activity.title}</p>
+                                    <p className="text-xs text-slate-500 mt-1">{activity.message}</p>
+                                    <p className="text-[10px] text-slate-400 mt-1">{fromNow(activity.createdAt)}</p>
                                 </div>
                             </div>
                         ))}
@@ -209,20 +265,27 @@ export default function SuperAdminDashboard() {
                 <div className="bg-white p-6 rounded-[10px] border border-slate-100">
                     <div className="flex items-center justify-between mb-2">
                         <h3 className="text-base font-semibold text-slate-900">Recent Bookings</h3>
-                        <button className="text-sm font-semibold text-[#4153B3] hover:underline">View all</button>
+                        <button
+                            onClick={() => router.push("/bookings/requests")}
+                            className="text-sm font-semibold text-[#4153B3] hover:underline"
+                        >
+                            View all
+                        </button>
                     </div>
-                    <div className="divide-y divide-slate-200 max-h-[350px] overflow-y-auto scrollbar-hide">
-                        {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="flex items-center py-4 group">
-                                <div className="w-12 h-12 bg-slate-100 rounded-[8px] overflow-hidden mr-3 transition-colors ">
-                                    <img src={`https://picsum.photos/seed/${i + 25}/100/100`} alt="booking" className="w-full h-full object-cover" />
+                    <div className="divide-y divide-slate-200 max-h-[400px] overflow-y-auto scrollbar-hide">
+                        {dashboardData?.last10RecentBookign?.map(booking => (
+                            <div key={booking.id} className="flex items-center py-4 group">
+                                <div className="w-12 h-12 bg-slate-100 rounded-[8px] overflow-hidden mr-3 flex items-center justify-center shrink-0">
+                                    <span className="text-xs font-bold text-slate-400">BK</span>
                                 </div>
                                 <div className="flex-1">
-                                    <div>
-                                        <p className="text-sm font-semibold text-[#18181A]">Booking # 100129</p>
-                                        <p className="text-sm font-normal text-slate-700 mt-0.5">25-Aug-25 11:25AM</p>
-                                        <p className="text-xs font-normal text-slate-500 mt-0.5">Booked by Sara Chan</p>
-                                    </div>
+                                    <p className="text-sm font-semibold text-[#18181A]">Booking ID: {booking.bookingId}</p>
+                                    <p className="text-xs font-normal text-slate-700 mt-0.5">
+                                        {formatDate(booking.createdAt)}
+                                    </p>
+                                    <p className="text-xs font-medium text-slate-500 mt-0.5">
+                                        Amount: {parseFloat(booking.amount).toLocaleString()} {booking.currency} ({booking.status})
+                                    </p>
                                 </div>
                             </div>
                         ))}

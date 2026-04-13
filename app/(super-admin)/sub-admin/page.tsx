@@ -1,23 +1,34 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Search, Plus, Trash2, ChevronDown, X, Check } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Plus, Trash2, ChevronDown, X, Check, Loader2, ChevronLeft, ChevronRight, Edit } from "lucide-react";
 import DeleteModal from "@/components/DeleteModal";
+import { useCreateAdminMutation, useGetSubAdminsQuery, useUpdateAdminPermissionsMutation } from "@/lib/features/super-admin/admin/adminAPI";
+import Swal from "sweetalert2";
 
+/* ─── Debounce hook ──────────────────────────────────────────────────── */
+function useDebounce<T>(value: T, delay: number): T {
+    const [debounced, setDebounced] = useState<T>(value);
+    useEffect(() => {
+        const timer = setTimeout(() => setDebounced(value), delay);
+        return () => clearTimeout(timer);
+    }, [value, delay]);
+    return debounced;
+}
 interface SubAdmin {
-    id: number;
-    name: string;
+    id: string;
+    firstName: string;
+    lastName: string;
     email: string;
     role: string;
-    permissions: number;
-    status: "Active" | "Inactive";
+    status: "ACTIVE" | "INACTIVE";
 }
 
-const SUB_ADMINS: SubAdmin[] = [
-    { id: 1, name: "John Smith", email: "john.smith@example.com", role: "Booking Manager", permissions: 5, status: "Active" },
-    { id: 2, name: "Sarah Johnson", email: "sarah.johnson@example.com", role: "User Manager", permissions: 6, status: "Active" },
-    { id: 3, name: "Michael Brown", email: "michael.brown@example.com", role: "Business Manager", permissions: 7, status: "Active" },
-];
+// const SUB_ADMINS: SubAdmin[] = [
+//     { id: 1, name: "John Smith", email: "john.smith@example.com", role: "Booking Manager", permissions: 5, status: "Active" },
+//     { id: 2, name: "Sarah Johnson", email: "sarah.johnson@example.com", role: "User Manager", permissions: 6, status: "Active" },
+//     { id: 3, name: "Michael Brown", email: "michael.brown@example.com", role: "Business Manager", permissions: 7, status: "Active" },
+// ];
 
 const ROLES = ["Booking Manager", "Provider Manager", "User Manager", "Service Manager", "Business Manager"];
 
@@ -48,21 +59,90 @@ const PERMISSIONS_DATA = {
 };
 
 export default function SubAdminManagementPage() {
-    const [subAdmins, setSubAdmins] = useState<SubAdmin[]>(SUB_ADMINS);
+    const [page, setPage] = useState(1);
+    const [search, setSearch] = useState("");
+    const [status, setStatus] = useState("All");
+    const debouncedSearch = useDebounce(search, 500);
+
+    const { data: subAdminsData, isLoading, isError, refetch } = useGetSubAdminsQuery({
+        page,
+        limit: 10,
+        search: debouncedSearch,
+        status: status === "All" ? undefined : status.toUpperCase()
+    });
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<"basic" | "permission">("basic");
     const [selectedRole, setSelectedRole] = useState<string>("");
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [adminToDelete, setAdminToDelete] = useState<number | null>(null);
+    const [adminToDelete, setAdminToDelete] = useState<string | null>(null);
+
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editAdminId, setEditAdminId] = useState<string | null>(null);
+
+    const subAdmins = subAdminsData?.data?.data || [];
+    const meta = subAdminsData?.data?.meta;
+
+    const [createAdmin, { isLoading: isCreating }] = useCreateAdminMutation();
+    const [updateAdminPermissions, { isLoading: isUpdating }] = useUpdateAdminPermissionsMutation();
 
     const [formData, setFormData] = useState({
-        fullName: "",
+        firstName: "",
+        lastName: "",
         email: "",
         phone: "",
         password: "",
         role: "",
         permissions: [] as string[]
     });
+
+    const countPermissions = (admin: any) => {
+        let count = 0;
+        if (admin.isViewBooking) count++;
+        if (admin.isManageBooking) count++;
+        if (admin.isExportBooking) count++;
+        if (admin.isViewProvider) count++;
+        if (admin.isManageProvider) count++;
+        if (admin.isViewUser) count++;
+        if (admin.isManageUser) count++;
+        if (admin.isViewCategory) count++;
+        if (admin.isManageCategory) count++;
+        if (admin.isViewTransaction) count++;
+        if (admin.isManageWithdrawal) count++;
+        return count;
+    };
+
+    const handleEditAdmin = (admin: any) => {
+        setIsEditMode(true);
+        setEditAdminId(admin.id);
+        
+        const perms: string[] = [];
+        if (admin.isViewBooking) perms.push("view_bookings");
+        if (admin.isManageBooking) perms.push("manage_bookings");
+        if (admin.isExportBooking) perms.push("export_bookings");
+        if (admin.isViewProvider) perms.push("view_providers");
+        if (admin.isManageProvider) perms.push("manage_providers");
+        if (admin.isViewUser) perms.push("view_users");
+        if (admin.isManageUser) perms.push("manage_users");
+        if (admin.isViewCategory) perms.push("view_categories");
+        if (admin.isManageCategory) perms.push("manage_categories");
+        if (admin.isViewTransaction) perms.push("view_transactions");
+        if (admin.isManageWithdrawal) perms.push("manage_withdrawals");
+        
+        setFormData({
+            firstName: admin.firstName || "",
+            lastName: admin.lastName || "",
+            email: admin.email || "",
+            phone: admin.phone || "",
+            password: "",
+            role: admin.role || "",
+            permissions: perms
+        });
+        
+        setSelectedRole(admin.role || "");
+        setActiveTab("permission");
+        setIsModalOpen(true);
+    };
 
     const togglePermission = (permissionId: string) => {
         setFormData(prev => {
@@ -73,41 +153,105 @@ export default function SubAdminManagementPage() {
         });
     };
 
-    const handleAddAdmin = () => {
-        if (!formData.fullName || !formData.email || !formData.role) {
-            alert("Please fill in all required fields (Name, Email, Role)");
+    const handleSaveAdmin = async () => {
+        if (!isEditMode && (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.role)) {
+            Swal.fire({
+                icon: "warning",
+                title: "Required Fields Missing",
+                text: "Please fill in all basic information fields.",
+            });
             return;
         }
 
-        const newAdmin: SubAdmin = {
-            id: Math.max(...subAdmins.map(a => a.id), 0) + 1,
-            name: formData.fullName,
-            email: formData.email,
-            role: formData.role,
-            permissions: formData.permissions.length,
-            status: "Active"
+        const permissionsPayload = {
+            isViewBooking: formData.permissions.includes("view_bookings"),
+            isManageBooking: formData.permissions.includes("manage_bookings"),
+            isExportBooking: formData.permissions.includes("export_bookings"),
+            isViewProvider: formData.permissions.includes("view_providers"),
+            isManageProvider: formData.permissions.includes("manage_providers"),
+            isViewUser: formData.permissions.includes("view_users"),
+            isManageUser: formData.permissions.includes("manage_users"),
+            isViewCategory: formData.permissions.includes("view_categories"),
+            isManageCategory: formData.permissions.includes("manage_categories"),
+            isViewTransaction: formData.permissions.includes("view_transactions"),
+            isViewWithdrawal: formData.permissions.includes("manage_withdrawals") || formData.permissions.includes("view_transactions"),
+            isManageWithdrawal: formData.permissions.includes("manage_withdrawals"),
         };
 
-        setSubAdmins([...subAdmins, newAdmin]);
-        setFormData({
-            fullName: "",
-            email: "",
-            phone: "",
-            password: "",
-            role: "",
-            permissions: []
-        });
-        setIsModalOpen(false);
+        if (isEditMode) {
+            if (!editAdminId) return;
+            try {
+                await updateAdminPermissions({ userId: editAdminId, ...permissionsPayload }).unwrap();
+                Swal.fire({
+                    icon: "success",
+                    title: "Permissions Updated",
+                    text: "Sub-admin permissions have been successfully updated.",
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                setIsModalOpen(false);
+                setIsEditMode(false);
+                setEditAdminId(null);
+                setFormData({ firstName: "", lastName: "", email: "", phone: "", password: "", role: "", permissions: [] });
+            } catch (err: any) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Update Failed",
+                    text: err?.data?.message || "Something went wrong while updating permissions.",
+                });
+            }
+        } else {
+            const payload = {
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                email: formData.email,
+                phone: formData.phone,
+                password: formData.password,
+                ...permissionsPayload
+            };
+
+            try {
+                await createAdmin(payload).unwrap();
+                
+                Swal.fire({
+                    icon: "success",
+                    title: "Sub-Admin Created",
+                    text: "The new sub-admin has been successfully added.",
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+                setFormData({
+                    firstName: "",
+                    lastName: "",
+                    email: "",
+                    phone: "",
+                    password: "",
+                    role: "",
+                    permissions: []
+                });
+                setIsModalOpen(false);
+                setActiveTab("basic");
+                refetch();
+            } catch (err: any) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Creation Failed",
+                    text: err?.data?.message || "Something went wrong while creating the sub-admin.",
+                });
+            }
+        }
     };
 
-    const handleDeleteAdmin = (id: number) => {
+    const handleDeleteAdmin = (id: string) => {
         setAdminToDelete(id);
         setIsDeleteModalOpen(true);
     };
 
     const confirmDelete = () => {
         if (adminToDelete) {
-            setSubAdmins(subAdmins.filter(a => a.id !== adminToDelete));
+            // No delete API provided yet based on prompt, keeping UI feedback
+            Swal.fire("Note", "Delete API not yet implemented", "info");
             setAdminToDelete(null);
         }
         setIsDeleteModalOpen(false);
@@ -122,7 +266,14 @@ export default function SubAdminManagementPage() {
                     <p className="text-sm text-slate-500 mt-1">Manage sub admin users, roles and access permissions across all sections</p>
                 </div>
                 <button
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={() => {
+                        setIsEditMode(false);
+                        setEditAdminId(null);
+                        setFormData({ firstName: "", lastName: "", email: "", phone: "", password: "", role: "", permissions: [] });
+                        setSelectedRole("");
+                        setActiveTab("basic");
+                        setIsModalOpen(true);
+                    }}
                     className="flex items-center gap-2 px-4 py-2.5 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#6366F1]/90 transition-colors shadow-sm"
                 >
                     <Plus size={18} />
@@ -140,13 +291,19 @@ export default function SubAdminManagementPage() {
                             type="text"
                             placeholder="Search sub admin by name or email..."
                             className="w-full pl-10 pr-4 py-2.5 text-sm text-black border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent placeholder:text-[#94A3B8]"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
                     <div className="relative min-w-[240px]">
-                        <select className="w-full appearance-none px-4 py-2.5 pr-10 text-black border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent bg-white text-sm">
-                            <option>Active</option>
-                            <option>Inactive</option>
-                            <option>All</option>
+                        <select 
+                            className="w-full appearance-none px-4 py-2.5 pr-10 text-black border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent bg-white text-sm"
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value)}
+                        >
+                            <option value="All">All</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
                         </select>
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                     </div>
@@ -165,45 +322,120 @@ export default function SubAdminManagementPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200">
-                            {subAdmins.map((admin) => (
-                                <tr key={admin.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-medium text-lg">
-                                                {admin.name.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <div className="text-sm font-medium text-slate-900">{admin.name}</div>
-                                                <div className="text-sm text-slate-500">{admin.email}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#EEF2FF] text-[#6366F1]">
-                                            {admin.role}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-slate-600">{admin.permissions} permissions assigned</td>
-                                    <td className="px-6 py-4 text-center">
-                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${admin.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                                            }`}>
-                                            {admin.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <button
-                                                onClick={() => handleDeleteAdmin(admin.id)}
-                                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                                                <Trash2 size={18} />
-                                            </button>
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={5} className="py-20 text-center">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                            <p className="text-sm text-slate-500 font-medium">Loading sub admins...</p>
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                            ) : subAdmins.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="py-20 text-center text-slate-500 italic">
+                                        No sub admins found.
+                                    </td>
+                                </tr>
+                            ) : (
+                                subAdmins.map((admin) => (
+                                    <tr key={admin.id} className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-medium text-lg uppercase">
+                                                    {admin.firstName.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-medium text-slate-900">{admin.firstName} {admin.lastName}</div>
+                                                    <div className="text-sm text-slate-500">{admin.email}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#EEF2FF] text-[#6366F1]">
+                                                {admin.role.replace('_', ' ')}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-slate-600">
+                                            {countPermissions(admin) > 0 ? (
+                                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700">
+                                                    {countPermissions(admin)} Permissions
+                                                </span>
+                                            ) : (
+                                                "No Permissions assigned"
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
+                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize ${admin.status === 'ACTIVE' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                                                }`}>
+                                                {admin.status.toLowerCase()}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button
+                                                    onClick={() => handleEditAdmin(admin)}
+                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                                    <Edit size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteAdmin(admin.id)}
+                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                {meta && meta.totalPage > 1 && (
+                    <div className="mt-6 flex items-center justify-end gap-3">
+                        <button
+                            disabled={page === 1}
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
+                        >
+                            <ChevronLeft size={16} />
+                            Previous
+                        </button>
+                        <div className="flex items-center gap-1">
+                            {Array.from({ length: Math.min(meta.totalPage, 5) }, (_, i) => {
+                                let pageNum = i + 1;
+                                if (meta.totalPage > 5 && page > 3) {
+                                    pageNum = page - 3 + i;
+                                    if (pageNum + (5 - i) > meta.totalPage) {
+                                        pageNum = meta.totalPage - 5 + i + 1;
+                                    }
+                                }
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => setPage(pageNum)}
+                                        className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${pageNum === page
+                                            ? 'bg-slate-100 text-slate-900 border border-slate-300 shadow-sm'
+                                            : 'text-slate-600 hover:bg-slate-50'
+                                            }`}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <button
+                            disabled={page === meta.totalPage}
+                            onClick={() => setPage(p => Math.min(meta.totalPage, p + 1))}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
+                        >
+                            Next
+                            <ChevronRight size={16} />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Create New Sub Admin Modal */}
@@ -214,8 +446,8 @@ export default function SubAdminManagementPage() {
                         {/* Modal Header */}
                         <div className="flex items-center justify-between px-8 py-6">
                             <div>
-                                <h3 className="text-xl font-bold text-slate-900">Create New Sub Admin</h3>
-                                <p className="text-sm text-slate-500 mt-1.5">Add a new sub admin and assign roles and permissions</p>
+                                <h3 className="text-xl font-bold text-slate-900">{isEditMode ? "Edit Sub Admin Permissions" : "Create New Sub Admin"}</h3>
+                                <p className="text-sm text-slate-500 mt-1.5">{isEditMode ? "Modify permissions for the selected sub admin" : "Add a new sub admin and assign roles and permissions"}</p>
                             </div>
                             <button
                                 onClick={() => setIsModalOpen(false)}
@@ -229,12 +461,13 @@ export default function SubAdminManagementPage() {
                         <div className="px-8 w-full">
                             <div className="grid grid-cols-2 gap-4 px-3.5 py-3 bg-blue-50 rounded-[50px] w-full">
                                 <button
+                                    disabled={isEditMode}
                                     onClick={() => setActiveTab("basic")}
                                     className={`px-3 md:px-6 md:py-3 py-1.5 md:text-base text-xs font-normal rounded-full transition-all
     ${activeTab === "basic"
                                             ? "bg-primary text-white shadow-sm"
                                             : "text-black hover:text-slate-700 hover:bg-slate-100"
-                                        }`}
+                                        } ${isEditMode ? "opacity-50 cursor-not-allowed" : ""}`}
                                 >
                                     <div className="flex justify-center items-center gap-2">
                                         <svg
@@ -318,15 +551,27 @@ export default function SubAdminManagementPage() {
                         <div className="p-8 overflow-y-auto custom-scrollbar">
                             {activeTab === "basic" ? (
                                 <div className="space-y-5">
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-medium text-slate-700 ">Full Name</label>
-                                        <input
-                                            type="text"
-                                            placeholder="Ex. John Doe"
-                                            className="w-full mt-2.5 px-4 py-2.5 bg-[#E8EFFC] border border-[#E8EFFC] rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1] transition-all"
-                                            value={formData.fullName}
-                                            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                                        />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="text-sm font-medium text-slate-700 ">First Name</label>
+                                            <input
+                                                type="text"
+                                                placeholder="Ex. John"
+                                                className="w-full mt-2.5 px-4 py-2.5 bg-[#E8EFFC] border border-[#E8EFFC] rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1] transition-all"
+                                                value={formData.firstName}
+                                                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-sm font-medium text-slate-700 ">Last Name</label>
+                                            <input
+                                                type="text"
+                                                placeholder="Ex. Doe"
+                                                className="w-full mt-2.5 px-4 py-2.5 bg-[#E8EFFC] border border-[#E8EFFC] rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1] transition-all"
+                                                value={formData.lastName}
+                                                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                            />
+                                        </div>
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-sm font-medium text-slate-700">Email Address</label>
@@ -378,9 +623,11 @@ export default function SubAdminManagementPage() {
                                     </div>
                                     <div className="pt-4 flex items-center gap-3">
                                         <button
-                                            onClick={handleAddAdmin}
-                                            className="px-6 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/80 transition-colors shadow-sm shadow-blue-100">
-                                            Add Admin
+                                            disabled={isCreating || isUpdating}
+                                            onClick={handleSaveAdmin}
+                                            className="px-6 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/80 transition-colors shadow-sm shadow-blue-100 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2">
+                                            {isCreating || isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                                            {isCreating || isUpdating ? "Saving..." : (isEditMode ? "Save Changes" : "Add Admin")}
                                         </button>
                                         <button
                                             onClick={() => setIsModalOpen(false)}
@@ -448,9 +695,11 @@ export default function SubAdminManagementPage() {
 
                                         <div className="pt-8 flex items-center gap-3">
                                             <button
-                                                onClick={handleAddAdmin}
-                                                className="px-6 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/80 transition-colors shadow-sm shadow-blue-100">
-                                                Add Admin
+                                                disabled={isCreating || isUpdating}
+                                                onClick={handleSaveAdmin}
+                                                className="px-6 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/80 transition-colors shadow-sm shadow-blue-100 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2">
+                                                {isCreating || isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                                                {isCreating || isUpdating ? "Saving..." : (isEditMode ? "Save Changes" : "Add Admin")}
                                             </button>
                                             <button
                                                 onClick={() => setIsModalOpen(false)}

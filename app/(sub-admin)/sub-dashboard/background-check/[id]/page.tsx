@@ -1,9 +1,12 @@
 "use client";
 
+import { use } from "react";
 import { ImgIcon, PdfIcon } from "@/app/assets/DocumentsIcon";
 import { Phone, Mail, MapPin } from "lucide-react";
 
-export default function BackgroundCheckDetailPage({ params }: { params: { id: string } }) {
+export default function BackgroundCheckDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
+    console.log(id);
     return (
         <div className="space-y-6">
             {/* Header */}
