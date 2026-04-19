@@ -2,7 +2,7 @@ import { createApi,fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { RootState } from "../store";
 
 const baseQueryAPI = fetchBaseQuery({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://protiva-backend.onrender.com',
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://protiva-backend-ukw2.onrender.com',
   credentials: "include",
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth?.accessToken;
