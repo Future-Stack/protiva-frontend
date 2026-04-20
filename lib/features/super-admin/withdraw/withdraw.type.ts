@@ -1,30 +1,40 @@
-export interface WithdrawalProvider {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    image: string;
-    role: string;
-    serviceName: string;
-    completedJobs: number;
-}
-
 export interface WithdrawalItem {
     id: string;
-    providerId: string;
-    amount: number;
-    accountNumber: string;
+    withdrawalNumber: string | null;
+    userId: string;
+    amount: string;
+    fee: string;
+    netAmount: string;
+    bankName: string | null;
+    accountNumber: string | null;
+    accountHolderName: string | null;
+    branchName: string | null;
+    routingNumber: string | null;
+    phoneNumber: string | null;
+    mobileBankingType: string | null;
+    mobileBankingPaymentTakeNumber: string | null;
+    bankType: "MOBILE_BANKING" | "BANK" | string;
     status: "PENDING" | "APPROVED" | "PROCESSING" | "COMPLETED" | "REJECTED" | "CANCELLED";
-    paymentMethod: string;
+    processedBy: string | null;
+    processedAt: string | null;
+    rejectionReason: string | null;
+    requestedAt: string;
     createdAt: string;
     updatedAt: string;
-    provider: WithdrawalProvider;
 }
 
 export interface WithdrawalMeta {
     totalPending: number;
-    totalPendingAmount: number;
+    totalPendingAmount: string;
     todayApproved: number;
+}
+
+export interface WithdrawalPagination {
+    total: number;
+    skip: number;
+    limit: number;
+    page: number;
+    totalPage: number;
 }
 
 export interface GetAllWithdrawalsParams {
@@ -35,21 +45,16 @@ export interface GetAllWithdrawalsParams {
 }
 
 export interface GetAllWithdrawalsResponse {
-    success: boolean;
-    message: string;
     data: {
         success: boolean;
         message: string;
         data: {
-            pagination: {
-                total: number;
-                skip: number;
-                limit: number;
-                page: number;
-                totalPage: number;
-            };
+            pagination: WithdrawalPagination;
             meta: WithdrawalMeta;
             data: WithdrawalItem[];
         };
     };
+    statusCode: number;
+    timestamp: string;
+    path: string;
 }

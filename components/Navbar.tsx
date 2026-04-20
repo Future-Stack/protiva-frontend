@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, User, Globe, Menu, User2Icon, Settings, LogOut } from "lucide-react";
+import { Bell, Search, User, Globe, Menu, User2Icon, Settings, LogOut, Info, CheckCircle, AlertCircle, CircleDollarSign, Clock } from "lucide-react";
 import Logo from "@/app/assets/logo";
 import { MdArrowDropDown } from "react-icons/md";
 import user1 from "@/app/assets/user1.png";
@@ -11,6 +11,7 @@ import { useAppDispatch } from "@/lib/hooks";
 import { logout } from "@/lib/features/auth/authSlice";
 import { useRouter } from "next/navigation";
 import { useGetMeQuery } from "@/lib/features/auth/authApi";
+import { useGetNotificationsQuery, useReadNotificationMutation } from "@/lib/features/notification/notificationAPI";
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -23,7 +24,12 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const { data: profileResponse } = useGetMeQuery();
   const reduxUser = useSelector((state: RootState) => state.auth.user);
   const user = profileResponse?.data?.user || reduxUser;
-  
+
+  const { data: notificationsResponse } = useGetNotificationsQuery();
+  const [readNotification] = useReadNotificationMutation();
+  const notifications = notificationsResponse?.data || [];
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
   const [openModal, setOpenModal] = useState<ModalType>(null);
   const ref = useRef<HTMLDivElement>(null);
   const [mobileSearch, setMobileSearch] = useState(false);
@@ -48,6 +54,31 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     dispatch(logout());
     window.location.href = "/";
   }
+
+  const getTimeAgo = (dateString: string) => {
+    const now = new Date();
+    const past = new Date(dateString);
+    const diffInMs = now.getTime() - past.getTime();
+    const diffInMins = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMins / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInMins < 1) return 'Just now';
+    if (diffInMins < 60) return `${diffInMins}m ago`;
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInDays < 7) return `${diffInDays}d ago`;
+    return past.toLocaleDateString();
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'PROFILE_UPDATE': return <User size={16} className="text-blue-500" />;
+      case 'PAYMENT_SUCCESS': return <CircleDollarSign size={16} className="text-green-500" />;
+      case 'BOOKING_ALERT': return <Clock size={16} className="text-amber-500" />;
+      case 'SYSTEM': return <Info size={16} className="text-slate-500" />;
+      default: return <Info size={16} className="text-slate-500" />;
+    }
+  };
 
   return (
 
@@ -174,13 +205,66 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             className="p-2 md:p-2.5 text-slate-500 hover:bg-slate-50 rounded-full relative transition-colors"
           >
             <Bell size={24} color="#09090B" />
-            <span className="absolute top-1 right-1 w-4 h-4 bg-[#4153B3] text-white text-[10px] flex items-center justify-center rounded-full ">
-              2
-            </span>
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-5 h-5 bg-[#EF4444] text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
           {openModal === "notification" && (
-            <div className="absolute top-[60px] right-[80px] bg-white rounded-lg shadow-md w-[250px] p-4">
-              <p className="text-sm text-slate-600">No new notifications</p>
+            <div ref={ref} className="absolute top-[65px] right-2 md:right-[80px] bg-white border border-slate-200 rounded-xl shadow-xl w-[320px] md:w-[380px] overflow-hidden z-50">
+              <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <h3 className="text-sm font-bold text-slate-900">Notifications</h3>
+                {unreadCount > 0 && (
+                  <button className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wider">
+                    Mark all read
+                  </button>
+                )}
+              </div>
+
+              <div className="max-h-[420px] overflow-y-auto divide-y divide-slate-100">
+                {notifications.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Bell size={20} className="text-slate-300" />
+                    </div>
+                    <p className="text-sm text-slate-500 font-medium">No notifications yet</p>
+                    <p className="text-xs text-slate-400 mt-1">We'll let you know when something happens</p>
+                  </div>
+                ) : (
+                  notifications.map((n) => (
+                    <div
+                      key={n.id}
+                      onClick={() => !n.isRead && readNotification(n.id)}
+                      className={`px-4 py-4 flex gap-4 cursor-pointer hover:bg-slate-50 transition-colors relative ${!n.isRead ? 'bg-indigo-50/20' : ''}`}
+                    >
+                      <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center border ${!n.isRead ? 'bg-white border-indigo-100 shadow-sm' : 'bg-slate-50 border-slate-100'}`}>
+                        {getNotificationIcon(n.type)}
+                      </div>
+                      <div className="flex-1 min-w-0 mt-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className={`text-sm font-bold truncate pr-2 ${!n.isRead ? 'text-slate-900' : 'text-slate-600'}`}>{n.title}</p>
+                          <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap">{getTimeAgo(n.createdAt)}</span>
+                        </div>
+                        <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                          {n.message}
+                        </p>
+                      </div>
+                      {!n.isRead && (
+                        <div className="absolute top-4 right-4 w-2 h-2 bg-indigo-500 rounded-full shadow-sm shadow-indigo-200"></div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {notifications.length > 5 && (
+                <div className="px-4 py-2 text-center border-t border-slate-100">
+                  <button className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors">
+                    View all notifications
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

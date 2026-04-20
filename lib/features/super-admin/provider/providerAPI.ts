@@ -2,7 +2,10 @@ import { baseAPI } from "@/lib/baseAPI/baseAPI";
 import {
   GetAllProvidersResponse,
   GetAllProvidersParams,
+  AddProviderPayload,
+  AddProviderResponse,
 } from "./provider.type";
+
 
 export const providerAPI = baseAPI.injectEndpoints({
   endpoints: (build) => ({
@@ -41,6 +44,30 @@ export const providerAPI = baseAPI.injectEndpoints({
       }),
       invalidatesTags: ["Provider"],
     }),
+
+    addProvider: build.mutation<AddProviderResponse, AddProviderPayload>({
+      query: (payload) => {
+        const formData = new FormData();
+        formData.append("firstName", payload.firstName);
+        formData.append("lastName", payload.lastName);
+        formData.append("email", payload.email);
+        formData.append("phone", payload.phone);
+        formData.append("password", payload.password);
+        formData.append("city", payload.city);
+        formData.append("nidNumber", payload.nidNumber);
+        formData.append("serviceLocation", payload.serviceLocation);
+        formData.append("yearOfExprience", payload.yearOfExprience);
+        formData.append("bio", payload.bio);
+        formData.append("avatar", payload.avatar);
+        formData.append("nidImage", payload.nidImage);
+        return {
+          url: "/api/v1/auth/add-provider",
+          method: "POST",
+          body: formData,
+        };
+      },
+      invalidatesTags: ["Provider"],
+    }),
   }),
 });
 
@@ -49,4 +76,5 @@ export const {
   useVerifyProviderMutation,
   useRejectProviderMutation,
   useToggleRecommendationMutation,
+  useAddProviderMutation,
 } = providerAPI;

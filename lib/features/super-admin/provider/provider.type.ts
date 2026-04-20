@@ -27,6 +27,9 @@ export interface Provider {
   providerServiceAvailability: boolean;
   isProviderRecomendation: boolean;
   isRecmmendation?: boolean;
+  nidImage: string | null;
+  nidNumber: string | null;
+  yearsOfExprience: string | null;
   loginAttempts: number;
   language: string;
   timezone: string;
@@ -63,4 +66,42 @@ export interface GetAllProvidersParams {
   limit?: number;
   search?: string;
   status?: string;
+}
+
+export interface AddProviderPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  password: string;
+  city: string;
+  nidNumber: string;
+  serviceLocation: string;
+  yearOfExprience: string;
+  bio: string;
+  avatar: File;
+  nidImage: File;
+}
+
+export interface AddProviderResponseData {
+  id: string;
+  email: string;
+  phone: string;
+  firstName: string;
+  lastName: string;
+  bio: string;
+  avatar: string;
+  streetAddress: string;
+  city: string;
+  role: string;
+  status: string;
+  verificationStatus: string;
+  createdAt: string;
+}
+
+export interface AddProviderResponse {
+  data: AddProviderResponseData;
+  statusCode: number;
+  timestamp: string;
+  path: string;
 }

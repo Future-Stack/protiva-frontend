@@ -42,7 +42,8 @@ interface CheckRow {
     phone: string;
     email: string;
     nid: string;
-    documents: { pdf: boolean; image: boolean };
+    // documents: { pdf: boolean; image: boolean };
+    nidImage: string;
     professionalDocs: { pdf: boolean; image: boolean };
     verificationStatus: string;
     avatarSeed: string;
@@ -95,7 +96,8 @@ export default function BackgroundCheckPage() {
                     phone: p.phone,
                     email: p.email,
                     nid: p.id.slice(0, 10).toUpperCase(), // NID not in API; show placeholder
-                    documents: { pdf: true, image: Boolean(p.avatar) },
+                    // documents: { pdf: true, image: Boolean(p.avatar) },
+                    nidImage: p.nidImage,
                     professionalDocs: { pdf: false, image: false },
                     verificationStatus: p.verificationStatus,
                     avatarSeed: p.id,
@@ -240,11 +242,8 @@ export default function BackgroundCheckPage() {
                                                             <PdfIcon />
                                                         </div>
                                                     )} */}
-                                                    <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
+                                                    <div onClick={() => handleViewDocument(check.nidImage)} className="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
                                                         <ImgIcon />
-                                                    </div>
-                                                    <div className="w-8 h-8 bg-red-100 rounded flex items-center justify-center">
-                                                        <PdfIcon />
                                                     </div>
                                                 </div>
                                             </td>

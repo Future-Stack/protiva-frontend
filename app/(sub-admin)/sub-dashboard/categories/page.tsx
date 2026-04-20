@@ -22,6 +22,7 @@ export default function CategoriesPage() {
     const { user } = useAppSelector((state) => state.auth);
     const hasViewPermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewCategory;
     const hasManagePermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isManageCategory;
+    const canDelete = user?.role === "SUPER_ADMIN";
 
     const [page, setPage] = useState(1);
     const { data: categoriesData, isLoading: isCategoriesLoading } = useGetAllCategoriesQuery({ page, limit: 10 }, {
@@ -226,7 +227,7 @@ export default function CategoriesPage() {
                                     <th className="px-4 py-3.5 text-sm font-semibold text-[#475569] border-r border-slate-300 text-center">SL</th>
                                     <th className="px-4 py-3.5 text-sm font-semibold text-[#475569] border-r border-slate-300 text-center">Category name</th>
                                     <th className="px-4 py-3.5 text-sm font-semibold text-[#475569] border-r border-slate-300 text-center">Sub category count</th>
-                                    <th className="px-4 py-3.5 text-sm font-semibold text-[#475569] text-center">Action</th>
+                                    {(hasManagePermission || canDelete) && <th className="px-4 py-3.5 text-sm font-semibold text-[#475569] text-center">Action</th>}
                                 </tr>
                             </thead>
                             <tbody>
@@ -251,28 +252,27 @@ export default function CategoriesPage() {
                                                 <td className="px-4 py-4 text-sm text-[#2C2C2C] border-r border-slate-300 text-center cursor-pointer hover:text-primary font-medium" onClick={() => toggleExpand(cat.id)}>
                                                     <span className="text-[10px] text-slate-400 font-normal">(Click to view)</span>
                                                 </td>
-                                                <td className="px-4 py-4">
-                                                    <div className="flex items-center gap-2 justify-center">
-                                                        <button onClick={() => toggleExpand(cat.id)}
-                                                            className={`p-2 rounded-lg transition-colors ${expandedCategoryId === cat.id ? "bg-primary text-white" : "text-slate-600 hover:bg-slate-100"}`}
-                                                            title="View Sub-categories"><Eye size={18} /></button>
-                                                        {hasManagePermission && (
-                                                            <>
-                                                                <button onClick={() => handleEdit(cat)} className="p-2 text-blue-700 hover:bg-blue-50 rounded-lg transition-colors" title="Edit"><PencilLine size={18} /></button>
-                                                                <button onClick={() => handleDelete(cat.id)} className="p-2 text-red-800 hover:bg-red-50 rounded-lg transition-colors" title="Delete"><Trash2 size={18} /></button>
-                                                                <button onClick={() => handleAddSubCategory(cat.id)} className="inline-flex items-center gap-1 text-primary hover:underline font-medium text-xs border border-primary/20 px-2 py-1 rounded">
-                                                                    <Plus size={12} /> Sub
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </td>
+                                                {(hasManagePermission || canDelete) && (
+                                                    <td className="px-4 py-4">
+                                                        <div className="flex items-center gap-2 justify-center">
+                                                            {hasManagePermission && (
+                                                                <>
+                                                                    <button onClick={() => handleEdit(cat)} className="p-2 text-blue-700 hover:bg-blue-50 rounded-lg transition-colors" title="Edit"><PencilLine size={18} /></button>
+                                                                    <button onClick={() => handleAddSubCategory(cat.id)} className="inline-flex items-center gap-1 text-primary hover:underline font-medium text-xs border border-primary/20 px-2 py-1 rounded">
+                                                                        <Plus size={12} /> Sub
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                            {canDelete && <button onClick={() => handleDelete(cat.id)} className="p-2 text-red-800 hover:bg-red-50 rounded-lg transition-colors" title="Delete"><Trash2 size={18} /></button>}
+                                                        </div>
+                                                    </td>
+                                                )}
                                             </tr>
                                             {expandedCategoryId === cat.id && (
                                                 <tr><td colSpan={4} className="p-0 border-b border-slate-200">
                                                     <SubCategoryRowList categoryId={cat.id}
                                                         onEdit={hasManagePermission ? handleEditSubCategory : undefined}
-                                                        onDelete={hasManagePermission ? handleDeleteSubCategory : undefined} />
+                                                        onDelete={canDelete ? handleDeleteSubCategory : undefined} />
                                                 </td></tr>
                                             )}
                                         </Fragment>

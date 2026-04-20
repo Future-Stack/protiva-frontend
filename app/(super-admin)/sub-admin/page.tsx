@@ -30,13 +30,13 @@ interface SubAdmin {
 //     { id: 3, name: "Michael Brown", email: "michael.brown@example.com", role: "Business Manager", permissions: 7, status: "Active" },
 // ];
 
-const ROLES = ["Booking Manager", "Provider Manager", "User Manager", "Service Manager", "Business Manager"];
+const ROLES = ["Booking Manager", "Provider Manager", "User Manager", "Service Manager", "Business Manager", "Marketing Manager"];
 
 const PERMISSIONS_DATA = {
     "Booking Manager": [
         { id: "view_bookings", label: "View Bookings", description: "View booking records" },
-        { id: "manage_bookings", label: "Manage Bookings", description: "Create, edit, delete bookings" },
-        { id: "export_bookings", label: "Export Bookings", description: "Export booking data" },
+        { id: "manage_bookings", label: "Manage Bookings", description: "Create and edit bookings (No deletion)" },
+        { id: "export_bookings", label: "Export Bookings", description: "Export booking data to CSV" },
     ],
     "Provider Manager": [
         { id: "view_providers", label: "View Providers", description: "View provider information" },
@@ -44,17 +44,22 @@ const PERMISSIONS_DATA = {
     ],
     "User Manager": [
         { id: "view_users", label: "View Users", description: "View user information" },
-        { id: "manage_users", label: "Manage Users", description: "Create, edit, delete users" },
+        { id: "manage_users", label: "Manage Users", description: "Create and edit users (No deletion)" },
     ],
     "Service Manager": [
         { id: "view_categories", label: "View Categories", description: "View service categories" },
-        { id: "manage_categories", label: "Manage Categories", description: "Add, edit service categories" },
+        { id: "manage_categories", label: "Manage Categories", description: "Add and edit service categories (No deletion)" },
+        { id: "view_jobs", label: "View Jobs", description: "Monitor all service listings" },
+        { id: "manage_jobs", label: "Manage Jobs", description: "Feature popular jobs in your region" },
     ],
     "Business Manager": [
-        { id: "view_subscription", label: "View Subscription", description: "View subscription plans" },
-        { id: "manage_subscription", label: "Manage Subscription", description: "Create, edit subscription plans" },
         { id: "view_transactions", label: "View Transactions", description: "Access transaction records" },
-        { id: "export_transactions", label: "Export Transactions", description: "Export transaction reports" },
+        { id: "view_withdrawals", label: "View Withdrawals", description: "View withdrawal requests" },
+        { id: "manage_withdrawals", label: "Manage Withdrawals", description: "Approve/Reject withdrawal requests" },
+    ],
+    "Marketing Manager": [
+        { id: "view_marketing", label: "View Marketing", description: "Access marketing tools and banners" },
+        { id: "manage_marketing", label: "Manage Marketing", description: "Add and edit marketing banners (No deletion)" },
     ],
 };
 
@@ -68,14 +73,15 @@ export default function SubAdminManagementPage() {
         page,
         limit: 10,
         search: debouncedSearch,
-        status: status === "All" ? undefined : status.toUpperCase()
+        status: status === "All" ? "" : status.toUpperCase()
     });
+    console.log(subAdminsData);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<"basic" | "permission">("basic");
-    const [selectedRole, setSelectedRole] = useState<string>("");
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [adminToDelete, setAdminToDelete] = useState<string | null>(null);
+    const [selectedRole, setSelectedRole] = useState("Booking Manager");
 
     const [isEditMode, setIsEditMode] = useState(false);
     const [editAdminId, setEditAdminId] = useState<string | null>(null);
@@ -92,7 +98,6 @@ export default function SubAdminManagementPage() {
         email: "",
         phone: "",
         password: "",
-        role: "",
         permissions: [] as string[]
     });
 
@@ -107,8 +112,13 @@ export default function SubAdminManagementPage() {
         if (admin.isManageUser) count++;
         if (admin.isViewCategory) count++;
         if (admin.isManageCategory) count++;
+        if (admin.isJobView) count++;
+        if (admin.isJobManage) count++;
         if (admin.isViewTransaction) count++;
+        if (admin.isViewWithdrawal) count++;
         if (admin.isManageWithdrawal) count++;
+        if (admin.isViewMarketing) count++;
+        if (admin.isManageMarketing) count++;
         return count;
     };
 
@@ -119,15 +129,20 @@ export default function SubAdminManagementPage() {
         const perms: string[] = [];
         if (admin.isViewBooking) perms.push("view_bookings");
         if (admin.isManageBooking) perms.push("manage_bookings");
-        if (admin.isExportBooking) perms.push("export_bookings");
         if (admin.isViewProvider) perms.push("view_providers");
         if (admin.isManageProvider) perms.push("manage_providers");
         if (admin.isViewUser) perms.push("view_users");
         if (admin.isManageUser) perms.push("manage_users");
         if (admin.isViewCategory) perms.push("view_categories");
         if (admin.isManageCategory) perms.push("manage_categories");
+        if (admin.isJobView) perms.push("view_jobs");
+        if (admin.isJobManage) perms.push("manage_jobs");
         if (admin.isViewTransaction) perms.push("view_transactions");
+        if (admin.isViewWithdrawal) perms.push("view_withdrawals");
         if (admin.isManageWithdrawal) perms.push("manage_withdrawals");
+        if (admin.isViewMarketing) perms.push("view_marketing");
+        if (admin.isManageMarketing) perms.push("manage_marketing");
+        if (admin.isExportBooking) perms.push("export_bookings");
         
         setFormData({
             firstName: admin.firstName || "",
@@ -135,7 +150,7 @@ export default function SubAdminManagementPage() {
             email: admin.email || "",
             phone: admin.phone || "",
             password: "",
-            role: admin.role || "",
+            // role: admin.role || "",
             permissions: perms
         });
         
@@ -154,7 +169,7 @@ export default function SubAdminManagementPage() {
     };
 
     const handleSaveAdmin = async () => {
-        if (!isEditMode && (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.role)) {
+        if (!isEditMode && (!formData.firstName || !formData.lastName || !formData.email || !formData.password)) {
             Swal.fire({
                 icon: "warning",
                 title: "Required Fields Missing",
@@ -173,15 +188,23 @@ export default function SubAdminManagementPage() {
             isManageUser: formData.permissions.includes("manage_users"),
             isViewCategory: formData.permissions.includes("view_categories"),
             isManageCategory: formData.permissions.includes("manage_categories"),
+            isJobView: formData.permissions.includes("view_jobs"),
+            isJobManage: formData.permissions.includes("manage_jobs"),
             isViewTransaction: formData.permissions.includes("view_transactions"),
-            isViewWithdrawal: formData.permissions.includes("manage_withdrawals") || formData.permissions.includes("view_transactions"),
+            isViewWithdrawal: formData.permissions.includes("view_withdrawals"),
             isManageWithdrawal: formData.permissions.includes("manage_withdrawals"),
+            isViewMarketing: formData.permissions.includes("view_marketing"),
+            isManageMarketing: formData.permissions.includes("manage_marketing"),
         };
 
         if (isEditMode) {
             if (!editAdminId) return;
             try {
-                await updateAdminPermissions({ userId: editAdminId, ...permissionsPayload }).unwrap();
+                // Ensure all flags are sent by spreading explicitly
+                await updateAdminPermissions({ 
+                    userId: editAdminId, 
+                    ...permissionsPayload 
+                }).unwrap();
                 Swal.fire({
                     icon: "success",
                     title: "Permissions Updated",
@@ -192,7 +215,7 @@ export default function SubAdminManagementPage() {
                 setIsModalOpen(false);
                 setIsEditMode(false);
                 setEditAdminId(null);
-                setFormData({ firstName: "", lastName: "", email: "", phone: "", password: "", role: "", permissions: [] });
+                setFormData({ firstName: "", lastName: "", email: "", phone: "", password: "", permissions: [] });
             } catch (err: any) {
                 Swal.fire({
                     icon: "error",
@@ -227,7 +250,7 @@ export default function SubAdminManagementPage() {
                     email: "",
                     phone: "",
                     password: "",
-                    role: "",
+                   
                     permissions: []
                 });
                 setIsModalOpen(false);
@@ -269,8 +292,7 @@ export default function SubAdminManagementPage() {
                     onClick={() => {
                         setIsEditMode(false);
                         setEditAdminId(null);
-                        setFormData({ firstName: "", lastName: "", email: "", phone: "", password: "", role: "", permissions: [] });
-                        setSelectedRole("");
+                        setFormData({ firstName: "", lastName: "", email: "", phone: "", password: "", permissions: [] });
                         setActiveTab("basic");
                         setIsModalOpen(true);
                     }}
@@ -602,25 +624,6 @@ export default function SubAdminManagementPage() {
                                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                         />
                                     </div>
-                                    <div className="">
-                                        <label className="text-sm font-medium text-slate-700">Role</label>
-                                        <div className="relative">
-                                            <select
-                                                className="w-full appearance-none  mt-2.5 px-4 py-2.5 bg-[#E8EFFC] border border-[#E8EFFC] rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1] transition-all text-slate-600"
-                                                value={formData.role}
-                                                onChange={(e) => {
-                                                    setFormData({ ...formData, role: e.target.value });
-                                                    setSelectedRole(e.target.value);
-                                                }}
-                                            >
-                                                <option value="">Select role</option>
-                                                {ROLES.map(role => (
-                                                    <option key={role} value={role}>{role}</option>
-                                                ))}
-                                            </select>
-                                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                        </div>
-                                    </div>
                                     <div className="pt-4 flex items-center gap-3">
                                         <button
                                             disabled={isCreating || isUpdating}
@@ -659,13 +662,35 @@ export default function SubAdminManagementPage() {
                                     <div className="flex-1 space-y-6">
                                         <div className="flex items-center justify-between mb-4">
                                             <h4 className="font-semibold text-slate-900">{selectedRole || "Select a role"}</h4>
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-[#6366F1] focus:ring-[#6366F1]" />
-                                                <span className="text-sm text-slate-600 mt-[2px]">Select All</span>
-                                            </label>
+                                            {selectedRole && PERMISSIONS_DATA[selectedRole as keyof typeof PERMISSIONS_DATA] && (
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        className="w-4 h-4 rounded border-gray-300 text-[#6366F1] focus:ring-[#6366F1]" 
+                                                        checked={
+                                                            PERMISSIONS_DATA[selectedRole as keyof typeof PERMISSIONS_DATA]?.every(p => formData.permissions.includes(p.id)) || false
+                                                        }
+                                                        onChange={(e) => {
+                                                            const rolePerms = PERMISSIONS_DATA[selectedRole as keyof typeof PERMISSIONS_DATA].map(p => p.id);
+                                                            if (e.target.checked) {
+                                                                setFormData(prev => ({
+                                                                    ...prev,
+                                                                    permissions: Array.from(new Set([...prev.permissions, ...rolePerms]))
+                                                                }));
+                                                            } else {
+                                                                setFormData(prev => ({
+                                                                    ...prev,
+                                                                    permissions: prev.permissions.filter(p => !rolePerms.includes(p))
+                                                                }));
+                                                            }
+                                                        }}
+                                                    />
+                                                    <span className="text-sm text-slate-600 mt-[2px]">Select All</span>
+                                                </label>
+                                            )}
                                         </div>
 
-                                        {selectedRole && PERMISSIONS_DATA[selectedRole as keyof typeof PERMISSIONS_DATA] ? (
+                                        { PERMISSIONS_DATA[selectedRole as keyof typeof PERMISSIONS_DATA] ? (
                                             <div className="space-y-4">
                                                 {PERMISSIONS_DATA[selectedRole as keyof typeof PERMISSIONS_DATA].map((perm) => (
                                                     <div key={perm.id} className="flex items-start gap-3 p-3 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors group">

@@ -42,6 +42,7 @@ export default function UsersPage() {
     const { user } = useAppSelector((state) => state.auth);
     const hasViewPermission   = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewUser;
     const hasManagePermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isManageUser;
+    const canDelete           = user?.role === "SUPER_ADMIN";
 
     const LIMIT = 10;
     const [page, setPage]           = useState(1);
@@ -179,7 +180,7 @@ export default function UsersPage() {
                                     <th className="px-4 py-3 text-base font-semibold text-slate-600 border-r-2 border-slate-300 text-center">Total Booking</th>
                                     <th className="px-4 py-3 text-base font-semibold text-slate-600 border-r-2 border-slate-300 text-center">Status</th>
                                     <th className="px-4 py-3 text-base font-semibold text-slate-600 border-r-2 border-slate-300 text-center">Last Login</th>
-                                    {hasManagePermission && <th className="px-4 py-3 text-base font-semibold text-slate-600 text-center">Action</th>}
+                                    {hasManagePermission && canDelete && <th className="px-4 py-3 text-base font-semibold text-slate-600 text-center">Action</th>}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-300">
@@ -208,7 +209,7 @@ export default function UsersPage() {
                                             <td className="px-4 py-4 text-sm text-slate-500 border-r-2 border-slate-300 text-center">
                                                 {u.lastLogin ? new Date(u.lastLogin).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : <span className="text-slate-300">—</span>}
                                             </td>
-                                            {hasManagePermission && (
+                                            {canDelete && hasManagePermission && (
                                                 <td className="px-4 py-4 text-center">
                                                     <button onClick={() => handleDelete(u.id)} disabled={isDeleting && itemToDelete === u.id}
                                                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40"

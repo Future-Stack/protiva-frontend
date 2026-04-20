@@ -1,7 +1,6 @@
 export interface AdminPermissions {
     isViewBooking: boolean;
     isManageBooking: boolean;
-    isExportBooking: boolean;
     isViewProvider: boolean;
     isManageProvider: boolean;
     isViewUser: boolean;
@@ -11,6 +10,11 @@ export interface AdminPermissions {
     isViewTransaction: boolean;
     isViewWithdrawal: boolean;
     isManageWithdrawal: boolean;
+    isJobView: boolean;
+    isJobManage: boolean;
+    isViewMarketing: boolean;
+    isManageMarketing: boolean;
+    isExportBooking: boolean;
 }
 
 export interface CreateAdminPayload extends AdminPermissions {
@@ -39,6 +43,9 @@ export interface AdminItem extends AdminPermissions {
     zipCode: string | null;
     country: string;
     role: string;
+    isViewMarketing: boolean;
+    isManageMarketing: boolean;
+    isExportBooking: boolean;
     status: "ACTIVE" | "INACTIVE";
     verificationStatus: string;
     emailVerified: boolean;

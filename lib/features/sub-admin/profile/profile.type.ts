@@ -11,6 +11,10 @@ export interface AdminPermissions {
   isViewTransaction: boolean;
   isViewWithdrawal: boolean;
   isManageWithdrawal: boolean;
+  isJobView: boolean;
+  isJobManage: boolean;
+  isViewMarketing: boolean;
+  isManageMarketing: boolean;
 }
 
 export interface SubAdminProfile {

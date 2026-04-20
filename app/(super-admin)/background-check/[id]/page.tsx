@@ -2,29 +2,27 @@
 
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ImgIcon, PdfIcon } from "@/app/assets/DocumentsIcon";
-import { Phone, Mail, MapPin, ArrowLeft, Loader2, ShieldCheck, ShieldAlert, Clock, X, FileText, Image as ImageIcon } from "lucide-react";
-import { useGetAllProvidersQuery, useVerifyProviderMutation, useRejectProviderMutation } from "@/lib/features/super-admin/provider/providerAPI";
+import { ImgIcon } from "@/app/assets/DocumentsIcon";
+import {
+    Phone, Mail, MapPin, ArrowLeft, Loader2,
+    ShieldCheck, ShieldAlert, Clock, X,
+    Image as ImageIcon, User, Briefcase, CreditCard,
+    Calendar, Globe, Activity, Star,
+} from "lucide-react";
+import {
+    useGetAllProvidersQuery,
+    useVerifyProviderMutation,
+    useRejectProviderMutation,
+} from "@/lib/features/super-admin/provider/providerAPI";
+import { useAppSelector } from "@/lib/hooks";
 
-/* ─── Static fallback detail (used when id looks like a static "01"…"10") ─ */
-const STATIC_DETAIL = {
-    name: "Mike Handyman",
-    phone: "+1268650960",
-    email: "jemmy@gmail.com",
-    location: "Toronto, Canada",
-    service: "Commercial Space Shifting",
-    license: "0H5B63352",
-    experience: "02",
-    verificationStatus: "PENDING",
-    avatarSeed: "provider",
-};
-
+/* ─── Verification badge ─────────────────────────────────────────────── */
 function VerificationBadge({ status }: { status: string }) {
     const map: Record<string, { cls: string; label: string; icon: React.ReactNode }> = {
-        VERIFIED: { cls: "bg-emerald-50 text-emerald-700 border border-emerald-200", label: "Verified", icon: <ShieldCheck size={13} /> },
-        PENDING: { cls: "bg-amber-50  text-amber-700  border border-amber-200", label: "Pending", icon: <Clock size={13} /> },
-        UNVERIFIED: { cls: "bg-red-50    text-red-600    border border-red-200", label: "Unverified", icon: <ShieldAlert size={13} /> },
-        REJECTED: { cls: "bg-red-100   text-red-700    border border-red-300", label: "Rejected", icon: <ShieldAlert size={13} /> },
+        VERIFIED:   { cls: "bg-emerald-50 text-emerald-700 border border-emerald-200", label: "Verified",   icon: <ShieldCheck size={13} /> },
+        PENDING:    { cls: "bg-amber-50  text-amber-700  border border-amber-200",     label: "Pending",    icon: <Clock size={13} /> },
+        UNVERIFIED: { cls: "bg-red-50    text-red-600    border border-red-200",       label: "Unverified", icon: <ShieldAlert size={13} /> },
+        REJECTED:   { cls: "bg-red-100   text-red-700    border border-red-300",       label: "Rejected",   icon: <ShieldAlert size={13} /> },
     };
     const config = map[status] ?? map["UNVERIFIED"];
     return (
@@ -34,66 +32,66 @@ function VerificationBadge({ status }: { status: string }) {
     );
 }
 
+/* ─── Info row helper ────────────────────────────────────────────────── */
+function InfoRow({ label, value }: { label: string; value?: string | null }) {
+    return (
+        <div className="flex flex-col gap-0.5">
+            <span className="text-xs font-medium text-slate-400 uppercase tracking-wide">{label}</span>
+            <span className="text-sm font-medium text-slate-800">{value || <span className="text-slate-400 italic">N/A</span>}</span>
+        </div>
+    );
+}
+
+/* ─── Section card ───────────────────────────────────────────────────── */
+function Section({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+    return (
+        <div className="bg-[#EFF6FF] rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+                <span className="text-[#6366F1]">{icon}</span>
+                <h4 className="text-sm font-semibold text-slate-800">{title}</h4>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {children}
+            </div>
+        </div>
+    );
+}
+
+/* ─── Page ───────────────────────────────────────────────────────────── */
 export default function BackgroundCheckDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const router = useRouter();
 
+    /* Auth — determine role */
+    const currentUser = useAppSelector((state) => state.auth.user);
+    const isSuperAdmin = currentUser?.role === "SUPER_ADMIN";
+
     const [verifyProvider, { isLoading: isVerifying }] = useVerifyProviderMutation();
     const [rejectProvider, { isLoading: isRejecting }] = useRejectProviderMutation();
     const [localStatus, setLocalStatus] = useState<string | null>(null);
-    const [previewDoc, setPreviewDoc] = useState<{ type: "pdf" | "image"; url: string; label: string } | null>(null);
+    const [previewDoc, setPreviewDoc] = useState<{ url: string; label: string } | null>(null);
 
-    /* Document URLs — null means no document is available for this provider.
-       Replace with real fields from providerProfile once the API returns them. */
-    const pdfUrl = "https://protiva-backend.onrender.com/uploads/1744214612336-1744214612336.pdf";
-    const imageUrl = "https://protiva-backend.onrender.com/uploads/1744214612336-1744214612336.pdf";
-    // const pdfUrl = (provider?.providerProfile as any)?.pdfDocument ?? null;
-    // const imageUrl = (provider?.providerProfile as any)?.imageDocument ?? null;
-
-    const DOCS = [
-        { type: "pdf" as const, url: pdfUrl, label: "Topic Name.PDF" },
-        { type: "image" as const, url: imageUrl, label: "Topic Name.image" },
-    ];
-
-    /* Fetch all providers and find the one matching this id */
-    const { data, isLoading, isError } = useGetAllProvidersQuery({ page: 1, limit: 50 });
+    /* Fetch */
+    const { data, isLoading, isError } = useGetAllProvidersQuery({ page: 1, limit: 100 });
     const provider = data?.data?.data?.find((p) => p.id === id);
 
-    const isStaticId = /^\d{2}$/.test(id); // "01"–"10" → static fallback
-    const useStatic = isStaticId || (!isLoading && !provider);
-
-    /* Derive display values */
-    const name = provider ? `${provider.firstName} ${provider.lastName}` : STATIC_DETAIL.name;
-    const phone = provider?.phone ?? STATIC_DETAIL.phone;
-    const email = provider?.email ?? STATIC_DETAIL.email;
-    const city = provider?.city ?? null;
-    const state = provider?.state ?? null;
-    const country = provider?.country ?? null;
-    const location = [city, state, country].filter(Boolean).join(", ") || STATIC_DETAIL.location;
-    const avatarSeed = provider?.id ?? STATIC_DETAIL.avatarSeed;
-    const rawStatus = localStatus ?? provider?.verificationStatus ?? STATIC_DETAIL.verificationStatus;
-
+    const rawStatus = localStatus ?? provider?.verificationStatus ?? "UNVERIFIED";
     const isAlreadyActioned = rawStatus === "VERIFIED" || rawStatus === "REJECTED";
 
     const handleApprove = async () => {
-        if (useStatic) { setLocalStatus("VERIFIED"); return; }
-        try {
-            await verifyProvider(id).unwrap();
-            setLocalStatus("VERIFIED");
-        } catch {
-            setLocalStatus("VERIFIED"); // reflect optimistically even on backend 500
-        }
+        try { await verifyProvider(id).unwrap(); } catch { /* optimistic */ }
+        setLocalStatus("VERIFIED");
+    };
+    const handleReject = async () => {
+        try { await rejectProvider(id).unwrap(); } catch { /* optimistic */ }
+        setLocalStatus("REJECTED");
     };
 
-    const handleReject = async () => {
-        if (useStatic) { setLocalStatus("REJECTED"); return; }
-        try {
-            await rejectProvider(id).unwrap();
-            setLocalStatus("REJECTED");
-        } catch {
-            setLocalStatus("REJECTED");
-        }
-    };
+    /* Derived display values */
+    const name      = provider ? `${provider.firstName} ${provider.lastName}` : "—";
+    const location  = [provider?.city, provider?.state, provider?.country].filter(Boolean).join(", ") || "—";
+    const nidImage  = provider?.nidImage ?? null;
+    const avatar    = provider?.avatar ?? null;
 
     return (
         <div className="space-y-6">
@@ -106,7 +104,7 @@ export default function BackgroundCheckDetailPage({ params }: { params: Promise<
                     <ArrowLeft size={18} />
                 </button>
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900">Background check</h2>
+                    <h2 className="text-2xl font-bold text-slate-900">Background Check</h2>
                     <p className="text-sm text-slate-500 mt-0.5">Check the identification for authentic providers</p>
                 </div>
             </div>
@@ -122,134 +120,179 @@ export default function BackgroundCheckDetailPage({ params }: { params: Promise<
             {/* Error */}
             {isError && !provider && (
                 <div className="bg-red-50 border border-red-200 rounded-lg px-6 py-4 text-sm text-red-600">
-                    Failed to load provider. Showing static data.
+                    Failed to load provider details.
                 </div>
             )}
 
-            {/* Main Card */}
             {!isLoading && (
-                <div className="bg-white rounded-lg overflow-hidden">
-                    <div className="px-10 py-16">
-                        <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-6">
-                            {/* Left – Provider Info */}
-                            <div className="bg-[#EFF6FF] p-8 rounded-lg">
-                                <div className="flex items-center gap-8">
-                                    <div className="w-20 h-20 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
-                                        <img
-                                            src={`https://picsum.photos/seed/${avatarSeed}/200/200`}
-                                            alt="Provider"
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </div>
-                                    <div className="flex-1 pt-1">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <h3 className="text-lg font-semibold text-[#0F172A]">{name}</h3>
-                                            <VerificationBadge status={rawStatus} />
-                                        </div>
-                                        <div className="space-y-2.5">
-                                            <div className="flex items-center gap-2.5 text-sm text-[#475569]">
-                                                <Phone className="w-4 h-4 text-[#6366F1]" />
-                                                <span>{phone}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2.5 text-sm text-[#475569]">
-                                                <Mail className="w-4 h-4 text-[#6366F1]" />
-                                                <span>{email}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2.5 text-sm text-[#475569]">
-                                                <MapPin className="w-4 h-4 text-[#6366F1]" />
-                                                <span>{location}</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                <div className="bg-white rounded-xl overflow-hidden shadow-sm">
+                    <div className="px-8 py-10 space-y-6">
+
+                        {/* ── Profile header ── */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 pb-6 border-b border-slate-100">
+                            <div className="w-20 h-20 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 ring-4 ring-slate-100">
+                                {avatar ? (
+                                    <img src={avatar} alt={name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <img src={`https://picsum.photos/seed/${id}/200/200`} alt={name} className="w-full h-full object-cover" />
+                                )}
+                            </div>
+                            <div className="flex-1">
+                                <div className="flex flex-wrap items-center gap-3 mb-2">
+                                    <h3 className="text-xl font-bold text-slate-900">{name}</h3>
+                                    <VerificationBadge status={rawStatus} />
+                                </div>
+                                <div className="flex flex-wrap gap-4 text-sm text-slate-500">
+                                    <span className="flex items-center gap-1.5"><Phone size={14} className="text-[#6366F1]" />{provider?.phone ?? "—"}</span>
+                                    <span className="flex items-center gap-1.5"><Mail size={14} className="text-[#6366F1]" />{provider?.email ?? "—"}</span>
+                                    <span className="flex items-center gap-1.5"><MapPin size={14} className="text-[#6366F1]" />{location}</span>
                                 </div>
                             </div>
+                        </div>
 
-                            {/* Right – Service Information */}
-                            <div className="bg-[#EFF6FF] p-8 rounded-lg">
-                                <h3 className="text-lg font-semibold text-[#0F172A] mb-3">Service Information</h3>
-                                <div className="space-y-2">
-                                    <p className="text-sm text-[#475569]">
-                                        {provider?.providerProfile
-                                            ? "Provider profile available"
-                                            : STATIC_DETAIL.service}
-                                    </p>
-                                    <p className="text-sm text-[#475569]">License number: {STATIC_DETAIL.license}</p>
-                                    <p className="text-sm text-[#475569]">Year of Experience: {STATIC_DETAIL.experience}</p>
-                                    {provider && (
-                                        <div className="pt-2 flex flex-wrap gap-3 text-xs text-slate-500">
-                                            <span>Total Jobs: <strong className="text-slate-700">{provider.totalJobs}</strong></span>
-                                            <span>Reviews: <strong className="text-slate-700">{provider.totalReviews}</strong></span>
-                                            <span>Rating: <strong className="text-slate-700">{provider.averageRating.toFixed(1)}</strong></span>
+                        {/* ══ SUPER ADMIN: full data ══════════════════════════════ */}
+                        {isSuperAdmin && provider && (
+                            <div className="space-y-5">
+
+                                {/* Personal Info */}
+                                <Section icon={<User size={16} />} title="Personal Information">
+                                    <InfoRow label="First Name"   value={provider.firstName} />
+                                    <InfoRow label="Last Name"    value={provider.lastName} />
+                                    <InfoRow label="Email"        value={provider.email} />
+                                    <InfoRow label="Phone"        value={provider.phone} />
+                                    <InfoRow label="City"         value={provider.city} />
+                                    <InfoRow label="State"        value={provider.state} />
+                                    <InfoRow label="Zip Code"     value={provider.zipCode} />
+                                    <InfoRow label="Country"      value={provider.country} />
+                                    <div className="sm:col-span-2">
+                                        <InfoRow label="Bio" value={provider.bio} />
+                                    </div>
+                                </Section>
+
+                                {/* Service Info */}
+                                <Section icon={<Briefcase size={16} />} title="Service Information">
+                                    <InfoRow label="Service Location" value={provider.streetAddress} />
+                                    <InfoRow label="Years of Experience" value={provider.yearsOfExprience} />
+                                    <InfoRow label="Total Jobs"   value={String(provider.totalJobs)} />
+                                    <InfoRow label="Total Reviews" value={String(provider.totalReviews)} />
+                                    <InfoRow label="Average Rating" value={provider.averageRating.toFixed(1)} />
+                                    <InfoRow label="Service Availability" value={provider.providerServiceAvailability ? "Available" : "Unavailable"} />
+                                </Section>
+
+                                {/* Account & Security */}
+                                <Section icon={<Activity size={16} />} title="Account & Security">
+                                    <InfoRow label="Role"                value={provider.role} />
+                                    <InfoRow label="Status"              value={provider.status} />
+                                    <InfoRow label="Verification Status" value={provider.verificationStatus} />
+                                    <InfoRow label="Email Verified"      value={provider.emailVerified ? "Yes" : "No"} />
+                                    <InfoRow label="Phone Verified"      value={provider.phoneVerified ? "Yes" : "No"} />
+                                    <InfoRow label="2FA Enabled"         value={provider.twoFactorEnabled ? "Yes" : "No"} />
+                                    <InfoRow label="Login Attempts"      value={String(provider.loginAttempts)} />
+                                    <InfoRow label="Language"            value={provider.language} />
+                                    <InfoRow label="Timezone"            value={provider.timezone} />
+                                    <InfoRow label="Last Login"          value={provider.lastLogin ? new Date(provider.lastLogin).toLocaleString() : undefined} />
+                                    <InfoRow label="Last Active"         value={provider.lastActive ? new Date(provider.lastActive).toLocaleString() : undefined} />
+                                    <InfoRow label="Created At"          value={new Date(provider.createdAt).toLocaleString()} />
+                                </Section>
+
+                                {/* Identity */}
+                                <Section icon={<CreditCard size={16} />} title="Identity Verification">
+                                    <InfoRow label="NID Number" value={provider.nidNumber} />
+                                    <InfoRow label="Recommendation" value={provider.isProviderRecomendation ? "Yes" : "No"} />
+                                </Section>
+
+                                {/* Documents */}
+                                <div className="bg-[#EFF6FF] rounded-xl p-6">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <ImageIcon size={16} className="text-[#6366F1]" />
+                                        <h4 className="text-sm font-semibold text-slate-800">Provided Documents</h4>
+                                    </div>
+                                    {nidImage ? (
+                                        <button
+                                            onClick={() => setPreviewDoc({ url: nidImage, label: "NID Image" })}
+                                            className="flex items-center gap-3 py-3 px-3 hover:bg-white rounded-lg transition-colors group w-full sm:w-auto"
+                                        >
+                                            <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                                                <ImgIcon />
+                                            </div>
+                                            <span className="text-sm font-medium text-slate-600 group-hover:text-[#6366F1] transition-colors">NID Image</span>
+                                            <span className="ml-auto text-xs text-slate-400 group-hover:text-[#6366F1] transition-colors">Preview ›</span>
+                                        </button>
+                                    ) : (
+                                        <div className="flex items-center gap-3 py-3 px-3 text-slate-400">
+                                            <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center text-lg font-semibold">—</div>
+                                            <span className="text-sm">No NID image available</span>
                                         </div>
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        )}
 
-                        {/* Provided Documents */}
-                        <div className="mt-12">
-                            <h3 className="text-base font-semibold text-[#0F172A] mb-6">Provided Documents</h3>
-                            
-                            <div className="space-y-0">
-                                {/* PDF row */}
-                                {DOCS[0].url ? (
-                                    <button
-                                        onClick={() => setPreviewDoc({ type: "pdf", url: DOCS[0].url!, label: DOCS[0].label })}
-                                        className="w-full flex items-center gap-3 py-3 border-b border-slate-200 hover:bg-slate-50 rounded-lg px-2 transition-colors group"
-                                    >
-                                        <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
-                                            <PdfIcon />
-                                        </div>
-                                        <span className="text-sm font-medium text-[#475569] group-hover:text-[#6366F1] transition-colors">
-                                            {DOCS[0].label}
-                                        </span>
-                                        <span className="ml-auto text-xs text-slate-400 group-hover:text-[#6366F1] transition-colors">Preview ›</span>
-                                    </button>
-                                ) : (
-                                    <div className="flex items-center gap-3 py-3 border-b border-slate-200 px-2">
-                                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 text-lg font-semibold">
-                                            —
-                                        </div>
-                                        <span className="text-sm text-slate-400">No PDF document</span>
-                                    </div>
-                                )}
+                        {/* ══ SUB ADMIN: limited data ════════════════════════════ */}
+                        {!isSuperAdmin && provider && (
+                            <div className="space-y-5">
+                                <Section icon={<User size={16} />} title="Contact Information">
+                                    <InfoRow label="Full Name" value={name} />
+                                    <InfoRow label="Email"     value={provider.email} />
+                                    <InfoRow label="Phone"     value={provider.phone} />
+                                    <InfoRow label="Location"  value={location} />
+                                </Section>
 
-                                {/* Image row */}
-                                {DOCS[1].url ? (
-                                    <button
-                                        onClick={() => setPreviewDoc({ type: "image", url: DOCS[1].url!, label: DOCS[1].label })}
-                                        className="w-full flex items-center gap-3 py-3 hover:bg-slate-50 rounded-lg px-2 transition-colors group"
-                                    >
-                                        <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-                                            <ImgIcon />
-                                        </div>
-                                        <span className="text-sm font-medium text-[#475569] group-hover:text-[#6366F1] transition-colors">
-                                            {DOCS[1].label}
-                                        </span>
-                                        <span className="ml-auto text-xs text-slate-400 group-hover:text-[#6366F1] transition-colors">Preview ›</span>
-                                    </button>
-                                ) : (
-                                    <div className="flex items-center gap-3 py-3 px-2">
-                                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 text-lg font-semibold">
-                                            —
-                                        </div>
-                                        <span className="text-sm text-slate-400">No image document</span>
+                                <Section icon={<Briefcase size={16} />} title="Service Summary">
+                                    <InfoRow label="Years of Experience"  value={provider.yearsOfExprience} />
+                                    <InfoRow label="Total Jobs"           value={String(provider.totalJobs)} />
+                                    <InfoRow label="Average Rating"       value={provider.averageRating.toFixed(1)} />
+                                    <InfoRow label="Service Availability" value={provider.providerServiceAvailability ? "Available" : "Unavailable"} />
+                                </Section>
+
+                                <Section icon={<Activity size={16} />} title="Verification">
+                                    <InfoRow label="Status"              value={provider.status} />
+                                    <InfoRow label="Verification Status" value={provider.verificationStatus} />
+                                </Section>
+
+                                {/* Documents — NID image preview only */}
+                                <div className="bg-[#EFF6FF] rounded-xl p-6">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <ImageIcon size={16} className="text-[#6366F1]" />
+                                        <h4 className="text-sm font-semibold text-slate-800">Provided Documents</h4>
                                     </div>
-                                )}
+                                    {nidImage ? (
+                                        <button
+                                            onClick={() => setPreviewDoc({ url: nidImage, label: "NID Image" })}
+                                            className="flex items-center gap-3 py-3 px-3 hover:bg-white rounded-lg transition-colors group w-full sm:w-auto"
+                                        >
+                                            <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                                                <ImgIcon />
+                                            </div>
+                                            <span className="text-sm font-medium text-slate-600 group-hover:text-[#6366F1] transition-colors">NID Image</span>
+                                            <span className="ml-auto text-xs text-slate-400 group-hover:text-[#6366F1] transition-colors">Preview ›</span>
+                                        </button>
+                                    ) : (
+                                        <div className="flex items-center gap-3 py-3 px-3 text-slate-400">
+                                            <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center text-lg font-semibold">—</div>
+                                            <span className="text-sm">No NID image available</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
+                        )}
+
+                        {/* No provider found */}
+                        {!provider && !isLoading && (
+                            <div className="py-16 text-center text-slate-400 text-sm">Provider not found.</div>
+                        )}
                     </div>
                 </div>
             )}
 
             {/* Action Buttons */}
-            {!isLoading && (
-                <div className="flex items-center gap-4 py-6">
+            {!isLoading && provider && (
+                <div className="flex items-center gap-4 py-4">
                     {isAlreadyActioned ? (
                         <div className={`px-6 py-2.5 rounded-lg text-sm font-medium ${rawStatus === "VERIFIED"
-                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                : "bg-red-50 text-red-600 border border-red-200"
-                            }`}>
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : "bg-red-50 text-red-600 border border-red-200"
+                        }`}>
                             Provider has been <strong>{rawStatus === "VERIFIED" ? "Approved" : "Rejected"}</strong>
                         </div>
                     ) : (
@@ -274,20 +317,16 @@ export default function BackgroundCheckDetailPage({ params }: { params: Promise<
                     )}
                 </div>
             )}
-            {/* Document Preview Modal */}
+
+            {/* NID Image Preview Modal */}
             {previewDoc && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-                        onClick={() => setPreviewDoc(null)}
-                    />
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setPreviewDoc(null)} />
                     <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col">
-                        {/* Modal Header */}
+                        {/* Header */}
                         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
                             <div className="flex items-center gap-2">
-                                {previewDoc.type === "pdf"
-                                    ? <FileText size={18} className="text-red-500" />
-                                    : <ImageIcon size={18} className="text-green-500" />}
+                                <ImageIcon size={18} className="text-green-500" />
                                 <span className="text-sm font-semibold text-slate-800">{previewDoc.label}</span>
                             </div>
                             <button
@@ -297,24 +336,15 @@ export default function BackgroundCheckDetailPage({ params }: { params: Promise<
                                 <X size={20} />
                             </button>
                         </div>
-                        {/* Modal Body */}
+                        {/* Body */}
                         <div className="flex items-center justify-center bg-slate-50" style={{ minHeight: 420 }}>
-                            {previewDoc.type === "image" ? (
-                                <img
-                                    src={previewDoc.url}
-                                    alt={previewDoc.label}
-                                    className="max-w-full max-h-[60vh] object-contain rounded"
-                                />
-                            ) : (
-                                <iframe
-                                    src={previewDoc.url}
-                                    title={previewDoc.label}
-                                    className="w-full rounded"
-                                    style={{ height: 500 }}
-                                />
-                            )}
+                            <img
+                                src={previewDoc.url}
+                                alt={previewDoc.label}
+                                className="max-w-full max-h-[60vh] object-contain rounded"
+                            />
                         </div>
-                        {/* Modal Footer */}
+                        {/* Footer */}
                         <div className="px-6 py-4 border-t border-slate-100 flex justify-end">
                             <button
                                 onClick={() => setPreviewDoc(null)}

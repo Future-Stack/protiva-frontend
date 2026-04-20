@@ -10,7 +10,6 @@ interface User {
   adminPermissions?: {
     isViewBooking?: boolean;
     isManageBooking?: boolean;
-    isExportBooking?: boolean;
     isViewProvider?: boolean;
     isManageProvider?: boolean;
     isViewUser?: boolean;

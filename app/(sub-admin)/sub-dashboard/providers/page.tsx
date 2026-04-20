@@ -74,6 +74,7 @@ export default function ProviderListPage() {
     
     const hasViewPermission    = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewProvider;
     const hasManagePermission  = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isManageProvider;
+    const canDelete            = user?.role === "SUPER_ADMIN";
 
     /* ── Pagination & filter state ── */
     const LIMIT = 10;
@@ -444,7 +445,7 @@ export default function ProviderListPage() {
                                             </td>
                                             <td className="px-4 py-4 text-center">
                                                 <div className="flex items-center justify-center gap-1">
-                                                    {provider.verificationStatus === "PENDING" && (
+                                                    {hasManagePermission  && (
                                                         <>
                                                             <button
                                                                 onClick={() => handleVerify(provider.id)}
@@ -458,18 +459,20 @@ export default function ProviderListPage() {
                                                                 title="Reject Provider"
                                                                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                             >
-                                                                <XCircle size={18} />
+                                                                <X size={18} />
                                                             </button>
                                                         </>
                                                     )}
-                                                    <button
-                                                        onClick={() => handleDelete(provider.id)}
-                                                        title="Delete Provider"
-                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                        disabled={isDeleting}
-                                                    >
-                                                        <Trash2 size={18} />
-                                                    </button>
+                                                    {canDelete && (
+                                                        <button
+                                                            onClick={() => handleDelete(provider.id)}
+                                                            title="Delete Provider"
+                                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                            disabled={isDeleting}
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                             </>

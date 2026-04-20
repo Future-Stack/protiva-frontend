@@ -22,7 +22,7 @@ export const jobAPI = baseAPI.injectEndpoints({
       query: ({ id, isPopuler }) => ({
         url: `/api/v1/job/make-populer/${id}`,
         method: "PATCH",
-        params: { isPopuler }, // Sending as query param as per plan
+        body: { isPopuler }, 
       }),
       invalidatesTags: ["Job"],
     }),

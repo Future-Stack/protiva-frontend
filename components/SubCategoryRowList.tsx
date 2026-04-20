@@ -48,8 +48,8 @@ export default function SubCategoryRowList({ categoryId, onEdit, onDelete }: Sub
                         <tr className="bg-slate-100/50 border-b border-slate-200">
                             <th className="px-4 py-3 text-[11px] font-bold text-slate-600 uppercase tracking-wider border-r border-slate-200">Sub-category Name</th>
                             <th className="px-4 py-3 text-[11px] font-bold text-slate-600 uppercase tracking-wider text-center border-r border-slate-200">Image</th>
-                            <th className="px-4 py-3 text-[11px] font-bold text-slate-600 uppercase tracking-wider text-center border-r border-slate-200">Icon</th>
-                            <th className="px-4 py-3 text-[11px] font-bold text-slate-600 uppercase tracking-wider text-center border-r border-slate-200">Jobs</th>
+                            {/* <th className="px-4 py-3 text-[11px] font-bold text-slate-600 uppercase tracking-wider text-center border-r border-slate-200">Icon</th> */}
+                            <th className="px-4 py-3 text-[11px] font-bold text-slate-600 uppercase tracking-wider text-center border-r border-slate-200">Services</th>
                             <th className="px-4 py-3 text-[11px] font-bold text-slate-600 uppercase tracking-wider text-center">Action</th>
                         </tr>
                     </thead>
@@ -64,13 +64,13 @@ export default function SubCategoryRowList({ categoryId, onEdit, onDelete }: Sub
                                         <span className="text-slate-300 text-xs">-</span>
                                     )}
                                 </td>
-                                <td className="px-4 py-3 text-center border-r border-slate-200">
+                                {/* <td className="px-4 py-3 text-center border-r border-slate-200">
                                     {sub.icon ? (
                                         <img src={sub.icon} alt="" className="w-6 h-6 object-contain mx-auto" />
                                     ) : (
                                         <span className="text-slate-300 text-xs">-</span>
-                                    )}
-                                </td>
+                                    )} */}
+                                {/* </td> */}
                                 <td className="px-4 py-3 text-center border-r border-slate-200 text-sm text-slate-600">
                                     {sub._count?.jobs || 0}
                                 </td>

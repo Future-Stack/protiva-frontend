@@ -18,6 +18,14 @@ const StatsCard = ({ value, subtext, icon: Icon, colorClass, bgClass }: any) => 
     </div>
 );
 
+/* ─── Detail row helper for modal ────────────────────────────────────── */
+const DetailRow = ({ label, value }: { label: string; value: string | null | undefined }) => (
+    <div className="flex items-center justify-between py-2.5">
+        <span className="text-xs font-semibold text-slate-400 uppercase tracking-tight">{label}</span>
+        <span className="text-sm font-medium text-slate-700 truncate max-w-[200px]" title={value || ""}>{value || "—"}</span>
+    </div>
+);
+
 export default function WithdrawalManagementPage() {
     const { user } = useAppSelector((state) => state.auth);
     const hasViewPermission   = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewWithdrawal;
@@ -138,12 +146,13 @@ export default function WithdrawalManagementPage() {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm font-semibold">
-                                <th className="px-6 py-4">Provider</th>
+                                <th className="px-6 py-4">User ID</th>
                                 <th className="px-6 py-4">Amount</th>
-                                <th className="px-6 py-4">Account Number</th>
-                                <th className="px-6 py-4">Request Date</th>
+                                <th className="px-6 py-4">Net Amount</th>
+                                <th className="px-6 py-4">Bank Type</th>
+                                <th className="px-6 py-4">Phone</th>
                                 <th className="px-6 py-4 text-center">Status</th>
-                                <th className="px-6 py-4 text-center">Actions</th>
+                                {hasManagePermission && <th className="px-6 py-4 text-center">Actions</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200 bg-white min-h-[200px]">
@@ -159,25 +168,21 @@ export default function WithdrawalManagementPage() {
                                 <tr><td colSpan={6} className="px-6 py-20 text-center text-slate-400">No withdrawal requests found.</td></tr>
                             ) : (
                                 requests.map((request) => (
-                                    <tr key={request.id} className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden flex-shrink-0">
-                                                    <img
-                                                        src={request.provider.image || `https://ui-avatars.com/api/?name=${request.provider.firstName}+${request.provider.lastName}&background=random`}
-                                                        alt="" className="w-full h-full object-cover"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm font-medium text-slate-900">{request.provider.firstName} {request.provider.lastName}</div>
-                                                    <div className="text-xs text-slate-500">{request.provider.email}</div>
-                                                </div>
+                                    <tr key={request.id} className="hover:bg-slate-50/50 transition-colors group">
+                                        <td className="px-6 py-4 cursor-pointer" onClick={() => setSelectedRequest(request)}>
+                                            <div className="text-sm font-mono text-slate-700 max-w-[140px] truncate" title={request.userId}>
+                                                {request.userId.slice(0, 12)}…
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-base font-semibold text-slate-900">৳{request.amount.toLocaleString()}</td>
-                                        <td className="px-6 py-4 text-sm text-slate-500 font-mono">{request.accountNumber}</td>
-                                        <td className="px-6 py-4 text-sm text-slate-500">
-                                            {request.createdAt ? new Date(request.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "N/A"}
+                                        <td className="px-6 py-4 text-sm font-semibold text-slate-900">৳{Number(request.amount).toLocaleString()}</td>
+                                        <td className="px-6 py-4 text-sm font-semibold text-green-700">৳{Number(request.netAmount).toLocaleString()}</td>
+                                        <td className="px-6 py-4">
+                                            <span className="text-xs font-medium px-2 py-1 rounded bg-blue-50 text-blue-700">
+                                                {request.bankType === "MOBILE_BANKING" ? request.mobileBankingType ?? "Mobile" : "Bank"}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-slate-600">
+                                            {request.phoneNumber ?? request.mobileBankingPaymentTakeNumber ?? "—"}
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
@@ -191,27 +196,27 @@ export default function WithdrawalManagementPage() {
                                                 {request.status.charAt(0) + request.status.slice(1).toLowerCase()}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <button onClick={() => setSelectedRequest(request)}
-                                                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-                                                    <Eye size={18} />
-                                                </button>
-                                                {/* Approve / Reject only if manage permission AND pending */}
-                                                {hasManagePermission && request.status === "PENDING" && (
-                                                    <>
-                                                        <button onClick={() => handleApprove(request.id)}
-                                                            className="px-3 py-1.5 bg-[#16A34A] text-white text-xs font-medium rounded hover:bg-green-700 transition-colors">
-                                                            Approve
-                                                        </button>
-                                                        <button onClick={() => handleReject(request.id)}
-                                                            className="px-3 py-1.5 bg-[#DC2626] text-white text-xs font-medium rounded hover:bg-red-700 transition-colors">
-                                                            Reject
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </td>
+                                        {hasManagePermission && (
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    {/* Approve / Reject only if pending */}
+                                                    {request.status === "PENDING" ? (
+                                                        <>
+                                                            <button onClick={() => handleApprove(request.id)}
+                                                                className="px-3 py-1.5 bg-[#16A34A] text-white text-xs font-medium rounded hover:bg-green-700 transition-colors">
+                                                                Approve
+                                                            </button>
+                                                            <button onClick={() => handleReject(request.id)}
+                                                                className="px-3 py-1.5 bg-[#DC2626] text-white text-xs font-medium rounded hover:bg-red-700 transition-colors">
+                                                                Reject
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-xs text-slate-400 italic">No actions available</span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        )}
                                     </tr>
                                 ))
                             )}
@@ -221,21 +226,48 @@ export default function WithdrawalManagementPage() {
 
                 {/* Pagination */}
                 {pagination && pagination.totalPage > 1 && (
-                    <div className="py-6 border-t border-slate-100 flex items-center justify-center gap-2">
-                        <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                            className="p-2 text-slate-400 hover:text-slate-600 disabled:opacity-50 transition-colors">
-                            <ChevronLeft size={20} />
+                    <div className="py-6 border-t border-slate-200 flex items-center justify-end gap-3 px-6">
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
+                        >
+                            <ChevronLeft size={16} />
+                            Previous
                         </button>
                         <div className="flex items-center gap-1">
-                            {Array.from({ length: pagination.totalPage }, (_, i) => i + 1).map((p) => (
-                                <button key={p} onClick={() => setCurrentPage(p)}
-                                    className={`w-10 h-10 rounded-lg text-sm font-medium transition-all ${currentPage === p ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-100"}`}
-                                >{p}</button>
-                            ))}
+                            {Array.from({ length: Math.min(pagination.totalPage, 5) }, (_, i) => {
+                                let pageNum = i + 1;
+                                if (pagination.totalPage > 5 && currentPage > 3) {
+                                    pageNum = currentPage - 3 + i;
+                                    if (pageNum + (5 - i) > pagination.totalPage) {
+                                        pageNum = pagination.totalPage - 5 + i + 1;
+                                    }
+                                }
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => setCurrentPage(pageNum)}
+                                        className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${pageNum === currentPage
+                                            ? 'bg-slate-100 text-slate-900 border border-slate-300 shadow-sm'
+                                            : 'text-slate-600 hover:bg-slate-50'
+                                            }`}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                );
+                            })}
+                            {pagination.totalPage > 5 && currentPage < pagination.totalPage - 2 && (
+                                <span className="px-1 text-slate-400">...</span>
+                            )}
                         </div>
-                        <button disabled={currentPage === pagination.totalPage} onClick={() => setCurrentPage(prev => Math.min(pagination.totalPage, prev + 1))}
-                            className="p-2 text-slate-400 hover:text-slate-600 disabled:opacity-50 transition-colors">
-                            <ChevronRight size={20} />
+                        <button
+                            disabled={currentPage === pagination.totalPage}
+                            onClick={() => setCurrentPage((p) => Math.min(pagination.totalPage, p + 1))}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
+                        >
+                            Next
+                            <ChevronRight size={16} />
                         </button>
                     </div>
                 )}
@@ -245,79 +277,67 @@ export default function WithdrawalManagementPage() {
             {selectedRequest && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedRequest(null)} />
-                    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+                    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
                         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                            <h3 className="text-xl font-bold text-[#0F172A]">Withdrawal Request Details</h3>
-                            <button onClick={() => setSelectedRequest(null)} className="p-2 text-slate-400 hover:bg-slate-50 rounded-full"><X size={20} /></button>
+                            <h3 className="text-lg font-bold text-slate-900">Withdrawal Details</h3>
+                            <button onClick={() => setSelectedRequest(null)} className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors"><X size={20} /></button>
                         </div>
-                        <div className="p-6 space-y-6">
-                            {/* Provider Info */}
-                            <div>
-                                <h4 className="text-xs font-semibold text-[#0F172A] uppercase tracking-wider mb-4">Provider Information</h4>
-                                <div className="bg-[#F8FAFC] p-4 rounded-lg flex items-start gap-4">
-                                    <div className="w-16 h-16 rounded-full bg-white overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
-                                        <img
-                                            src={selectedRequest.provider.image || `https://ui-avatars.com/api/?name=${selectedRequest.provider.firstName}+${selectedRequest.provider.lastName}&background=random`}
-                                            alt="" className="w-full h-full object-cover"
-                                        />
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="text-base font-bold text-[#0F172A]">{selectedRequest.provider.firstName} {selectedRequest.provider.lastName}</div>
-                                        <div className="text-sm text-[#64748B]">{selectedRequest.provider.email}</div>
-                                        <div className="grid grid-cols-2 gap-4 mt-3">
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] uppercase text-slate-400 font-bold">Role</span>
-                                                <span className="text-sm font-semibold text-[#0F172A]">{selectedRequest.provider.role}</span>
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] uppercase text-slate-400 font-bold">Jobs completed</span>
-                                                <span className="text-sm font-semibold text-[#0F172A]">{selectedRequest.provider.completedJobs || 0}</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                        <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+                            {/* Status */}
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-semibold text-slate-700">Status</span>
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
+                                    selectedRequest.status === "PENDING" ? "bg-amber-100 text-amber-700" :
+                                    selectedRequest.status === "APPROVED" || selectedRequest.status === "COMPLETED" ? "bg-green-100 text-green-700" :
+                                    "bg-red-100 text-red-700"
+                                }`}>
+                                    {selectedRequest.status.charAt(0) + selectedRequest.status.slice(1).toLowerCase()}
+                                </span>
+                            </div>
+
+                            {/* Amount Summary */}
+                            <div className="bg-slate-50 rounded-xl p-4 grid grid-cols-3 gap-3 text-center">
+                                <div>
+                                    <p className="text-[10px] uppercase text-slate-400 mb-1 font-bold">Amount</p>
+                                    <p className="text-sm font-bold text-slate-900">৳{Number(selectedRequest.amount).toLocaleString()}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] uppercase text-slate-400 mb-1 font-bold">Fee</p>
+                                    <p className="text-sm font-bold text-red-500">-৳{Number(selectedRequest.fee || 0).toLocaleString()}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] uppercase text-slate-400 mb-1 font-bold">Net</p>
+                                    <p className="text-sm font-bold text-green-600">৳{Number(selectedRequest.netAmount).toLocaleString()}</p>
                                 </div>
                             </div>
 
-                            {/* Withdrawal Details */}
-                            <div className="bg-slate-50 rounded-xl p-5 space-y-4">
-                                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Withdrawal Details</h4>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-slate-600">Withdrawal Amount</span>
-                                    <span className="text-lg font-bold text-slate-900">৳{selectedRequest.amount.toLocaleString()}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-slate-600">Account Number</span>
-                                    <span className="text-sm font-mono text-slate-900">{selectedRequest.accountNumber}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-slate-600">Payment Method</span>
-                                    <span className="text-sm text-slate-900">{selectedRequest.paymentMethod}</span>
-                                </div>
-                                <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-                                    <span className="text-sm text-slate-600">Status</span>
-                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                                        selectedRequest.status === "PENDING" ? "bg-amber-100 text-amber-700" :
-                                        selectedRequest.status === "APPROVED" || selectedRequest.status === "COMPLETED" ? "bg-green-100 text-green-700" :
-                                        "bg-red-100 text-red-700"
-                                    }`}>
-                                        {selectedRequest.status === "PENDING" && <Clock size={14} />}
-                                        {(selectedRequest.status === "APPROVED" || selectedRequest.status === "COMPLETED") && <CheckCircle size={14} />}
-                                        {(selectedRequest.status === "REJECTED" || selectedRequest.status === "CANCELLED") && <IoIosCloseCircleOutline size={16} />}
-                                        {selectedRequest.status}
-                                    </span>
-                                </div>
+                            {/* Fields */}
+                            <div className="divide-y divide-slate-100 pt-2 text-black">
+                                <DetailRow label="Withdrawal ID"      value={selectedRequest.id} />
+                                <DetailRow label="User ID"            value={selectedRequest.userId} />
+                                <DetailRow label="Bank Type"          value={selectedRequest.bankType} />
+                                <DetailRow label="Mobile Banking Type" value={selectedRequest.mobileBankingType} />
+                                <DetailRow label="Phone Number"       value={selectedRequest.phoneNumber} />
+                                <DetailRow label="Payment Take Number" value={selectedRequest.mobileBankingPaymentTakeNumber} />
+                                <DetailRow label="Bank Name"          value={selectedRequest.bankName} />
+                                <DetailRow label="Account Number"     value={selectedRequest.accountNumber} />
+                                <DetailRow label="Account Holder"     value={selectedRequest.accountHolderName} />
+                                <DetailRow label="Branch Name"        value={selectedRequest.branchName} />
+                                <DetailRow label="Routing Number"     value={selectedRequest.routingNumber} />
+                                <DetailRow label="Processed By"       value={selectedRequest.processedBy} />
+                                <DetailRow label="Requested At"       value={selectedRequest.requestedAt ? new Date(selectedRequest.requestedAt).toLocaleString() : ""} />
                             </div>
 
-                            {/* Actions — only if manage permission AND still pending */}
+                            {/* Actions */}
                             {hasManagePermission && selectedRequest.status === "PENDING" && (
-                                <div className="flex gap-3 pt-2">
+                                <div className="flex gap-3 pt-4">
                                     <button onClick={() => handleApprove(selectedRequest.id)}
-                                        className="flex-1 py-3 bg-[#16A34A] text-white font-bold rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-100">
-                                        Approve Request
+                                        className="flex-1 py-2.5 bg-[#16A34A] text-white text-sm font-bold rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-100">
+                                        Approve
                                     </button>
                                     <button onClick={() => handleReject(selectedRequest.id)}
-                                        className="flex-1 py-3 bg-white border-2 border-red-500 text-red-500 font-bold rounded-xl hover:bg-red-50 transition-all">
-                                        Reject Request
+                                        className="flex-1 py-2.5 bg-white border-2 border-red-500 text-red-500 text-sm font-bold rounded-xl hover:bg-red-50 transition-all">
+                                        Reject
                                     </button>
                                 </div>
                             )}

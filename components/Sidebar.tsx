@@ -80,16 +80,8 @@ const SUB_ADMIN_MENU: MenuSection[] = [
     {
         title: "Service Management",
         items: [
-            {
-                title: "Categories",
-                href: "/sub-dashboard/categories",
-                icon: Shapes,
-                children: [
-                    { title: "Category Setup", href: "/sub-dashboard/categories", icon: Shapes },
-                    { title: "Job List", href: "/sub-dashboard/jobs", icon: FileText },
-                    // { title: "Sub Category Setup", href: "/sub-categories", icon: Shapes },
-                ]
-            },
+            { title: "Categories", href: "/sub-dashboard/categories", icon: Shapes },
+            { title: "Jobs", href: "/sub-dashboard/jobs", icon: FileText },
         ]
     },
     {
@@ -107,7 +99,12 @@ const SUB_ADMIN_MENU: MenuSection[] = [
 
         ]
     },
-   
+    {
+        title: "Marketing",
+        items: [
+            { title: "Marketing Tool", href: "/sub-dashboard/marketing", icon: Globe },
+        ]
+    },
 ];
 
 const SUPER_ADMIN_MENU: MenuSection[] = [
@@ -148,16 +145,8 @@ const SUPER_ADMIN_MENU: MenuSection[] = [
     {
         title: "Service Management",
         items: [
-            {
-                title: "Categories",
-                href: "/categories",
-                icon: Shapes,
-                children: [
-                    { title: "Category Setup", href: "/categories", icon: Shapes },
-                    { title: "Job List", href: "/jobs", icon: FileText },
-                    // { title: "Sub Category Setup", href: "/sub-categories", icon: Shapes },
-                ]
-            },
+            { title: "Categories", href: "/categories", icon: Shapes },
+            { title: "Jobs", href: "/jobs", icon: FileText },
         ]
     },
     {
@@ -210,14 +199,52 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
     }, [pathname]);
 
     const getFilteredSubAdminMenu = () => {
-        return SUB_ADMIN_MENU.filter(section => {
-            if (section.title === "Booking Management") return permissions?.isViewBooking;
-            if (section.title === "Provider Management") return permissions?.isViewProvider;
-            if (section.title === "Service Management") return permissions?.isViewCategory;
-            if (section.title === "User Management") return permissions?.isViewUser;
-            if (section.title === "Business Management") return permissions?.isViewTransaction || permissions?.isViewWithdrawal;
-            return true;
-        });
+        return SUB_ADMIN_MENU.map(section => {
+            const filteredItems = section.items.filter(item => {
+                if (item.title === "Dashboard") return true;
+                
+                // Booking Management
+                if (item.title === "Bookings") return permissions?.isViewBooking;
+                if (section.title === "Booking Management") return permissions?.isViewBooking;
+
+                // Provider Management
+                if (item.title === "Providers") return permissions?.isViewProvider;
+                if (item.title === "Add New Provider") return permissions?.isManageProvider;
+                if (item.title === "Background check") return permissions?.isViewProvider;
+
+                // Service Management
+                if (item.title === "Categories") return permissions?.isViewCategory;
+                if (item.title === "Jobs") return permissions?.isJobView;
+
+                // User Management
+                if (item.title === "Users") return permissions?.isViewUser;
+
+                // Business Management
+                if (item.title === "Transaction") return permissions?.isViewTransaction;
+                if (item.title === "Withdrawals") return permissions?.isViewWithdrawal;
+
+                // Marketing
+                if (item.title === "Marketing Tool") return permissions?.isViewMarketing;
+
+                return false;
+            }).map(item => {
+                // Also filter children
+                if (item.children) {
+                    return {
+                        ...item,
+                        children: item.children.filter(child => {
+                            if (child.title === "Add New Provider") return permissions?.isManageProvider;
+                            if (child.title === "Booking Requests") return permissions?.isViewBooking;
+                            if (child.title === "Provider list") return permissions?.isViewProvider;
+                            return true;
+                        })
+                    };
+                }
+                return item;
+            }).filter(item => !item.children || item.children.length > 0);
+
+            return { ...section, items: filteredItems };
+        }).filter(section => section.items.length > 0);
     };
 
     const sections = role === "super-admin" ? SUPER_ADMIN_MENU : getFilteredSubAdminMenu();
