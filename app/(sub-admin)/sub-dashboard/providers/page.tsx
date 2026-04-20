@@ -36,8 +36,8 @@ interface ProviderRow {
     email: string;
     bookings: number;
     providerServiceAvailability: boolean;
-    // available: boolean;
-    verificationStatus: string; // "VERIFIED" | "UNVERIFIED" | "PENDING"
+    verificationStatus: string; 
+    avatar: string | null;
     avatarSeed: string;
     isProviderRecomendation: boolean;
 }
@@ -109,6 +109,27 @@ export default function ProviderListPage() {
     const apiProviders = data?.data?.data ?? [];
     const pagination   = data?.data?.pagination;
     const totalPages   = pagination?.totalPages ?? 1;
+    const hasApiData   = apiProviders.length > 0;
+    
+    useEffect(() => {
+        if (hasApiData) {
+            setLocalRows(
+                apiProviders.map((p: any) => ({
+                    id: p.id,
+                    name: `${p.firstName} ${p.lastName}`,
+                    rating: p.averageRating?.toString() || "0",
+                    phone: p.phone,
+                    email: p.email,
+                    bookings: p.totalJobs,
+                    providerServiceAvailability: p.providerServiceAvailability,
+                    verificationStatus: p.verificationStatus,
+                    avatar: p.avatar,
+                    avatarSeed: p.id,
+                    isProviderRecomendation: p.isProviderRecomendation,
+                }))
+            );
+        }
+    }, [apiProviders, isLoading, isFetching]);
 
     
 
@@ -373,23 +394,29 @@ export default function ProviderListPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-300">
-                                {apiProviders.map((provider: any, index: number) => (
+                                {localRows.map((provider, index) => (
                                     <tr key={provider.id} className="hover:bg-slate-50/50 transition-colors">
                                         <td className="px-4 py-4 text-sm text-slate-600 border-r-2 border-slate-300">
                                             {(page - 1) * LIMIT + index + 1}
                                         </td>
                                         <td className="px-4 py-4 border-r-2 border-slate-300">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
-                                                    <img
-                                                        src={provider.avatar || `https://picsum.photos/seed/${provider.id}/100/100`}
-                                                        alt=""
-                                                        className="w-full h-full object-cover"
-                                                    />
+                                                <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+                                                    {provider.avatar ? (
+                                                        <img
+                                                            src={provider.avatar}
+                                                            alt={provider.name}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold">
+                                                            {provider.name.charAt(0)}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm font-medium text-[#0F172A]">{provider.firstName} {provider.lastName}</div>
-                                                    <div className="text-xs text-[#FF8113]">★ <span className="text-[#475569]">{provider.averageRating ?? "N/A"}</span></div>
+                                                    <div className="text-sm font-medium text-[#0F172A]">{provider.name}</div>
+                                                    <div className="text-xs text-[#FF8113]">★ <span className="text-[#475569]">{provider.rating}</span></div>
                                                 </div>
                                             </div>
                                         </td>
@@ -420,10 +447,13 @@ export default function ProviderListPage() {
                                                     ? "bg-emerald-50 text-emerald-700"
                                                     : provider.verificationStatus === "PENDING"
                                                     ? "bg-amber-50 text-amber-700"
+                                                    : provider.verificationStatus === "REJECTED"
+                                                    ? "bg-red-100 text-red-700"
                                                     : "bg-red-50 text-red-600"
                                             }`}>
                                                 {provider.verificationStatus === "VERIFIED" ? "Verified"
                                                     : provider.verificationStatus === "PENDING" ? "Pending"
+                                                    : provider.verificationStatus === "REJECTED" ? "Rejected"
                                                     : "Unverified"}
                                             </span>
                                         </td>
@@ -449,15 +479,17 @@ export default function ProviderListPage() {
                                                         <>
                                                             <button
                                                                 onClick={() => handleVerify(provider.id)}
+                                                                disabled={provider.verificationStatus === "VERIFIED"}
                                                                 title="Verify Provider"
-                                                                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                                                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                                             >
                                                                 <Check size={18} />
                                                             </button>
                                                             <button
                                                                 onClick={() => handleReject(provider.id)}
+                                                                disabled={provider.verificationStatus === "REJECTED"}
                                                                 title="Reject Provider"
-                                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                                             >
                                                                 <X size={18} />
                                                             </button>

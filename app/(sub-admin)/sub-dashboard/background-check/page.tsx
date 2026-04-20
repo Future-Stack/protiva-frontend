@@ -11,14 +11,28 @@ import {
     Loader2,
     AlertCircle,
 } from "lucide-react";
-import { ImgIcon, PdfIcon } from "@/app/assets/DocumentsIcon";
+import { ImgIcon } from "@/app/assets/DocumentsIcon";
 import {
     useGetAllProvidersQuery,
     useVerifyProviderMutation,
     useRejectProviderMutation,
 } from "@/lib/features/super-admin/provider/providerAPI";
 import { useAppSelector } from "@/lib/hooks";
+import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
+
+/* ─── Normalised row shape ───────────────────────────────────────────── */
+interface CheckRow {
+    id: string;
+    name: string;
+    rating: string;
+    phone: string;
+    email: string;
+    nid: string;
+    nidImage: string | null;
+    verificationStatus: string;
+    avatar: string | null;
+}
 
 /* ─── Debounce hook ──────────────────────────────────────────────────── */
 function useDebounce<T>(value: T, delay: number): T {
@@ -35,14 +49,16 @@ export default function BackgroundCheckPage() {
     const hasViewPermission   = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewProvider;
     const hasManagePermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isManageProvider;
 
+    const router = useRouter();
     const LIMIT = 10;
     const [page, setPage]         = useState(1);
     const [searchInput, setSearchInput] = useState("");
     const debouncedSearch = useDebounce(searchInput, 400);
     useEffect(() => { setPage(1); }, [debouncedSearch]);
 
-    const [selectedProvider, setSelectedProvider] = useState<any | null>(null);
-    const [actionLoading, setActionLoading]       = useState<string | null>(null);
+    const [localRows, setLocalRows] = useState<CheckRow[]>([]);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [previewDoc, setPreviewDoc] = useState<{ url: string; label: string } | null>(null);
 
     /* ── API ── */
     const { data, isLoading, isFetching, isError, refetch } = useGetAllProvidersQuery(
@@ -55,6 +71,26 @@ export default function BackgroundCheckPage() {
     const apiProviders = data?.data?.data ?? [];
     const pagination   = data?.data?.pagination;
     const totalPages   = pagination?.totalPages ?? 1;
+    const hasApiData = apiProviders.length > 0;
+
+    /* ── Sync local rows ── */
+    useEffect(() => {
+        if (hasApiData) {
+            setLocalRows(
+                apiProviders?.map((p: any) => ({
+                    id: p.id,
+                    name: `${p.firstName} ${p.lastName}`,
+                    rating: p.averageRating?.toString() || "0",
+                    phone: p.phone,
+                    email: p.email,
+                    nid: p.nidNumber || "N/A",
+                    nidImage: p.nidImage,
+                    verificationStatus: p.verificationStatus,
+                    avatar: p.avatar,
+                }))
+            );
+        }
+    }, [apiProviders, isLoading, isFetching]);
 
 
     /* ── Verify flow ── */
@@ -68,12 +104,16 @@ export default function BackgroundCheckPage() {
             confirmButtonColor: "#10b981",
         });
         if (!result.isConfirmed) return;
+        
+        setActionLoading(id);
         try {
             await verifyProvider(id).unwrap();
-            refetch();
+            setLocalRows(prev => prev.map(r => r.id === id ? { ...r, verificationStatus: "VERIFIED" } : r));
             Swal.fire({ icon: "success", title: "Verified!", text: "Provider has been verified.", timer: 1800, showConfirmButton: false });
         } catch {
             Swal.fire({ icon: "error", title: "Failed", text: "Could not verify provider. Please try again." });
+        } finally {
+            setActionLoading(null);
         }
     };
 
@@ -88,12 +128,22 @@ export default function BackgroundCheckPage() {
             confirmButtonColor: "#ef4444",
         });
         if (!result.isConfirmed) return;
+
+        setActionLoading(id);
         try {
             await rejectProvider(id).unwrap();
-            refetch();
+            setLocalRows(prev => prev.map(r => r.id === id ? { ...r, verificationStatus: "REJECTED" } : r));
             Swal.fire({ icon: "success", title: "Rejected!", text: "Provider has been rejected.", timer: 1800, showConfirmButton: false });
         } catch {
             Swal.fire({ icon: "error", title: "Failed", text: "Could not reject provider. Please try again." });
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleViewDocument = (url: string) => {
+        if (url) {
+            setPreviewDoc({ url, label: "NID Document" });
         }
     };
 
@@ -147,7 +197,7 @@ export default function BackgroundCheckPage() {
                             <AlertCircle size={36} />
                             <p className="text-sm font-medium">Failed to load providers. Please try again.</p>
                         </div>
-                    ) : apiProviders.length === 0 ? (
+                    ) : (localRows.length === 0 && !isFetching) ? (
                         <div className="py-20 text-center text-slate-400 text-sm">No providers found.</div>
                     ) : (
                         <table className={`w-full text-left border border-slate-300 transition-opacity ${isFetching ? "opacity-60" : "opacity-100"}`}>
@@ -162,58 +212,58 @@ export default function BackgroundCheckPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {apiProviders.map((provider: any, index: number) => {
-                                    const isActioning = actionLoading === provider.id;
-                                    const isVerified  = provider.verificationStatus === "VERIFIED";
-                                    const isRejected  = provider.verificationStatus === "REJECTED";
+                                {localRows.map((check, index) => {
+                                    const isActioning = actionLoading === check.id;
+                                    const isVerified = check.verificationStatus === "VERIFIED";
+                                    const isRejected = check.verificationStatus === "REJECTED";
                                     return (
-                                        <tr key={provider.id} className="border-t border-slate-300 hover:bg-slate-50/50 transition-colors">
+                                        <tr key={check.id} className="border-t border-slate-300 hover:bg-slate-50/50 transition-colors">
                                             <td className="px-4 py-4 text-sm text-[#64748B] border-r border-slate-300">
                                                 {(page - 1) * LIMIT + index + 1}
                                             </td>
                                             <td className="px-4 py-4 border-r border-slate-300">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
-                                                        <img
-                                                            src={provider.avatar || `https://picsum.photos/seed/${provider.id}/100/100`}
-                                                            alt=""
-                                                            className="w-full h-full object-cover"
-                                                        />
+                                                        {check.avatar ? (
+                                                            <img src={check.avatar} alt={check.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold">
+                                                                {check.name.charAt(0)}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     <div>
-                                                        <div className="text-sm font-medium text-[#0F172A]">{provider.firstName} {provider.lastName}</div>
-                                                        <div className="text-xs text-[#FF8113]">★ <span className="text-[#475569]">{provider.averageRating ?? "N/A"}</span></div>
+                                                        <div className="text-sm font-medium text-[#0F172A]">{check.name}</div>
+                                                        <div className="text-xs text-[#FF8113]">★ <span className="text-[#475569]">{check.rating}</span></div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-4 border-r border-slate-300">
-                                                <div className="text-sm text-[#0F172A]">{provider.phone}</div>
-                                                <div className="text-sm text-[#0F172A]">{provider.email}</div>
+                                                <div className="text-sm text-[#0F172A]">{check.phone}</div>
+                                                <div className="text-sm text-[#0F172A]">{check.email}</div>
                                             </td>
-                                            <td className="px-4 py-4 text-sm text-[#64748B] border-r border-slate-300 text-center">
-                                                {provider.id.slice(0, 10).toUpperCase()}
-                                            </td>
+                                            <td className="px-4 py-4 text-sm text-[#64748B] border-r border-slate-300 text-center">{check.nid}</td>
                                             <td className="px-4 py-4 border-r border-slate-300">
                                                 <div className="flex items-center gap-2 justify-center">
-                                                    <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
+                                                    <div
+                                                        onClick={() => handleViewDocument(check.nidImage || "")}
+                                                        className={`w-8 h-8 rounded flex items-center justify-center transition-all ${check.nidImage ? "bg-green-100 cursor-pointer hover:bg-green-200" : "bg-slate-100 opacity-50 cursor-not-allowed"}`}
+                                                        title={check.nidImage ? "View Document" : "No document available"}
+                                                    >
                                                         <ImgIcon />
-                                                    </div>
-                                                    <div className="w-8 h-8 bg-red-100 rounded flex items-center justify-center">
-                                                        <PdfIcon />
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-4">
                                                 <div className="flex items-center gap-2 justify-center">
-                                                    {/* View */}
+                                                    {/* View details */}
                                                     <button
-                                                        onClick={() => setSelectedProvider(provider)}
+                                                        onClick={() => router.push(`/sub-dashboard/background-check/${check.id}`)}
                                                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                         title="View Details"
                                                     >
                                                         <Eye size={18} />
                                                     </button>
-
                                                     {/* Verify / Reject — only if manage permission */}
                                                     {hasManagePermission && (
                                                         isVerified ? (
@@ -223,7 +273,7 @@ export default function BackgroundCheckPage() {
                                                         ) : (
                                                             <>
                                                                 <button
-                                                                    onClick={() => handleVerify(provider.id)}
+                                                                    onClick={() => handleVerify(check.id)}
                                                                     disabled={isActioning}
                                                                     title="Verify provider"
                                                                     className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-40"
@@ -231,7 +281,7 @@ export default function BackgroundCheckPage() {
                                                                     {isActioning ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => handleReject(provider.id)}
+                                                                    onClick={() => handleReject(check.id)}
                                                                     disabled={isActioning}
                                                                     title="Reject provider"
                                                                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40"
@@ -241,7 +291,6 @@ export default function BackgroundCheckPage() {
                                                             </>
                                                         )
                                                     )}
-
                                                     {/* Read-only badge if no manage permission */}
                                                     {!hasManagePermission && (
                                                         <span className={`px-2 py-1 text-xs font-semibold rounded-md ${
@@ -280,7 +329,7 @@ export default function BackgroundCheckPage() {
                                     onClick={() => setPage(i)}
                                     disabled={isFetching}
                                     className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${
-                                        i === page ? "bg-slate-100 text-slate-900" : "text-slate-600 hover:bg-slate-50"
+                                        i === page ? "bg-slate-100 text-slate-900" : "text-slate-600 hover:bg-slate-100"
                                     }`}
                                 >
                                     {i}
@@ -299,94 +348,41 @@ export default function BackgroundCheckPage() {
                 )}
             </div>
 
-            {/* Details Modal */}
-            {selectedProvider && (
+            {/* NID Image Preview Modal */}
+            {previewDoc && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedProvider(null)} />
-                    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setPreviewDoc(null)} />
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col">
+                        {/* Header */}
                         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                            <h3 className="text-lg font-bold text-slate-900">Background Check Details</h3>
+                            <div className="flex items-center gap-2">
+                                <Search size={18} className="text-blue-500" />
+                                <span className="text-sm font-semibold text-slate-800">{previewDoc.label}</span>
+                            </div>
                             <button
-                                onClick={() => setSelectedProvider(null)}
+                                onClick={() => setPreviewDoc(null)}
                                 className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
                             >
                                 <X size={20} />
                             </button>
                         </div>
-                        <div className="p-6 space-y-4">
-                            <div className="flex items-center gap-4">
-                                <div className="w-16 h-16 rounded-full bg-slate-200 overflow-hidden">
-                                    <img
-                                        src={selectedProvider.avatar || `https://picsum.photos/seed/${selectedProvider.id}/100/100`}
-                                        alt=""
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                                <div>
-                                    <h4 className="text-lg font-bold text-slate-900">{selectedProvider.firstName} {selectedProvider.lastName}</h4>
-                                    <span className={`inline-block mt-1 px-2 py-0.5 rounded-md text-xs font-semibold ${
-                                        selectedProvider.verificationStatus === "VERIFIED" ? "bg-emerald-50 text-emerald-700"
-                                        : selectedProvider.verificationStatus === "REJECTED" ? "bg-red-50 text-red-600"
-                                        : "bg-amber-50 text-amber-700"
-                                    }`}>
-                                        {selectedProvider.verificationStatus}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-xs text-slate-500 font-medium uppercase">Phone</label>
-                                    <p className="text-sm font-medium text-slate-900">{selectedProvider.phone}</p>
-                                </div>
-                                <div>
-                                    <label className="text-xs text-slate-500 font-medium uppercase">Email</label>
-                                    <p className="text-sm font-medium text-slate-900">{selectedProvider.email}</p>
-                                </div>
-                                <div>
-                                    <label className="text-xs text-slate-500 font-medium uppercase">Country</label>
-                                    <p className="text-sm font-medium text-slate-900">{selectedProvider.country || "N/A"}</p>
-                                </div>
-                                <div>
-                                    <label className="text-xs text-slate-500 font-medium uppercase">Status</label>
-                                    <p className="text-sm font-medium text-slate-900">{selectedProvider.status}</p>
-                                </div>
-                                <div className="col-span-2">
-                                    <label className="text-xs text-slate-500 font-medium uppercase">Documents</label>
-                                    <div className="flex gap-2 mt-1">
-                                        <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 text-green-700 text-xs rounded border border-green-200">
-                                            <ImgIcon /> Image
-                                        </div>
-                                        <div className="flex items-center gap-1.5 px-2 py-1 bg-red-50 text-red-700 text-xs rounded border border-red-200">
-                                            <PdfIcon /> PDF
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
-                            {hasManagePermission
-                                && selectedProvider.verificationStatus !== "VERIFIED"
-                                && selectedProvider.verificationStatus !== "REJECTED" && (
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => handleVerify(selectedProvider.id)}
-                                        disabled={actionLoading === selectedProvider.id}
-                                        className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
-                                    >
-                                        <Check size={15} /> Verify
-                                    </button>
-                                    <button
-                                        onClick={() => handleReject(selectedProvider.id)}
-                                        disabled={actionLoading === selectedProvider.id}
-                                        className="flex items-center gap-1.5 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                                    >
-                                        <X size={15} /> Reject
-                                    </button>
-                                </div>
+                        {/* Body */}
+                        <div className="flex items-center justify-center bg-slate-50 min-h-[420px]">
+                            {previewDoc.url ? (
+                                <img
+                                    src={previewDoc.url}
+                                    alt={previewDoc.label}
+                                    className="max-w-full max-h-[60vh] object-contain rounded shadow-sm"
+                                />
+                            ) : (
+                                <div className="text-slate-400 text-sm">No image available</div>
                             )}
+                        </div>
+                        {/* Footer */}
+                        <div className="px-6 py-4 border-t border-slate-100 flex justify-end">
                             <button
-                                onClick={() => setSelectedProvider(null)}
-                                className="ml-auto px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors"
+                                onClick={() => setPreviewDoc(null)}
+                                className="px-5 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors"
                             >
                                 Close
                             </button>

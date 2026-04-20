@@ -18,7 +18,7 @@ export interface Provider {
   country: string;
   role: string;
   status: "ACTIVE" | "PENDING" | "SUSPENDED" | "INACTIVE";
-  verificationStatus: "VERIFIED" | "UNVERIFIED" | "PENDING";
+  verificationStatus: "VERIFIED" | "UNVERIFIED" | "PENDING" | "REJECTED";
   emailVerified: boolean;
   phoneVerified: boolean;
   twoFactorEnabled: boolean;

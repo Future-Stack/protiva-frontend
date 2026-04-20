@@ -58,9 +58,8 @@ interface ProviderRow {
     providerServiceAvailability: boolean;
     // available: boolean;
     verificationStatus: string; // "VERIFIED" | "UNVERIFIED" | "PENDING"
-    avatarSeed: string;
+    avatar: string | null;
     isProviderRecomendation: boolean;
-
 }
 
 const STATUS_OPTIONS = [
@@ -124,14 +123,13 @@ export default function ProviderListPage() {
                 apiProviders.map((p) => ({
                     id: p.id,
                     name: `${p.firstName} ${p.lastName}`,
-                    rating: "★",
+                    rating: p.averageRating?.toString() || "0",
                     phone: p.phone,
                     email: p.email,
                     bookings: p.totalJobs,
                     providerServiceAvailability: p.providerServiceAvailability,
-                    // available: p.status === "ACTIVE",
                     verificationStatus: p.verificationStatus,
-                    avatarSeed: p.id,
+                    avatar: p.avatar,
                     isProviderRecomendation: p.isProviderRecomendation,
                 }))
             );
@@ -336,48 +334,6 @@ export default function ProviderListPage() {
                                 </div>
                             )}
                         </div>
-
-                        {/* <div className="relative">
-                            <button
-                                onClick={() => setShowStatusFilter((v) => !v)}
-                                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                                    showStatusFilter || statusFilter
-                                        ? "bg-[#787BEB] text-white"
-                                        : "bg-slate-900 text-white hover:bg-slate-800"
-                                }`}
-                            >
-                                <Filter size={16} />
-                                Status
-                                {statusFilter && (
-                                    <span className="ml-1 bg-white/20 text-white rounded-full px-1.5 py-0.5 text-xs">1</span>
-                                )}
-                            </button>
-                            {showStatusFilter && (
-                                <div className="absolute right-0 top-full mt-2 z-20 bg-white border border-slate-200 rounded-xl shadow-lg p-4 w-56">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <span className="text-sm font-semibold text-slate-700">Account Status</span>
-                                        <button onClick={() => setShowStatusFilter(false)} className="text-slate-400 hover:text-slate-600">
-                                            <X size={16} />
-                                        </button>
-                                    </div>
-                                    <div className="space-y-1">
-                                        {STATUS_OPTIONS.map((opt) => (
-                                            <button
-                                                key={opt.value}
-                                                onClick={() => { setStatusFilter(opt.value); setShowStatusFilter(false); }}
-                                                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                                                    statusFilter === opt.value
-                                                        ? "bg-[#787BEB]/10 text-[#787BEB] font-medium"
-                                                        : "text-slate-600 hover:bg-slate-50"
-                                                }`}
-                                            >
-                                                {opt.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div> */}
                     </div>
                 </div>
 
@@ -438,17 +394,23 @@ export default function ProviderListPage() {
                                         </td>
                                         <td className="px-4 py-4 border-r-2 border-slate-300">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
-                                                    <img
-                                                        src={`https://picsum.photos/seed/${provider.avatarSeed}/100/100`}
-                                                        alt=""
-                                                        className="w-full h-full object-cover"
-                                                    />
+                                                <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+                                                    {provider.avatar ? (
+                                                        <img
+                                                            src={provider.avatar}
+                                                            alt={provider.name}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold">
+                                                            {provider.name.charAt(0)}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div>
                                                     <div className="text-sm font-medium text-[#0F172A]">{provider.name}</div>
                                                     <div className="text-xs text-[#FF8113]">
-                                                        {provider.rating} <span className="text-[#475569]">4.8</span>
+                                                        ★ <span className="text-[#475569]">{provider.rating}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -477,11 +439,14 @@ export default function ProviderListPage() {
                                                 ? "bg-emerald-50 text-emerald-700"
                                                 : provider.verificationStatus === "PENDING"
                                                     ? "bg-amber-50 text-amber-700"
-                                                    : "bg-red-50 text-red-600"
+                                                    : provider.verificationStatus === "REJECTED"
+                                                        ? "bg-red-100 text-red-700"
+                                                        : "bg-red-50 text-red-600"
                                                 }`}>
                                                 {provider.verificationStatus === "VERIFIED" ? "Verified"
                                                     : provider.verificationStatus === "PENDING" ? "Pending"
-                                                        : "Unverified"}
+                                                        : provider.verificationStatus === "REJECTED" ? "Rejected"
+                                                            : "Unverified"}
                                             </span>
                                         </td>
                                         <td className="px-4 py-4 border-r-2 border-slate-300 text-center">
@@ -497,23 +462,22 @@ export default function ProviderListPage() {
                                             </button>
                                         </td>
                                         <td className="px-4 py-4 text-center">
-                                            {/* verify and reject provider */}
-
                                             <button
                                                 onClick={() => handleVerify(provider.id)}
-                                                className={`p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors ${provider.verificationStatus === "VERIFIED" ? "opacity-50 cursor-not-allowed" : ""}`}
+                                                disabled={provider.verificationStatus === "VERIFIED"}
+                                                className={`p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed`}
+                                                title="Verify"
                                             >
                                                 <Check size={18} />
                                             </button>
-
                                             <button
                                                 onClick={() => handleReject(provider.id)}
-                                                className={`p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors ${provider.verificationStatus === "REJECTED" ? "opacity-50 cursor-not-allowed" : ""}`}
+                                                disabled={provider.verificationStatus === "REJECTED"}
+                                                className={`p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed`}
+                                                title="Reject"
                                             >
                                                 <X size={18} />
                                             </button>
-
-
                                             <button
                                                 onClick={() => handleDelete(provider.id)}
                                                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
