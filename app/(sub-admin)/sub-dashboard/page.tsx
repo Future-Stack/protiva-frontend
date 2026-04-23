@@ -189,9 +189,7 @@ export default function SubAdminDashboard() {
                 <div className="bg-white border border-slate-100 rounded-[10px] p-6 h-full">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-base font-bold text-slate-900">Recent Activity</h3>
-                    <button className="text-slate-400 hover:text-slate-600">
-                    <FileText size={18} />
-                    </button>
+                    
                 </div>
 
                 <div className="relative pl-2 space-y-8">
