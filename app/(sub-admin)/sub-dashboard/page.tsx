@@ -171,7 +171,7 @@ export default function SubAdminDashboard() {
                         <PermissionItem 
                             icon={<Megaphone size={16} />} 
                             label="Marketing Tools" 
-                            view={(permissions as any)?.isViewMarketing} 
+                            view={(permissions as any)?.isViewManageMarketing} 
                             manage={(permissions as any)?.isManageMarketing}
                         />
                     </div>

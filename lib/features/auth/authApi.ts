@@ -1,4 +1,4 @@
-import { LoginPayload } from "@/lib/types/user.type";
+import { IUserResponse, LoginPayload } from "@/lib/types/user.type";
 import { baseAPI } from "@/lib/baseAPI/baseAPI";
 
  const userAPI = baseAPI.injectEndpoints({
@@ -20,7 +20,7 @@ import { baseAPI } from "@/lib/baseAPI/baseAPI";
       invalidatesTags: ["User"],
     }),
 
-    getMe: build.query<any, void>({
+    getMe: build.query<IUserResponse, void>({
       query: () => ({
         url: "/api/v1/auth/me",
         method: "GET",
@@ -35,6 +35,14 @@ import { baseAPI } from "@/lib/baseAPI/baseAPI";
         body,
       }),
     }),
+    updateAvatar: build.mutation<any, FormData>({
+      query: (body) => ({
+        url: "/api/v1/auth/updateUserProfile",
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["User"],
+    }),
   }),
 });
 
@@ -43,4 +51,5 @@ export const {
   useUpdateProfileMutation,
   useGetMeQuery,
   useChangePasswordMutation,
+  useUpdateAvatarMutation,
 } = userAPI;

@@ -28,7 +28,7 @@ const DetailRow = ({ label, value }: { label: string; value: string | null | und
 
 export default function WithdrawalManagementPage() {
     const { user } = useAppSelector((state) => state.auth);
-    const hasViewPermission   = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewWithdrawal;
+    const hasViewPermission   = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewWithdrawal || user?.adminPermissions?.isManageWithdrawal;
     const hasManagePermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isManageWithdrawal;
 
     const [searchQuery, setSearchQuery]   = useState("");

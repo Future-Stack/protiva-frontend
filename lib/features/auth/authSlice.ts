@@ -10,6 +10,7 @@ interface User {
   adminPermissions?: {
     isViewBooking?: boolean;
     isManageBooking?: boolean;
+    isExportBooking?: boolean;
     isViewProvider?: boolean;
     isManageProvider?: boolean;
     isViewUser?: boolean;
@@ -19,6 +20,10 @@ interface User {
     isViewTransaction?: boolean;
     isViewWithdrawal?: boolean;
     isManageWithdrawal?: boolean;
+    isJobView?: boolean;
+    isJobManage?: boolean;
+    isManageMarketing?: boolean;
+    isViewManageMarketing?: boolean;
   };
 }
 
@@ -93,8 +98,15 @@ const authSlice = createSlice({
 
       localStorage.clear();
     },
+
+    updateUser: (state, action: PayloadAction<Partial<User>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+        localStorage.setItem("user", JSON.stringify(state.user));
+      }
+    },
   },
 });
 
-export const { setCredentials, logout } = authSlice.actions;
+export const { setCredentials, logout, updateUser } = authSlice.actions;
 export default authSlice.reducer;

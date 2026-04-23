@@ -58,8 +58,8 @@ const PERMISSIONS_DATA = {
         { id: "manage_withdrawals", label: "Manage Withdrawals", description: "Approve/Reject withdrawal requests" },
     ],
     "Marketing Manager": [
-        { id: "view_marketing", label: "View Marketing", description: "Access marketing tools and banners" },
-        { id: "manage_marketing", label: "Manage Marketing", description: "Add and edit marketing banners (No deletion)" },
+        { id: "isViewManageMarketing", label: "View Marketing", description: "Access marketing tools and banners" },
+        { id: "isManageMarketing", label: "Manage Marketing", description: "Add and edit marketing banners (No deletion)" },
     ],
 };
 
@@ -117,7 +117,7 @@ export default function SubAdminManagementPage() {
         if (admin.isViewTransaction) count++;
         if (admin.isViewWithdrawal) count++;
         if (admin.isManageWithdrawal) count++;
-        if (admin.isViewMarketing) count++;
+        if (admin.isViewManageMarketing) count++;
         if (admin.isManageMarketing) count++;
         return count;
     };
@@ -140,8 +140,8 @@ export default function SubAdminManagementPage() {
         if (admin.isViewTransaction) perms.push("view_transactions");
         if (admin.isViewWithdrawal) perms.push("view_withdrawals");
         if (admin.isManageWithdrawal) perms.push("manage_withdrawals");
-        if (admin.isViewMarketing) perms.push("view_marketing");
-        if (admin.isManageMarketing) perms.push("manage_marketing");
+        if (admin.isViewManageMarketing) perms.push("isViewManageMarketing");
+        if (admin.isManageMarketing) perms.push("isManageMarketing");
         if (admin.isExportBooking) perms.push("export_bookings");
         
         setFormData({
@@ -193,8 +193,8 @@ export default function SubAdminManagementPage() {
             isViewTransaction: formData.permissions.includes("view_transactions"),
             isViewWithdrawal: formData.permissions.includes("view_withdrawals"),
             isManageWithdrawal: formData.permissions.includes("manage_withdrawals"),
-            isViewMarketing: formData.permissions.includes("view_marketing"),
-            isManageMarketing: formData.permissions.includes("manage_marketing"),
+            isViewManageMarketing: formData.permissions.includes("isViewManageMarketing"),
+            isManageMarketing: formData.permissions.includes("isManageMarketing"),
         };
 
         if (isEditMode) {
@@ -338,7 +338,7 @@ export default function SubAdminManagementPage() {
                             <tr className="bg-slate-50 border-b border-slate-200">
                                 <th className="px-6 py-4 text-sm font-semibold text-slate-600">User</th>
                                 <th className="px-6 py-4 text-sm font-semibold text-slate-600">Role</th>
-                                <th className="px-6 py-4 text-sm font-semibold text-slate-600">Permissions</th>
+                                {/* <th className="px-6 py-4 text-sm font-semibold text-slate-600">Permissions</th> */}
                                 <th className="px-6 py-4 text-sm font-semibold text-slate-600 text-center">Status</th>
                                 <th className="px-6 py-4 text-sm font-semibold text-slate-600 text-center">Actions</th>
                             </tr>
@@ -378,7 +378,7 @@ export default function SubAdminManagementPage() {
                                                 {admin.role.replace('_', ' ')}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-slate-600">
+                                        {/* <td className="px-6 py-4 text-sm text-slate-600">
                                             {countPermissions(admin) > 0 ? (
                                                 <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700">
                                                     {countPermissions(admin)} Permissions
@@ -386,7 +386,7 @@ export default function SubAdminManagementPage() {
                                             ) : (
                                                 "No Permissions assigned"
                                             )}
-                                        </td>
+                                        </td> */}
                                         <td className="px-6 py-4 text-center">
                                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize ${admin.status === 'ACTIVE' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
                                                 }`}>

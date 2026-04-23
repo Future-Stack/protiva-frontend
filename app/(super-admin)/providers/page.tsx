@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
     Search,
     Download,
@@ -16,26 +16,15 @@ import {
 import DeleteModal from "@/components/DeleteModal";
 import {
     useGetAllProvidersQuery,
-    useRejectProviderMutation,
     useToggleRecommendationMutation,
-    useVerifyProviderMutation
+    useVerifyProviderMutation,
+    useUpdateServiceAvailabilityMutation,
+    useGetProviderJobsQuery,
+    useRejectProviderMutation,
 } from "@/lib/features/super-admin/provider/providerAPI";
 import { useGetUserTotalBookingQuery } from "@/lib/features/super-admin/booking/bookingAPI";
 import Swal from "sweetalert2";
 
-/* ─── Static fallback data (shown when API has no data) ─────────────── */
-// const STATIC_PROVIDERS = [
-//     { id: "01", name: "Handyman service", rating: "★", phone: "+65954425", email: "polo@gmail.com", bookings: 10, available: true, verificationStatus: "VERIFIED" },
-//     { id: "02", name: "Handyman service", rating: "★", phone: "+65954425", email: "polo@gmail.com", bookings: 10, available: false, verificationStatus: "UNVERIFIED" },
-//     { id: "03", name: "Handyman service", rating: "★", phone: "+65954425", email: "polo@gmail.com", bookings: 10, available: false, verificationStatus: "PENDING" },
-//     { id: "04", name: "Handyman service", rating: "★", phone: "+65954425", email: "polo@gmail.com", bookings: 10, available: false, verificationStatus: "UNVERIFIED" },
-//     { id: "05", name: "Handyman service", rating: "★", phone: "+65954425", email: "polo@gmail.com", bookings: 10, available: false, verificationStatus: "VERIFIED" },
-//     { id: "06", name: "Handyman service", rating: "★", phone: "+65954425", email: "polo@gmail.com", bookings: 10, available: false, verificationStatus: "PENDING" },
-//     { id: "07", name: "Handyman service", rating: "★", phone: "+65954425", email: "polo@gmail.com", bookings: 10, available: false, verificationStatus: "UNVERIFIED" },
-//     { id: "08", name: "Handyman service", rating: "★", phone: "+65954425", email: "polo@gmail.com", bookings: 10, available: false, verificationStatus: "VERIFIED" },
-//     { id: "09", name: "Handyman service", rating: "★", phone: "+65954425", email: "polo@gmail.com", bookings: 10, available: false, verificationStatus: "UNVERIFIED" },
-//     { id: "10", name: "Handyman service", rating: "★", phone: "+65954425", email: "polo@gmail.com", bookings: 10, available: false, verificationStatus: "PENDING" },
-// ];
 
 /* ─── Debounce hook ──────────────────────────────────────────────────── */
 function useDebounce<T>(value: T, delay: number): T {
@@ -60,6 +49,7 @@ interface ProviderRow {
     verificationStatus: string; // "VERIFIED" | "UNVERIFIED" | "PENDING"
     avatar: string | null;
     isProviderRecomendation: boolean;
+    status: string;
 }
 
 const STATUS_OPTIONS = [
@@ -81,6 +71,121 @@ const BookingCountCell = ({ userId }: { userId: string }) => {
     return <span className="text-base text-[#2C2C2C]">{data?.data ?? 0}</span>;
 };
 
+const ServiceCountCell = ({ providerId, onViewServices }: { providerId: string; onViewServices: (id: string) => void }) => {
+    const { data, isLoading } = useGetProviderJobsQuery(providerId);
+    if (isLoading) return <div className="h-4 w-8 bg-slate-100 animate-pulse rounded mx-auto"></div>;
+    const count = Array.isArray(data?.data) ? data.data.length : 0;
+    return (
+        <div className="flex flex-col items-center">
+            <span className="text-base font-semibold text-[#2C2C2C]">{count}</span>
+            <button
+                onClick={() => onViewServices(providerId)}
+                className="text-xs text-[#787BEB] hover:underline mt-1 font-medium"
+            >
+                (Click to view)
+            </button>
+        </div>
+    );
+};
+
+const ServicesModal = ({ isOpen, onClose, providerId }: { isOpen: boolean; onClose: () => void; providerId: string | null }) => {
+    const { data, isLoading, isError } = useGetProviderJobsQuery(providerId as string, { skip: !providerId });
+
+    if (!isOpen) return null;
+
+    const services = data?.data || [];
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[80vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+                <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                    <div>
+                        <h3 className="text-xl font-bold text-slate-900">Provider Services</h3>
+                        <p className="text-sm text-slate-500">List of all services offered by this provider</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                        <X size={20} className="text-slate-500" />
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6">
+                    {isLoading ? (
+                        <div className="flex flex-col items-center justify-center py-20 gap-3">
+                            <Loader2 size={40} className="animate-spin text-[#787BEB]" />
+                            <p className="text-slate-500">Loading services...</p>
+                        </div>
+                    ) : isError ? (
+                        <div className="flex flex-col items-center justify-center py-20 gap-3 text-red-500">
+                            <AlertCircle size={40} />
+                            <p className="font-medium">Failed to load services</p>
+                        </div>
+                    ) : services.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                            <p>No services found for this provider.</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th className="px-4 py-3 text-sm font-semibold text-slate-600">Service Title</th>
+                                        <th className="px-4 py-3 text-sm font-semibold text-slate-600 text-center">Price</th>
+                                        <th className="px-4 py-3 text-sm font-semibold text-slate-600 text-center">Status</th>
+                                        <th className="px-4 py-3 text-sm font-semibold text-slate-600 text-center">Bookings</th>
+                                        <th className="px-4 py-3 text-sm font-semibold text-slate-600 text-center">Rating</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {services.map((job: any) => (
+                                        <tr key={job.id} className="hover:bg-slate-50/50">
+                                            <td className="px-4 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    {job.thumbnail ? (
+                                                        <img src={job.thumbnail} alt="service-img" className="w-10 h-10 rounded-lg object-cover bg-slate-100" />
+                                                    ) : (
+                                                        <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center text-slate-400">
+                                                            <Loader2 size={16} />
+                                                        </div>
+                                                    )}
+                                                    <span className="text-sm font-medium text-slate-900 line-clamp-1">{job.title}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-4 text-center">
+                                                <span className="text-sm font-bold text-slate-900">${job.basePrice}</span>
+                                                <span className="text-[10px] text-slate-500 block capitalize">{job.priceType}</span>
+                                            </td>
+                                            <td className="px-4 py-4 text-center">
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                                                    job.status === "PUBLISHED" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+                                                }`}>
+                                                    {job.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-4 text-center text-sm text-slate-600">{job.totalBookings}</td>
+                                            <td className="px-4 py-4 text-center text-sm text-amber-500 font-medium">
+                                                ★ {job.averageRating || "N/A"}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
+                <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end">
+                    <button
+                        onClick={onClose}
+                        className="px-6 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium text-sm"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export default function ProviderListPage() {
     /* ── Pagination & filter state ── */
     const LIMIT = 10;
@@ -97,17 +202,17 @@ export default function ProviderListPage() {
     const [localRows, setLocalRows] = useState<ProviderRow[]>([]);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+    const [isServicesModalOpen, setIsServicesModalOpen] = useState(false);
+    const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
 
     const [verifyProvider] = useVerifyProviderMutation();
     const [rejectProvider] = useRejectProviderMutation();
+    const [updateServiceAvailability] = useUpdateServiceAvailabilityMutation();
 
     /* ── API ── */
     const queryParams = {
         page,
-        limit: LIMIT,
-        ...(debouncedSearch ? { search: debouncedSearch } : {}),
-        ...(statusFilter ? { status: statusFilter } : {}),
-        ...(verificationFilter ? { verificationStatus: verificationFilter } : {}),
+        limit: 100, // Fetch more records for better frontend filtering
     };
     const { data, isLoading, isFetching, isError } = useGetAllProvidersQuery(queryParams);
 
@@ -131,22 +236,47 @@ export default function ProviderListPage() {
                     verificationStatus: p.verificationStatus,
                     avatar: p.avatar,
                     isProviderRecomendation: p.isProviderRecomendation,
+                    status: p.status,
                 }))
             );
         }
     }, [apiProviders, isLoading, isFetching]);
 
-    const displayedRows = hasApiData
-        ? localRows
-        : localRows.filter((r) =>
-            r.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-            r.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-            r.phone.includes(debouncedSearch)
-        );
+    const displayedRows = useMemo(() => {
+        return localRows.filter((r) => {
+            const matchesSearch = 
+                r.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+                r.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+                r.phone.includes(debouncedSearch);
+            
+            const matchesStatus = statusFilter ? r.status === statusFilter : true;
+            const matchesVerification = verificationFilter ? r.verificationStatus === verificationFilter : true;
+
+            return matchesSearch && matchesVerification;
+        });
+    }, [localRows, debouncedSearch, verificationFilter]);
 
     /* ── Toggle handlers (local state) ── */
-    const toggleAvailability = (id: string) => {
-        setLocalRows((prev) => prev.map((r) => r.id === id ? { ...r, providerServiceAvailability: !r.providerServiceAvailability } : r));
+    const toggleAvailability = async (id: string, currentStatus: boolean) => {
+        try {
+            await updateServiceAvailability({ providerId: id, isAvailable: !currentStatus }).unwrap();
+            setLocalRows((prev) =>
+                prev.map((r) => r.id === id ? { ...r, providerServiceAvailability: !currentStatus } : r)
+            );
+            Swal.fire({
+                icon: "success",
+                title: "Updated",
+                text: `Service availability ${!currentStatus ? "enabled" : "disabled"}.`,
+                timer: 1500,
+                showConfirmButton: false,
+            });
+        } catch (error) {
+            Swal.fire({
+                icon: "error",
+                title: "Failed",
+                text: "Could not update service availability.",
+            });
+        }
     };
 
 
@@ -215,6 +345,12 @@ export default function ProviderListPage() {
                 text: "Could not reject provider.",
             });
         }
+    };
+
+    /* ── Services Modal Handlers ── */
+    const handleViewServices = (id: string) => {
+        setSelectedProviderId(id);
+        setIsServicesModalOpen(true);
     };
 
     /* ── Delete ── */
@@ -379,6 +515,7 @@ export default function ProviderListPage() {
                                     <th className="px-4 py-3 text-base font-semibold text-slate-600 capitalize border-r-2 border-slate-300">SL</th>
                                     <th className="px-4 py-3 text-base font-semibold text-slate-600 capitalize border-r-2 border-slate-300">Provider</th>
                                     <th className="px-4 py-3 text-base font-semibold text-slate-600 capitalize border-r-2 border-slate-300">Contact information</th>
+                                    <th className="px-4 py-3 text-base font-semibold text-slate-600 capitalize border-r-2 border-slate-300 text-center">Services</th>
                                     <th className="px-4 py-3 text-base font-semibold text-slate-600 capitalize border-r-2 border-slate-300 text-center">Total Bookings served</th>
                                     <th className="px-4 py-3 text-base font-semibold text-slate-600 capitalize border-r-2 border-slate-300 text-center">Service Availability</th>
                                     <th className="px-4 py-3 text-base font-semibold text-slate-600 capitalize border-r-2 border-slate-300 text-center">Verification Status</th>
@@ -420,11 +557,14 @@ export default function ProviderListPage() {
                                             <div className="text-sm text-[#2C2C2C]">{provider.email}</div>
                                         </td>
                                         <td className="px-4 py-4 text-base text-[#2C2C2C] border-r-2 border-slate-300 text-center">
+                                            <ServiceCountCell providerId={provider.id} onViewServices={handleViewServices} />
+                                        </td>
+                                        <td className="px-4 py-4 text-base text-[#2C2C2C] border-r-2 border-slate-300 text-center">
                                             <BookingCountCell userId={provider.id} />
                                         </td>
                                         <td className="px-4 py-4 border-r-2 border-slate-300 text-center">
                                             <button
-                                                onClick={() => toggleAvailability(provider.id)}
+                                                onClick={() => toggleAvailability(provider.id, provider.providerServiceAvailability)}
                                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${provider.providerServiceAvailability ? "bg-[#000000]" : "bg-slate-500"
                                                     }`}
                                             >
@@ -450,16 +590,19 @@ export default function ProviderListPage() {
                                             </span>
                                         </td>
                                         <td className="px-4 py-4 border-r-2 border-slate-300 text-center">
+
                                             <button
                                                 onClick={() => toggleRecomendation(provider.id, provider.isProviderRecomendation)}
                                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${provider.isProviderRecomendation ? "bg-[#000000]" : "bg-slate-500"
-                                                    }`}
+                                                    } ${provider.verificationStatus !== "VERIFIED" && "opacity-50 cursor-not-allowed"}`}
+                                                disabled={provider.verificationStatus !== "VERIFIED"}
                                             >
                                                 <span
                                                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${provider.isProviderRecomendation ? "translate-x-6" : "translate-x-1"
                                                         }`}
                                                 />
                                             </button>
+                                                
                                         </td>
                                         <td className="px-4 py-4 text-center">
                                             <button
@@ -538,6 +681,12 @@ export default function ProviderListPage() {
                 onConfirm={confirmDelete}
                 title="Delete Provider"
                 description="Are you sure you want to delete this provider? This action cannot be undone."
+            />
+
+            <ServicesModal
+                isOpen={isServicesModalOpen}
+                onClose={() => setIsServicesModalOpen(false)}
+                providerId={selectedProviderId}
             />
         </div>
     );

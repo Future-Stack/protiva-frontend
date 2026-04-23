@@ -12,6 +12,10 @@ import { SubCategoryItem } from "@/lib/features/super-admin/sub-category/subCate
 import ImageIcon2 from "@/app/assets/ImageIcon2.png";
 import { useCreateSubCategoryMutation, useDeleteSubCategoryMutation } from "@/lib/features/super-admin/sub-category/subCategoryAPI";
 
+const SubCategoryCount = ({ categoryId }: { categoryId: string }) => {
+    const { data } = useGetSubCategoriesQuery({ categoryId, limit: 1 });
+    return <>{data?.data?.data?.total || 0}</>;
+};
 
 export default function CategoriesPage() {
     const [page, setPage] = useState(1);
@@ -395,10 +399,10 @@ export default function CategoriesPage() {
                                                         {category.name}
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-4 text-sm text-[#2C2C2C] border-r border-slate-300 text-center cursor-pointer hover:text-primary transition-colors font-medium" onClick={() => toggleExpand(category.id)}>
+                                                <td className="px-4 py-4 text-sm text-[#2C2C2C] border-r border-slate-300 text-center " onClick={() => toggleExpand(category.id)}>
                                                     <div className="flex items-center justify-center gap-2">
 
-                                                        <span className="text-[10px] text-slate-400 font-normal">(Click to view)</span>
+                                                        <span className=""><SubCategoryCount categoryId={category.id} /> <span className="text-[10px] text-slate-400 font-medium hover:text-primary/90 cursor-pointer transition-colors hover:underline">(Click to view)</span></span>
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-4">

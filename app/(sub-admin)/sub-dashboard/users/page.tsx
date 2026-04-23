@@ -40,7 +40,7 @@ const STATUS_OPTIONS = [
 
 export default function UsersPage() {
     const { user } = useAppSelector((state) => state.auth);
-    const hasViewPermission   = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewUser;
+    const hasViewPermission   = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewUser || user?.adminPermissions?.isManageUser;
     const hasManagePermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isManageUser;
     const canDelete           = user?.role === "SUPER_ADMIN";
 

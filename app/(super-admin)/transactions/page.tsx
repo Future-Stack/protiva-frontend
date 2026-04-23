@@ -15,11 +15,6 @@ export default function TransactionsPage() {
     const transactions = transactionsData?.data?.data || [];
     const meta = transactionsData?.data?.meta;
 
-    const handleDelete = (id: string) => {
-        setItemToDelete(id);
-        setIsDeleteModalOpen(true);
-    };
-
     const confirmDelete = () => {
         // No delete API provided yet, just UI feedback
         if (itemToDelete) {

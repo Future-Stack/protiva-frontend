@@ -227,24 +227,24 @@ export default function WithdrawalManagementPage() {
                                                 >
                                                     <Eye size={18} />
                                                 </button>
-                                                {req.status === "PENDING" && (
+                                                {/* {req.status === "PENDING" && ( */}
                                                     <>
                                                         <button
                                                             onClick={() => handleApprove(req.id)}
                                                             disabled={isApproving || isRejecting}
-                                                            className="px-3 py-1.5 bg-[#16A34A] text-white text-xs font-medium rounded hover:bg-green-700 transition-colors disabled:opacity-50"
+                                                            className={`px-3 py-1.5 bg-[#16A34A] text-white text-xs font-medium rounded hover:bg-green-700 transition-colors disabled:opacity-50 ${req.status === "APPROVED" ? "cursor-disabled opacity-50" : "cursor-pointer"}`}
                                                         >
                                                             Approve
                                                         </button>
                                                         <button
                                                             onClick={() => handleReject(req.id)}
                                                             disabled={isApproving || isRejecting}
-                                                            className="px-3 py-1.5 bg-[#DC2626] text-white text-xs font-medium rounded hover:bg-red-700 transition-colors disabled:opacity-50"
+                                                            className={`px-3 py-1.5 bg-[#DC2626] text-white text-xs font-medium rounded hover:bg-red-700 transition-colors disabled:opacity-50 ${req.status === "REJECTED" ? "cursor-disabled opacity-50" : "cursor-pointer"}`}
                                                         >
                                                             Reject
                                                         </button>
                                                     </>
-                                                )}
+                                                {/* )} */}
                                             </div>
                                         </td>
                                     </tr>

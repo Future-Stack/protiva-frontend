@@ -45,6 +45,23 @@ export const providerAPI = baseAPI.injectEndpoints({
       invalidatesTags: ["Provider"],
     }),
 
+    updateServiceAvailability: build.mutation<any, { providerId: string; isAvailable: boolean }>({
+      query: ({ providerId, isAvailable }) => ({
+        url: `/api/v1/job/service-availability/${providerId}`,
+        method: "PATCH",
+        params: { isAvailable },
+      }),
+      invalidatesTags: ["Provider"],
+    }),
+
+    getProviderJobs: build.query<any, string>({
+      query: (providerId) => ({
+        url: `/api/v1/job/provider/${providerId}/jobs`,
+        method: "GET",
+      }),
+      providesTags: ["Provider"],
+    }),
+
     addProvider: build.mutation<AddProviderResponse, AddProviderPayload>({
       query: (payload) => {
         const formData = new FormData();
@@ -77,4 +94,6 @@ export const {
   useRejectProviderMutation,
   useToggleRecommendationMutation,
   useAddProviderMutation,
+  useUpdateServiceAvailabilityMutation,
+  useGetProviderJobsQuery,
 } = providerAPI;

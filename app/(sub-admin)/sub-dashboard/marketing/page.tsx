@@ -28,10 +28,8 @@ const StatsCard = ({ title, value, subtext, isLoading }: any) => (
 
 export default function SubAdminMarketingPage() {
     const { user } = useAppSelector((state) => state.auth);
-    // const hasViewPermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewMarketing;
-    // const hasManagePermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isManageMarketing; 
-    const hasViewPermission = true;
-    const hasManagePermission = true;
+    const hasViewPermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewManageMarketing || user?.adminPermissions?.isManageMarketing;
+    const hasManagePermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isManageMarketing;
     const canDelete = user?.role === "SUPER_ADMIN";
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -191,9 +189,9 @@ export default function SubAdminMarketingPage() {
     if (!hasViewPermission) {
         return (
             <div className="flex items-center justify-center h-[50vh]">
-                <div className="text-center">
-                    <h2 className="text-2xl font-bold text-slate-800 mb-2">Access Denied</h2>
-                    <p className="text-slate-500">You do not have permission to view marketing tools.</p>
+                <div className="text-center p-8 bg-rose-50 rounded-2xl border border-rose-100">
+                    <h2 className="text-2xl font-bold text-rose-900 uppercase">Access Denied</h2>
+                    <p className="text-rose-600 mt-2 text-sm">You do not have permission to view marketing tools.</p>
                 </div>
             </div>
         );
@@ -256,24 +254,24 @@ export default function SubAdminMarketingPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 mt-4">
-                                    {hasManagePermission && (
+
                                         <>
                                             <button
                                                 disabled={!!updatingStatusId}
                                                 onClick={() => handleToggleStatus(banner)}
-                                                className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50"
+                                                className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors border border-[#0000001A] text-[#0A0A0A] hover:bg-slate-100 disabled:opacity-50"
                                             >
                                                 {banner.status === "ACTIVE" ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
                                                 {banner.status === "ACTIVE" ? "Deactivate" : "Activate"}
                                             </button>
                                             <button
                                                 onClick={() => handleOpenModal(banner)}
-                                                className="px-3 py-1.5 flex items-center gap-1.5 text-xs font-medium border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors"
+                                                className="px-3 py-1.5 flex items-center gap-1.5 text-[#0A0A0A] text-xs font-medium border border-[#0000001A] hover:text-[#6366F1] hover:bg-indigo-50 rounded-lg transition-colors"
                                             >
                                                 <Edit2 size={12} /> Edit
                                             </button>
                                         </>
-                                    )}
+                                    
                                     {canDelete && (
                                         <button
                                             onClick={() => handleDeleteClick(banner.id)}

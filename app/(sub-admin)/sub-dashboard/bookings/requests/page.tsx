@@ -15,10 +15,11 @@ import StatusBadge from "@/components/StatusBadge";
 import { useGetAllBookingsQuery } from "@/lib/features/super-admin/booking/bookingAPI";
 import { Booking } from "@/lib/features/super-admin/booking/booking.type";
 import { useAppSelector } from "@/lib/hooks";
+import { errorBarDefaultProps } from "recharts/types/cartesian/ErrorBar";
 
 export default function BookingRequestsPage() {
     const { user } = useAppSelector((state) => state.auth);
-    const hasViewPermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewBooking;
+    const hasViewPermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewBooking || user?.adminPermissions?.isManageBooking;
     const hasManagePermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isManageBooking;
 
     const [activeTab, setActiveTab] = useState("All Bookings");
@@ -53,6 +54,7 @@ export default function BookingRequestsPage() {
     }, {
         skip: !hasViewPermission
     });
+    console.log(error);
 
     const allBookings = response?.data?.data?.data || [];
     const pagination = response?.data?.data?.pagination;
@@ -99,16 +101,16 @@ export default function BookingRequestsPage() {
         { name: "In-Progress", count: getCount("In-Progress") },
     ];
 
-    if (!hasViewPermission) {
-        return (
-            <div className="flex items-center justify-center h-[50vh]">
-                <div className="text-center">
-                    <h2 className="text-2xl font-bold text-slate-800 mb-2">Access Denied</h2>
-                    <p className="text-slate-500">You do not have permission to view bookings.</p>
-                </div>
-            </div>
-        );
-    }
+    // if (!hasViewPermission) {
+    //     return (
+    //         <div className="flex items-center justify-center h-[50vh]">
+    //             <div className="text-center">
+    //                 <h2 className="text-2xl font-bold text-slate-800 mb-2">Access Denied</h2>
+    //                 <p className="text-slate-500">You do not have permission to view bookings.</p>
+    //             </div>
+    //         </div>
+    //     );
+    // }
 
     if (error) {
         return <div className="p-8 text-center text-red-500">Error loading bookings. Please try again.</div>;

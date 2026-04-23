@@ -22,6 +22,7 @@ import user1 from "@/app/assets/user1.png";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
 import { useGetSubAdminProfileQuery } from "@/lib/features/sub-admin/profile/profileAPI";
+import { useGetMeQuery } from "@/lib/features/auth/authApi";
 
 
 interface SidebarProps {
@@ -72,6 +73,7 @@ const SUB_ADMIN_MENU: MenuSection[] = [
                 children: [
                     { title: "Provider list", href: "/sub-dashboard/providers", icon: Users },
                     { title: "Add New Provider", href: "/sub-dashboard/providers/add", icon: UserPlus },
+                    
                 ]
             },
             { title: "Background check", href: "/sub-dashboard/background-check", icon: UserCheck },
@@ -179,10 +181,14 @@ const SUPER_ADMIN_MENU: MenuSection[] = [
 ];
 
 export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
-    const user = useSelector((state: RootState) => state.auth.user);
-    const { data: profile } = useGetSubAdminProfileQuery();
-    const permissions = profile?.data?.user?.adminPermissions;
-    console.log(permissions);
+    const reduxUser = useSelector((state: RootState) => state.auth.user);
+    const { data: meProfile } = useGetMeQuery();
+    const { data: subAdminProfile } = useGetSubAdminProfileQuery();
+    
+    // Prioritize live data from either getMe or getSubAdminProfile based on role
+    const displayUser = meProfile?.data || subAdminProfile?.data?.user || reduxUser;
+    
+    const permissions = subAdminProfile?.data?.user?.adminPermissions;
     const pathname = usePathname();
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
     
@@ -204,27 +210,27 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
                 if (item.title === "Dashboard") return true;
                 
                 // Booking Management
-                if (item.title === "Bookings") return permissions?.isViewBooking;
-                if (section.title === "Booking Management") return permissions?.isViewBooking;
+                if (item.title === "Bookings") return permissions?.isViewBooking || permissions?.isManageBooking;
+                if (section.title === "Booking Management") return permissions?.isViewBooking || permissions?.isManageBooking;
 
                 // Provider Management
-                if (item.title === "Providers") return permissions?.isViewProvider;
+                if (item.title === "Providers") return permissions?.isViewProvider || permissions?.isManageProvider;
                 if (item.title === "Add New Provider") return permissions?.isManageProvider;
-                if (item.title === "Background check") return permissions?.isViewProvider;
+                if (item.title === "Background check") return permissions?.isViewProvider || permissions?.isManageProvider;
 
                 // Service Management
-                if (item.title === "Categories") return permissions?.isViewCategory;
-                if (item.title === "Jobs") return permissions?.isJobView;
+                if (item.title === "Categories") return permissions?.isViewCategory || permissions?.isManageCategory;
+                if (item.title === "Jobs") return permissions?.isJobView || permissions?.isJobManage;
 
                 // User Management
-                if (item.title === "Users") return permissions?.isViewUser;
+                if (item.title === "Users") return permissions?.isViewUser || permissions?.isManageUser;
 
                 // Business Management
                 if (item.title === "Transaction") return permissions?.isViewTransaction;
-                if (item.title === "Withdrawals") return permissions?.isViewWithdrawal;
+                if (item.title === "Withdrawals") return permissions?.isViewWithdrawal || permissions?.isManageWithdrawal;
 
                 // Marketing
-                if (item.title === "Marketing Tool") return permissions?.isViewMarketing;
+                if (item.title === "Marketing Tool") return permissions?.isViewManageMarketing || permissions?.isManageMarketing;
 
                 return false;
             }).map(item => {
@@ -234,8 +240,8 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
                         ...item,
                         children: item.children.filter(child => {
                             if (child.title === "Add New Provider") return permissions?.isManageProvider;
-                            if (child.title === "Booking Requests") return permissions?.isViewBooking;
-                            if (child.title === "Provider list") return permissions?.isViewProvider;
+                            if (child.title === "Booking Requests") return permissions?.isViewBooking || permissions?.isManageBooking;
+                            if (child.title === "Provider list") return permissions?.isViewProvider || permissions?.isManageProvider;
                             return true;
                         })
                     };
@@ -256,13 +262,13 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
                 <div className="bg-[#F8FAFC] rounded-xl p-4 flex items-center gap-3">
                     <div className="relative">
                         <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
-                            <img src={user?.avatar || user1.src} alt="Profile" className="w-full h-full object-cover" />
+                            <img src={displayUser?.avatar || user1.src} alt="Profile" className="w-full h-full object-cover" />
                         </div>
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#22C55E] border-2 border-white rounded-full"></div>
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-[12px] text-slate-500 truncate">{user?.email}</p>
-                        <p className="text-[14px] font-semibold text-slate-900 truncate capitalize">{user?.role?.replace("_", " ")}</p>
+                        <p className="text-[12px] text-slate-500 truncate">{displayUser?.email}</p>
+                        <p className="text-[14px] font-semibold text-slate-900 truncate capitalize">{displayUser?.role?.replace("_", " ")}</p>
                     </div>
                 </div>
             </div>

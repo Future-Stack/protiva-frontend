@@ -46,8 +46,8 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export default function BackgroundCheckPage() {
     const { user } = useAppSelector((state) => state.auth);
-    const hasViewPermission   = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewProvider;
-    const hasManagePermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isManageProvider;
+    const hasViewPermission   = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewProvider || user?.adminPermissions?.isManageProvider;
+    const hasManagePermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isManageProvider ;
 
     const router = useRouter();
     const LIMIT = 10;

@@ -2,29 +2,49 @@
 
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import PersonalDetailsForm from "@/components/profile/PersonalDetailsForm";
-import SecurityForm from "@/components/profile/SecurityForm";
-import { useUpdateProfileMutation, useChangePasswordMutation, useGetMeQuery } from "@/lib/features/auth/authApi";
+// import SecurityForm from "@/components/profile/SecurityForm";
+import { useUpdateProfileMutation, useGetMeQuery, useUpdateAvatarMutation } from "@/lib/features/auth/authApi";
 import Swal from "sweetalert2";
 import { useState } from "react";
+import { useAppDispatch } from "@/lib/hooks";
+import { updateUser } from "@/lib/features/auth/authSlice";
 
 export default function SubAdminProfile() {
+  const dispatch = useAppDispatch();
   const { data: profileResponse, isLoading: isFetchingProfile } = useGetMeQuery();
   const [updateProfile] = useUpdateProfileMutation();
-  const [changePassword, { isLoading: isChangingPassword }] = useChangePasswordMutation();
-  
-  const profile = profileResponse?.data?.user;
+  const [updateAvatar] = useUpdateAvatarMutation();
+  // const [changePassword, { isLoading: isChangingPassword }] = useChangePasswordMutation();
+
+  const profile = (profileResponse?.data as any)?.user || profileResponse?.data;
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleProfileUpdate = async (data: any) => {
     setIsUpdating(true);
     try {
       const fieldsToUpdate = [];
-      if (data.firstName !== profile?.firstName) fieldsToUpdate.push({ fildName: "firstName", value: data.firstName });
-      if (data.lastName !== profile?.lastName) fieldsToUpdate.push({ fildName: "lastName", value: data.lastName });
-      if (data.phone && data.phone !== profile?.phone) fieldsToUpdate.push({ fildName: "phone", value: data.phone });
+      if (data.firstName !== profile?.firstName)
+        fieldsToUpdate.push({ fildName: "firstName", value: data.firstName });
+      if (data.lastName !== profile?.lastName)
+        fieldsToUpdate.push({ fildName: "lastName", value: data.lastName });
+      if (data.phone && data.phone !== profile?.phone)
+        fieldsToUpdate.push({ fildName: "phone", value: data.phone });
+
+      if (fieldsToUpdate.length === 0) {
+        Swal.fire({
+          icon: "info",
+          title: "No Changes",
+          text: "No profile information has been changed.",
+          confirmButtonColor: "#4F46E5",
+        });
+        setIsUpdating(false);
+        return;
+      }
 
       for (const field of fieldsToUpdate) {
         await updateProfile(field).unwrap();
+        // Update local state for each field
+        dispatch(updateUser({ [field.fildName]: field.value }));
       }
 
       Swal.fire({
@@ -44,34 +64,56 @@ export default function SubAdminProfile() {
     }
   };
 
-  const handlePasswordChange = async (data: any) => {
+  // const handlePasswordChange = async (data: any) => {
+  //   try {
+  //     await changePassword({
+  //       currentPassword: data.currentPassword,
+  //       newPassword: data.newPassword,
+  //     }).unwrap();
+
+  //     Swal.fire({
+  //       icon: "success",
+  //       title: "Password Changed",
+  //       text: "Your password has been updated successfully.",
+  //       confirmButtonColor: "#4F46E5",
+  //     });
+  //   } catch (error: any) {
+  //     Swal.fire({
+  //       icon: "error",
+  //       title: "Change Failed",
+  //       text: error.data?.message || "Something went wrong while changing your password.",
+  //     });
+  //   }
+  // };
+
+  const handleAvatarChange = async (file: File) => {
     try {
-      await changePassword({
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword,
-      }).unwrap();
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const result = await updateAvatar(formData).unwrap();
       
+      // Update local state with new avatar URL from response
+      // Handling various potential response structures
+      const newAvatar = result?.data?.avatar || result?.data?.user?.avatar || (typeof result?.data === 'string' ? result.data : null);
+      
+      if (newAvatar) {
+        dispatch(updateUser({ avatar: newAvatar }));
+      }
+
       Swal.fire({
         icon: "success",
-        title: "Password Changed",
-        text: "Your password has been updated successfully.",
+        title: "Avatar Updated",
+        text: "Your profile picture has been updated successfully.",
         confirmButtonColor: "#4F46E5",
       });
     } catch (error: any) {
       Swal.fire({
         icon: "error",
-        title: "Change Failed",
-        text: error.data?.message || "Something went wrong while changing your password.",
+        title: "Upload Failed",
+        text: error.data?.message || "Something went wrong while updating your avatar.",
       });
     }
-  };
-
-  const handleAvatarChange = async (file: File) => {
-    Swal.fire({
-      icon: "info",
-      title: "Avatar Update",
-      text: "Avatar update functionality is currently being reviewed for compatibility with the new API structure.",
-    });
   };
 
   if (isFetchingProfile) {
@@ -105,10 +147,10 @@ export default function SubAdminProfile() {
           isLoading={isUpdating}
         />
 
-        <SecurityForm 
+        {/* <SecurityForm 
           onSubmit={handlePasswordChange}
           isLoading={isChangingPassword}
-        />
+        /> */}
       </div>
     </div>
   );

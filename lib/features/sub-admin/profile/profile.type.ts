@@ -13,7 +13,7 @@ export interface AdminPermissions {
   isManageWithdrawal: boolean;
   isJobView: boolean;
   isJobManage: boolean;
-  isViewMarketing: boolean;
+  isViewManageMarketing: boolean;
   isManageMarketing: boolean;
 }
 
@@ -23,6 +23,7 @@ export interface SubAdminProfile {
   firstName: string;
   lastName: string;
   role: string;
+  avatar: string | null;
   status: string;
   emailVerified: boolean;
   phoneVerified: boolean;
