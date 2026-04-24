@@ -3,8 +3,9 @@
 import DeleteModal from "@/components/DeleteModal";
 import { useCreateCategoryMutation, useDeleteCategoryMutation, useGetAllCategoriesQuery, useGetSubCategoriesQuery, useUpdateCategoryMutation } from "@/lib/features/super-admin/category/categoryAPI";
 import Swal from "sweetalert2";
-import { ChevronLeft, ChevronRight, Loader2, Pencil, PencilLine, Trash2, Upload, Plus, Eye, ListFilter } from "lucide-react";
-import { Fragment, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Loader2, Pencil, PencilLine, Trash2, Upload, Plus, Eye, ListFilter, Search } from "lucide-react";
+import { useAppSelector } from "@/lib/hooks";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import SubCategoryModal from "@/components/SubCategoryModal";
 import SubCategoryRowList from "@/components/SubCategoryRowList";
 import { CategoryItem } from "@/lib/features/super-admin/category/category.type";
@@ -19,7 +20,15 @@ const SubCategoryCount = ({ categoryId }: { categoryId: string }) => {
 
 export default function CategoriesPage() {
     const [page, setPage] = useState(1);
-    const { data: categoriesData, isLoading: isCategoriesLoading } = useGetAllCategoriesQuery({ page, limit: 10 });
+    const globalSearch = useAppSelector((state) => state.search.query);
+    const [searchQuery, setSearchQuery] = useState(globalSearch || "");
+
+    // Sync local search with global search
+    useEffect(() => {
+        setSearchQuery(globalSearch);
+    }, [globalSearch]);
+
+    const { data: categoriesData, isLoading: isCategoriesLoading } = useGetAllCategoriesQuery({ page, limit: 100 });
     // const SubCategoriesLength = categoriesData?.data?.length;
     const [categoryName, setCategoryName] = useState("");
     const [description, setDescription] = useState("");
@@ -52,6 +61,15 @@ export default function CategoriesPage() {
     const categories = categoriesData?.data?.data?.data || [];
     console.log(categories);
     const meta = categoriesData?.data?.data;
+
+    const filteredCategories = useMemo(() => {
+        return categories.filter((c: any) =>
+            c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            c.id.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [categories, searchQuery]);
+
+    const displayedCategories = filteredCategories.slice((page - 1) * 10, page * 10);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -365,6 +383,25 @@ export default function CategoriesPage() {
             </div>
             <div className="bg-white rounded-lg overflow-hidden">
                 <div className="p-10">
+                    {/* Actions Bar */}
+                    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-6 mb-6">
+                        {/* <div className="flex items-center justify-between gap-4 mb-6"> */}
+                            <h3 className="text-lg font-bold text-slate-800">Category List</h3>
+                            <div className="flex-1 max-w-md relative group">
+                                <input
+                                    type="text"
+                                    placeholder="Search categories..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm text-black focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
+                                />
+                                <div className="absolute left-1 top-1 bottom-1 w-7.5 h-7.5 flex items-center justify-center bg-primary text-white rounded-full">
+                                    <Search size={14} />
+                                </div>
+                            {/* </div> */}
+                        </div>
+                    </div>
+
                     {/* Table */}
                     <div className="overflow-x-auto border border-slate-300">
                         <table className="w-full text-left ">
@@ -384,12 +421,12 @@ export default function CategoriesPage() {
                                             <p className="mt-2 text-sm text-slate-500 font-medium">Loading categories...</p>
                                         </td>
                                     </tr>
-                                ) : categories.length === 0 ? (
+                                ) : displayedCategories.length === 0 ? (
                                     <tr>
                                         <td colSpan={4} className="py-10 text-center text-slate-500">No categories found.</td>
                                     </tr>
                                 ) : (
-                                    categories.map((category: CategoryItem, index: number) => (
+                                    displayedCategories.map((category: CategoryItem, index: number) => (
                                         <Fragment key={category.id}>
                                             <tr className={`border-t border-slate-300 hover:bg-slate-50/50 transition-colors ${expandedCategoryId === category.id ? 'bg-slate-50' : ''}`}>
                                                 <td className="px-4 py-4 text-sm text-[#2C2C2C] border-r border-slate-300 text-center ">{index + 1 + (page - 1) * 10}</td>
@@ -466,7 +503,7 @@ export default function CategoriesPage() {
                             Previous
                         </button>
                         <div className="flex items-center gap-1">
-                            {Array.from({ length: meta?.totalPages || 0 }, (_, i) => i + 1).map(i => (
+                            {Array.from({ length: Math.ceil(filteredCategories.length / 10) }, (_, i) => i + 1).map(i => (
                                 <button
                                     key={i}
                                     onClick={() => setPage(i)}
@@ -480,7 +517,7 @@ export default function CategoriesPage() {
                             ))}
                         </div>
                         <button
-                            disabled={page === meta?.totalPages}
+                            disabled={page >= Math.ceil(filteredCategories.length / 10)}
                             onClick={() => setPage(p => p + 1)}
                             className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50">
                             Next

@@ -23,6 +23,7 @@ import {
     useRejectProviderMutation,
 } from "@/lib/features/super-admin/provider/providerAPI";
 import { useGetUserTotalBookingQuery } from "@/lib/features/super-admin/booking/bookingAPI";
+import { useAppSelector } from "@/lib/hooks";
 import Swal from "sweetalert2";
 
 
@@ -53,16 +54,16 @@ interface ProviderRow {
 }
 
 const STATUS_OPTIONS = [
-    { value: "",          label: "All Status" },
-    { value: "ACTIVE",    label: "Active" },
-    { value: "PENDING",   label: "Pending" },
+    { value: "", label: "All Status" },
+    { value: "ACTIVE", label: "Active" },
+    { value: "PENDING", label: "Pending" },
     { value: "SUSPENDED", label: "Suspended" },
 ];
 
 const VERIFICATION_OPTIONS = [
-    { value: "",          label: "All Verification" },
-    { value: "VERIFIED",  label: "Verified" },
-    { value: "UNVERIFIED",label: "Unverified" },
+    { value: "", label: "All Verification" },
+    { value: "VERIFIED", label: "Verified" },
+    { value: "UNVERIFIED", label: "Unverified" },
 ];
 
 const BookingCountCell = ({ userId }: { userId: string }) => {
@@ -155,9 +156,8 @@ const ServicesModal = ({ isOpen, onClose, providerId }: { isOpen: boolean; onClo
                                                 <span className="text-[10px] text-slate-500 block capitalize">{job.priceType}</span>
                                             </td>
                                             <td className="px-4 py-4 text-center">
-                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                                                    job.status === "PUBLISHED" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
-                                                }`}>
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${job.status === "PUBLISHED" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+                                                    }`}>
                                                     {job.status}
                                                 </span>
                                             </td>
@@ -190,12 +190,19 @@ export default function ProviderListPage() {
     /* ── Pagination & filter state ── */
     const LIMIT = 10;
     const [page, setPage] = useState(1);
-    const [searchInput, setSearchInput] = useState("");
+    const globalSearch = useAppSelector((state) => state.search.query);
+    const [searchInput, setSearchInput] = useState(globalSearch || "");
     const [statusFilter, setStatusFilter] = useState("");
     const [verificationFilter, setVerificationFilter] = useState("");
     const [showVerifyFilter, setShowVerifyFilter] = useState(false);
 
     const debouncedSearch = useDebounce(searchInput, 400);
+
+    // Sync local search with global search
+    useEffect(() => {
+        setSearchInput(globalSearch);
+    }, [globalSearch]);
+
     useEffect(() => { setPage(1); }, [debouncedSearch, statusFilter, verificationFilter]);
 
     /* ── Local UI state ── */
@@ -244,17 +251,20 @@ export default function ProviderListPage() {
 
     const displayedRows = useMemo(() => {
         return localRows.filter((r) => {
-            const matchesSearch = 
-                r.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-                r.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-                r.phone.includes(debouncedSearch);
-            
+            const searchLower = debouncedSearch.toLowerCase();
+            const matchesSearch =
+                r.id.toLowerCase().includes(searchLower) ||
+                r.name.toLowerCase().includes(searchLower) ||
+                r.email.toLowerCase().includes(searchLower) ||
+                r.phone.includes(debouncedSearch) ||
+                (r.status && r.status.toLowerCase().includes(searchLower));
+
             const matchesStatus = statusFilter ? r.status === statusFilter : true;
             const matchesVerification = verificationFilter ? r.verificationStatus === verificationFilter : true;
 
-            return matchesSearch && matchesVerification;
+            return matchesSearch && matchesVerification && matchesStatus;
         });
-    }, [localRows, debouncedSearch, verificationFilter]);
+    }, [localRows, debouncedSearch, verificationFilter, statusFilter]);
 
     /* ── Toggle handlers (local state) ── */
     const toggleAvailability = async (id: string, currentStatus: boolean) => {
@@ -432,11 +442,10 @@ export default function ProviderListPage() {
                         <div className="relative">
                             <button
                                 onClick={() => setShowVerifyFilter((v) => !v)}
-                                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                                    showVerifyFilter || verificationFilter
+                                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${showVerifyFilter || verificationFilter
                                         ? "bg-[#787BEB] text-white"
                                         : "bg-slate-900 text-white hover:bg-slate-800"
-                                }`}
+                                    }`}
                             >
                                 <Filter size={16} />
                                 Status
@@ -457,11 +466,10 @@ export default function ProviderListPage() {
                                             <button
                                                 key={opt.value}
                                                 onClick={() => { setVerificationFilter(opt.value); setShowVerifyFilter(false); }}
-                                                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                                                    verificationFilter === opt.value
+                                                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${verificationFilter === opt.value
                                                         ? "bg-[#787BEB]/10 text-[#787BEB] font-medium"
                                                         : "text-slate-600 hover:bg-slate-50"
-                                                }`}
+                                                    }`}
                                             >
                                                 {opt.label}
                                             </button>
@@ -539,13 +547,13 @@ export default function ProviderListPage() {
                                                             className="w-full h-full object-cover"
                                                         />
                                                     ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold">
+                                                        <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold ">
                                                             {provider.name.charAt(0)}
                                                         </div>
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm font-medium text-[#0F172A]">{provider.name}</div>
+                                                    <div className="text-sm font-medium text-[#0F172A] capitalize">{provider.name}</div>
                                                     <div className="text-xs text-[#FF8113]">
                                                         ★ <span className="text-[#475569]">{provider.rating}</span>
                                                     </div>
@@ -602,7 +610,7 @@ export default function ProviderListPage() {
                                                         }`}
                                                 />
                                             </button>
-                                                
+
                                         </td>
                                         <td className="px-4 py-4 text-center">
                                             <button

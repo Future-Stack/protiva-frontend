@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import { Search, Plus, Trash2, ChevronDown, X, Check, Loader2, ChevronLeft, ChevronRight, Edit } from "lucide-react";
 import DeleteModal from "@/components/DeleteModal";
 import { useCreateAdminMutation, useGetSubAdminsQuery, useUpdateAdminPermissionsMutation } from "@/lib/features/super-admin/admin/adminAPI";
+import { useAppSelector } from "@/lib/hooks";
 import Swal from "sweetalert2";
+import { useMemo } from "react";
 
 /* ─── Debounce hook ──────────────────────────────────────────────────── */
 function useDebounce<T>(value: T, delay: number): T {
@@ -65,14 +67,18 @@ const PERMISSIONS_DATA = {
 
 export default function SubAdminManagementPage() {
     const [page, setPage] = useState(1);
-    const [search, setSearch] = useState("");
+    const globalSearch = useAppSelector((state) => state.search.query);
+    const [searchInput, setSearchInput] = useState(globalSearch || "");
     const [status, setStatus] = useState("All");
-    const debouncedSearch = useDebounce(search, 500);
 
-    const { data: subAdminsData, isLoading, isError, refetch } = useGetSubAdminsQuery({
-        page,
-        limit: 10,
-        search: debouncedSearch,
+    // Sync with global search
+    useEffect(() => {
+        setSearchInput(globalSearch);
+    }, [globalSearch]);
+
+    const { data: subAdminsData, isLoading, isError, refetch, isFetching } = useGetSubAdminsQuery({
+        page: 1,
+        limit: 100,
         status: status === "All" ? "" : status.toUpperCase()
     });
     console.log(subAdminsData);
@@ -86,8 +92,25 @@ export default function SubAdminManagementPage() {
     const [isEditMode, setIsEditMode] = useState(false);
     const [editAdminId, setEditAdminId] = useState<string | null>(null);
 
-    const subAdmins = subAdminsData?.data?.data || [];
-    const meta = subAdminsData?.data?.meta;
+    const rawSubAdmins = subAdminsData?.data?.data || [];
+    
+    /* ── Client-side Filter ── */
+    const filteredSubAdmins = useMemo(() => {
+        return rawSubAdmins.filter((admin: any) => {
+            const s = searchInput.toLowerCase();
+            const fullName = `${admin.firstName || ""} ${admin.lastName || ""}`.toLowerCase();
+            const matchesSearch = 
+                fullName.includes(s) ||
+                (admin.email || "").toLowerCase().includes(s) ||
+                (admin.role || "").toLowerCase().includes(s.replace(' ', '_'));
+            
+            return matchesSearch;
+        });
+    }, [rawSubAdmins, searchInput]);
+
+    const displayedSubAdmins = filteredSubAdmins.slice((page - 1) * 10, page * 10);
+    const totalFiltered = filteredSubAdmins.length;
+    const effectiveTotalPages = Math.ceil(totalFiltered / 10);
 
     const [createAdmin, { isLoading: isCreating }] = useCreateAdminMutation();
     const [updateAdminPermissions, { isLoading: isUpdating }] = useUpdateAdminPermissionsMutation();
@@ -125,7 +148,7 @@ export default function SubAdminManagementPage() {
     const handleEditAdmin = (admin: any) => {
         setIsEditMode(true);
         setEditAdminId(admin.id);
-        
+
         const perms: string[] = [];
         if (admin.isViewBooking) perms.push("view_bookings");
         if (admin.isManageBooking) perms.push("manage_bookings");
@@ -143,7 +166,7 @@ export default function SubAdminManagementPage() {
         if (admin.isViewManageMarketing) perms.push("isViewManageMarketing");
         if (admin.isManageMarketing) perms.push("isManageMarketing");
         if (admin.isExportBooking) perms.push("export_bookings");
-        
+
         setFormData({
             firstName: admin.firstName || "",
             lastName: admin.lastName || "",
@@ -153,7 +176,7 @@ export default function SubAdminManagementPage() {
             // role: admin.role || "",
             permissions: perms
         });
-        
+
         setSelectedRole(admin.role || "");
         setActiveTab("permission");
         setIsModalOpen(true);
@@ -201,9 +224,9 @@ export default function SubAdminManagementPage() {
             if (!editAdminId) return;
             try {
                 // Ensure all flags are sent by spreading explicitly
-                await updateAdminPermissions({ 
-                    userId: editAdminId, 
-                    ...permissionsPayload 
+                await updateAdminPermissions({
+                    userId: editAdminId,
+                    ...permissionsPayload
                 }).unwrap();
                 Swal.fire({
                     icon: "success",
@@ -235,7 +258,7 @@ export default function SubAdminManagementPage() {
 
             try {
                 await createAdmin(payload).unwrap();
-                
+
                 Swal.fire({
                     icon: "success",
                     title: "Sub-Admin Created",
@@ -250,7 +273,7 @@ export default function SubAdminManagementPage() {
                     email: "",
                     phone: "",
                     password: "",
-                   
+
                     permissions: []
                 });
                 setIsModalOpen(false);
@@ -307,18 +330,20 @@ export default function SubAdminManagementPage() {
             <div className="mt-8">
                 {/* Search Bar */}
                 <div className="pb-6 flex flex-wrap items-center gap-4">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <div className="hidden sm:flex items-center flex-1 relative group">
                         <input
                             type="text"
                             placeholder="Search sub admin by name or email..."
-                            className="w-full pl-10 pr-4 py-2.5 text-sm text-black border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent placeholder:text-[#94A3B8]"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full pl-15 px-4 py-1.5 h-[45px] bg-white border border-blue-300 rounded-[50px] text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1] transition-all placeholder:text-slate-400"
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
                         />
+                        <div className="absolute left-1.5 w-9 h-9 flex items-center justify-center bg-[#787BEB] text-white rounded-full">
+                            <Search size={18} />
+                        </div>
                     </div>
                     <div className="relative min-w-[240px]">
-                        <select 
+                        <select
                             className="w-full appearance-none px-4 py-2.5 pr-10 text-black border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent bg-white text-sm"
                             value={status}
                             onChange={(e) => setStatus(e.target.value)}
@@ -353,14 +378,14 @@ export default function SubAdminManagementPage() {
                                         </div>
                                     </td>
                                 </tr>
-                            ) : subAdmins.length === 0 ? (
+                            ) : displayedSubAdmins.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="py-20 text-center text-slate-500 italic">
                                         No sub admins found.
                                     </td>
                                 </tr>
                             ) : (
-                                subAdmins.map((admin) => (
+                                displayedSubAdmins.map((admin: any) => (
                                     <tr key={admin.id} className="hover:bg-slate-50/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
@@ -415,7 +440,7 @@ export default function SubAdminManagementPage() {
                 </div>
 
                 {/* Pagination */}
-                {meta && meta.totalPage > 1 && (
+                {effectiveTotalPages > 1 && (
                     <div className="mt-6 flex items-center justify-end gap-3">
                         <button
                             disabled={page === 1}
@@ -426,31 +451,22 @@ export default function SubAdminManagementPage() {
                             Previous
                         </button>
                         <div className="flex items-center gap-1">
-                            {Array.from({ length: Math.min(meta.totalPage, 5) }, (_, i) => {
-                                let pageNum = i + 1;
-                                if (meta.totalPage > 5 && page > 3) {
-                                    pageNum = page - 3 + i;
-                                    if (pageNum + (5 - i) > meta.totalPage) {
-                                        pageNum = meta.totalPage - 5 + i + 1;
-                                    }
-                                }
-                                return (
-                                    <button
-                                        key={pageNum}
-                                        onClick={() => setPage(pageNum)}
-                                        className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${pageNum === page
-                                            ? 'bg-slate-100 text-slate-900 border border-slate-300 shadow-sm'
-                                            : 'text-slate-600 hover:bg-slate-50'
-                                            }`}
-                                    >
-                                        {pageNum}
-                                    </button>
-                                );
-                            })}
+                            {Array.from({ length: effectiveTotalPages }, (_, i) => i + 1).map((pageNum) => (
+                                <button
+                                    key={pageNum}
+                                    onClick={() => setPage(pageNum)}
+                                    className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${pageNum === page
+                                        ? 'bg-slate-100 text-slate-900 border border-slate-300 shadow-sm'
+                                        : 'text-slate-600 hover:bg-slate-50'
+                                        }`}
+                                >
+                                    {pageNum}
+                                </button>
+                            ))}
                         </div>
                         <button
-                            disabled={page === meta.totalPage}
-                            onClick={() => setPage(p => Math.min(meta.totalPage, p + 1))}
+                            disabled={page === effectiveTotalPages}
+                            onClick={() => setPage(p => Math.min(effectiveTotalPages, p + 1))}
                             className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
                         >
                             Next
@@ -664,9 +680,9 @@ export default function SubAdminManagementPage() {
                                             <h4 className="font-semibold text-slate-900">{selectedRole || "Select a role"}</h4>
                                             {selectedRole && PERMISSIONS_DATA[selectedRole as keyof typeof PERMISSIONS_DATA] && (
                                                 <label className="flex items-center gap-2 cursor-pointer">
-                                                    <input 
-                                                        type="checkbox" 
-                                                        className="w-4 h-4 rounded border-gray-300 text-[#6366F1] focus:ring-[#6366F1]" 
+                                                    <input
+                                                        type="checkbox"
+                                                        className="w-4 h-4 rounded border-gray-300 text-[#6366F1] focus:ring-[#6366F1]"
                                                         checked={
                                                             PERMISSIONS_DATA[selectedRole as keyof typeof PERMISSIONS_DATA]?.every(p => formData.permissions.includes(p.id)) || false
                                                         }
@@ -690,7 +706,7 @@ export default function SubAdminManagementPage() {
                                             )}
                                         </div>
 
-                                        { PERMISSIONS_DATA[selectedRole as keyof typeof PERMISSIONS_DATA] ? (
+                                        {PERMISSIONS_DATA[selectedRole as keyof typeof PERMISSIONS_DATA] ? (
                                             <div className="space-y-4">
                                                 {PERMISSIONS_DATA[selectedRole as keyof typeof PERMISSIONS_DATA].map((perm) => (
                                                     <div key={perm.id} className="flex items-start gap-3 p-3 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors group">

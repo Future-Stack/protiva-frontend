@@ -10,8 +10,8 @@ import {
     useCreateSubCategoryMutation, useDeleteSubCategoryMutation,
 } from "@/lib/features/super-admin/sub-category/subCategoryAPI";
 import Swal from "sweetalert2";
-import { ChevronLeft, ChevronRight, Loader2, Pencil, PencilLine, Trash2, Upload, Plus, Eye } from "lucide-react";
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useRef, useState, useEffect, useMemo } from "react";
+import { ChevronLeft, ChevronRight, Loader2, Pencil, PencilLine, Trash2, Upload, Plus, Eye, Search } from "lucide-react";
 import SubCategoryModal from "@/components/SubCategoryModal";
 import SubCategoryRowList from "@/components/SubCategoryRowList";
 import { CategoryItem } from "@/lib/features/super-admin/category/category.type";
@@ -30,7 +30,14 @@ export default function CategoriesPage() {
     const canDelete = user?.role === "SUPER_ADMIN";
 
     const [page, setPage] = useState(1);
-    const { data: categoriesData, isLoading: isCategoriesLoading } = useGetAllCategoriesQuery({ page, limit: 10 }, {
+    const globalSearch = useAppSelector((state) => state.search.query);
+    const [searchQuery, setSearchQuery] = useState(globalSearch || "");
+
+    useEffect(() => {
+        setSearchQuery(globalSearch);
+    }, [globalSearch]);
+
+    const { data: categoriesData, isLoading: isCategoriesLoading } = useGetAllCategoriesQuery({ page, limit: 100 }, {
         skip: !hasViewPermission,
     });
 
@@ -60,6 +67,17 @@ export default function CategoriesPage() {
 
     const categories = categoriesData?.data?.data?.data || [];
     const meta = categoriesData?.data?.data;
+
+    const filteredCategories = useMemo(() => {
+        return categories.filter(cat => {
+            const lowerQuery = searchQuery.toLowerCase();
+            return (
+                cat.name?.toLowerCase().includes(lowerQuery) ||
+                cat.id?.toLowerCase().includes(lowerQuery) ||
+                cat.description?.toLowerCase().includes(lowerQuery)
+            );
+        });
+    }, [categories, searchQuery]);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -225,6 +243,21 @@ export default function CategoriesPage() {
             {/* Table */}
             <div className="bg-white rounded-lg overflow-hidden">
                 <div className="p-10">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+                        <h3 className="text-lg font-bold text-slate-800">Category List</h3>
+                        <div className="flex-1 max-w-md relative group">
+                            <input
+                                type="text"
+                                placeholder="Search categories..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-12 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm text-black focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
+                            />
+                            <div className="absolute left-1 top-1 bottom-1 w-7.5 h-7.5 flex items-center justify-center bg-primary text-white rounded-full">
+                                <Search size={14} />
+                            </div>
+                        </div>
+                    </div>
                     <div className="overflow-x-auto border border-slate-300">
                         <table className="w-full text-left">
                             <thead>
@@ -241,10 +274,10 @@ export default function CategoriesPage() {
                                         <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
                                         <p className="mt-2 text-sm text-slate-500 font-medium">Loading categories...</p>
                                     </td></tr>
-                                ) : categories.length === 0 ? (
+                                ) : filteredCategories.length === 0 ? (
                                     <tr><td colSpan={4} className="py-10 text-center text-slate-500">No categories found.</td></tr>
                                 ) : (
-                                    categories.map((cat: CategoryItem, index: number) => (
+                                    filteredCategories.map((cat: CategoryItem, index: number) => (
                                         <Fragment key={cat.id}>
                                             <tr className={`border-t border-slate-300 hover:bg-slate-50/50 transition-colors ${expandedCategoryId === cat.id ? "bg-slate-50" : ""}`}>
                                                 <td className="px-4 py-4 text-sm text-[#2C2C2C] border-r border-slate-300 text-center">{index + 1 + (page - 1) * 10}</td>

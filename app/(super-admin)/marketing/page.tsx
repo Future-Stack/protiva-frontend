@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import {  Plus, Trash2, Edit2, X, Image as ImageIcon, UploadCloud, Calendar, ExternalLink, EyeIcon, EyeOffIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Trash2, Edit2, X, Image as ImageIcon, UploadCloud, Calendar, ExternalLink, EyeIcon, EyeOffIcon, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { useAppSelector } from "@/lib/hooks";
+import { useEffect, useMemo, useState } from "react";
 import DeleteModal from "@/components/DeleteModal";
 import { 
     useGetMarketingBannersQuery, 
@@ -26,12 +27,24 @@ const StatsCard = ({ title, value, subtext, isLoading }: any) => (
 );
 
 export default function MarketingManagementPage() {
+    const globalSearch = useAppSelector((state) => state.search.query);
     const [currentPage, setCurrentPage] = useState(1);
-    
+    const [searchQuery, setSearchQuery] = useState(globalSearch || "");
+
+    // Sync local search with global search
+    useEffect(() => {
+        setSearchQuery(globalSearch);
+    }, [globalSearch]);
+
+    // Reset pagination on search
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery]);
+
     // API Queries and Mutations
     const { data: response, isLoading: isFetching } = useGetMarketingBannersQuery({ 
         page: currentPage, 
-        limit: 10 
+        limit: 100 
     });
     const [updateStatus, { isLoading: isUpdating }] = useUpdateBannerStatusMutation();
     const [deleteBanner, { isLoading: isDeleting }] = useDeleteBannerMutation();
@@ -64,8 +77,22 @@ export default function MarketingManagementPage() {
 
     const banners = response?.data || [];
     // console.log(banners);
+    
+    const filteredBanners = useMemo(() => {
+        return banners.filter((b: any) => {
+            const searchLower = searchQuery.toLowerCase();
+            return (
+                b.title.toLowerCase().includes(searchLower) ||
+                b.description.toLowerCase().includes(searchLower) ||
+                (b.link && b.link.toLowerCase().includes(searchLower))
+            );
+        });
+    }, [banners, searchQuery]);
+
+    const displayedBanners = filteredBanners.slice((currentPage - 1) * 10, currentPage * 10);
     const stats = response?.stats;
-    const pagination = response?.pagination;
+    const totalFiltered = filteredBanners.length;
+    const totalPagesFiltered = Math.ceil(totalFiltered / 10);
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -253,18 +280,35 @@ export default function MarketingManagementPage() {
 
     return (
         <div className="space-y-6 bg-white min-h-[calc(100vh-100px)] p-8 rounded-xl">
-            <div className="flex flex-wrap items-center justify-between">
-                <div>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex-1 min-w-[300px]">
                     <h2 className="text-2xl font-bold text-slate-900">Marketing Management</h2>
                     <p className="text-sm text-slate-500 mt-1">Manage promotional banners and marketing content for your mobile app</p>
                 </div>
-                <button
-                    onClick={() => handleOpenModal()}
-                    className="flex items-center gap-2 mt-4 md:mt-0 px-4 py-2.5 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#6366F1]/90 transition-colors"
-                >
-                    <Plus size={18} />
-                    Add New Banner
-                </button>
+
+                <div className="flex flex-wrap items-center gap-4 flex-1 justify-end">
+                    {/* Search Bar */}
+                    <div className="flex-1 max-w-md relative group">
+                        <input
+                            type="text"
+                            placeholder="Search banners..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-12 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm text-black focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
+                        />
+                        <div className="absolute left-1 top-1 bottom-1 w-7.5 h-7.5 flex items-center justify-center bg-primary text-white rounded-full">
+                            <Search size={14} />
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={() => handleOpenModal()}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#6366F1]/90 transition-colors whitespace-nowrap"
+                    >
+                        <Plus size={18} />
+                        Add New Banner
+                    </button>
+                </div>
             </div>
 
             {/* Stats */}
@@ -284,7 +328,7 @@ export default function MarketingManagementPage() {
                         ))}
                     </div>
                 ) : (
-                    banners.map((banner) => (
+                    displayedBanners.map((banner) => (
                         <div key={banner.id} className="flex flex-col md:flex-row gap-6 p-4 border border-slate-200 rounded-xl bg-white hover:border-slate-300 transition-colors">
                             <div className="w-full md:w-48 h-32 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 relative group">
                                 <img src={banner.image} alt={banner.title} className="w-full h-full object-cover" />
@@ -358,7 +402,7 @@ export default function MarketingManagementPage() {
                     ))
                 )}
 
-                {!isFetching && banners.length === 0 && (
+                {!isFetching && displayedBanners.length === 0 && (
                     <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
                         <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
                             <ImageIcon className="text-slate-400" size={24} />
@@ -376,7 +420,7 @@ export default function MarketingManagementPage() {
             </div>
 
             {/* Pagination */}
-            {pagination && pagination.totalPages > 1 && (
+            {totalPagesFiltered > 1 && (
                 <div className="flex items-center justify-center gap-4 py-6 border-t border-slate-100">
                     <button
                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
@@ -386,11 +430,11 @@ export default function MarketingManagementPage() {
                         <ChevronLeft size={20} />
                     </button>
                     <span className="text-sm font-medium text-slate-700">
-                        Page {currentPage} of {pagination.totalPages}
+                        Page {currentPage} of {totalPagesFiltered}
                     </span>
                     <button
-                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.totalPages))}
-                        disabled={currentPage === pagination.totalPages || isFetching}
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPagesFiltered))}
+                        disabled={currentPage === totalPagesFiltered || isFetching}
                         className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors"
                     >
                         <ChevronRight size={20} />

@@ -2,18 +2,42 @@
 
 import DeleteModal from "@/components/DeleteModal";
 import { useGetAllTransactionsQuery } from "@/lib/features/super-admin/transaction/transactionAPI";
-import { ChevronLeft, ChevronRight, Loader2, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { ChevronLeft, ChevronRight, Loader2, Search } from "lucide-react";
+import { useAppSelector } from "@/lib/hooks";
+import { useEffect, useState, useMemo } from "react";
 
 export default function TransactionsPage() {
     const [page, setPage] = useState(1);
-    const { data: transactionsData, isLoading, isError } = useGetAllTransactionsQuery({ page, limit: 10 });
+    const globalSearch = useAppSelector((state) => state.search.query);
+    const [searchInput, setSearchInput] = useState(globalSearch || "");
+    
+    // Sync local search with global search
+    useEffect(() => {
+        setSearchInput(globalSearch);
+    }, [globalSearch]);
+
+    const { data: transactionsData, isLoading, isError, isFetching } = useGetAllTransactionsQuery({ page, limit: 100 });
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
     const transactions = transactionsData?.data?.data || [];
     const meta = transactionsData?.data?.meta;
+
+    const filteredTransactions = useMemo(() => {
+        return transactions.filter((t: any) => {
+            const searchLower = searchInput.toLowerCase();
+            return (
+                t.bookingId?.toLowerCase().includes(searchLower) ||
+                t.transactionId?.toLowerCase().includes(searchLower) ||
+                t.gateway?.toLowerCase().includes(searchLower) ||
+                t.status?.toLowerCase().includes(searchLower) ||
+                t.amount?.toString().includes(searchInput)
+            );
+        });
+    }, [transactions, searchInput]);
+
+    const displayedTransactions = filteredTransactions.slice((page - 1) * 10, page * 10);
 
     const confirmDelete = () => {
         // No delete API provided yet, just UI feedback
@@ -66,6 +90,22 @@ export default function TransactionsPage() {
                 <p className="text-sm text-slate-500 mt-1">Track all your payments and refunds in one place</p>
             </div>
 
+            {/* Actions Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-6">
+                <div className="hidden sm:flex items-center flex-1 max-w-md relative group">
+                    <input
+                        type="text"
+                        placeholder="Search by Booking ID or Transaction ID..."
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        className="w-full pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-full text-sm text-black focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
+                    />
+                    <div className="absolute left-1 top-1 bottom-1 w-8 h-8 flex items-center justify-center bg-primary text-white rounded-full">
+                        <Search size={16} />
+                    </div>
+                </div>
+            </div>
+
             {/* Main Card */}
             <div className="mt-6">
                 {/* Table */}
@@ -93,14 +133,14 @@ export default function TransactionsPage() {
                                         </div>
                                     </td>
                                 </tr>
-                            ) : transactions.length === 0 ? (
+                            ) : displayedTransactions.length === 0 ? (
                                 <tr>
                                     <td colSpan={8} className="py-20 text-center text-slate-500 italic">
                                         No transactions found.
                                     </td>
                                 </tr>
                             ) : (
-                                transactions.map((transaction, index) => (
+                                displayedTransactions.map((transaction: any, index: number) => (
                                     <tr key={transaction.id} className="border-t border-slate-300 hover:bg-slate-50/50 transition-colors">
                                         <td className="px-4 py-4 text-sm text-[#2C2C2C] border-r border-slate-300 text-center">
                                             {index + 1 + (page - 1) * 10}
@@ -142,53 +182,38 @@ export default function TransactionsPage() {
                 </div>
 
                 {/* Pagination */}
-                {meta && meta.totalPage > 1 && (
-                    <div className="py-4 border-t border-slate-300 flex items-center justify-end gap-3">
-                        <button
-                            disabled={page === 1}
-                            onClick={() => setPage(p => Math.max(1, p - 1))}
-                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
-                        >
-                            <ChevronLeft size={16} />
-                            Previous
-                        </button>
-                        <div className="flex items-center gap-1">
-                            {Array.from({ length: Math.min(meta.totalPage, 5) }, (_, i) => {
-                                // Simple sliding window for page numbers
-                                let pageNum = i + 1;
-                                if (meta.totalPage > 5 && page > 3) {
-                                    pageNum = page - 3 + i;
-                                    if (pageNum + (5 - i) > meta.totalPage) {
-                                        pageNum = meta.totalPage - 5 + i + 1;
-                                    }
-                                }
-                                return (
-                                    <button
-                                        key={pageNum}
-                                        onClick={() => setPage(pageNum)}
-                                        className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${pageNum === page
-                                            ? 'bg-slate-100 text-slate-900 border border-slate-300 shadow-sm'
-                                            : 'text-slate-600 hover:bg-slate-50'
-                                            }`}
-                                    >
-                                        {pageNum}
-                                    </button>
-                                );
-                            })}
-                            {meta.totalPage > 5 && page < meta.totalPage - 2 && (
-                                <span className="px-1 text-slate-400">...</span>
-                            )}
-                        </div>
-                        <button
-                            disabled={page === meta.totalPage}
-                            onClick={() => setPage(p => Math.min(meta.totalPage, p + 1))}
-                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
-                        >
-                            Next
-                            <ChevronRight size={16} />
-                        </button>
+                <div className="py-4 border-t border-slate-300 flex items-center justify-end gap-3">
+                    <button
+                        disabled={page === 1}
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
+                    >
+                        <ChevronLeft size={16} />
+                        Previous
+                    </button>
+                    <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.ceil(filteredTransactions.length / 10) }, (_, i) => i + 1).map((pageNum) => (
+                            <button
+                                key={pageNum}
+                                onClick={() => setPage(pageNum)}
+                                className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${pageNum === page
+                                    ? 'bg-slate-100 text-slate-900 border border-slate-300 shadow-sm'
+                                    : 'text-slate-600 hover:bg-slate-50'
+                                    }`}
+                            >
+                                {pageNum}
+                            </button>
+                        ))}
                     </div>
-                )}
+                    <button
+                        disabled={page >= Math.ceil(filteredTransactions.length / 10)}
+                        onClick={() => setPage(p => p + 1)}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
+                    >
+                        Next
+                        <ChevronRight size={16} />
+                    </button>
+                </div>
             </div>
 
             <DeleteModal

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Trash2, Edit2, X, Image as ImageIcon, UploadCloud, Calendar, ExternalLink, EyeIcon, EyeOffIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Plus, Trash2, Edit2, X, Image as ImageIcon, UploadCloud, Calendar, ExternalLink, EyeIcon, EyeOffIcon, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import DeleteModal from "@/components/DeleteModal";
 import { 
     useGetMarketingBannersQuery, 
@@ -33,11 +33,17 @@ export default function SubAdminMarketingPage() {
     const canDelete = user?.role === "SUPER_ADMIN";
 
     const [currentPage, setCurrentPage] = useState(1);
+    const globalSearch = useAppSelector((state) => state.search.query);
+    const [searchQuery, setSearchQuery] = useState(globalSearch || "");
+
+    useEffect(() => {
+        setSearchQuery(globalSearch);
+    }, [globalSearch]);
     
     // API Queries and Mutations
     const { data: response, isLoading: isFetching } = useGetMarketingBannersQuery({ 
         page: currentPage, 
-        limit: 10 
+        limit: 100 // Fetch more for frontend filtering
     }, { skip: !hasViewPermission });
 
     const [updateStatus, { isLoading: isUpdating }] = useUpdateBannerStatusMutation();
@@ -72,6 +78,18 @@ export default function SubAdminMarketingPage() {
     const banners = response?.data || [];
     const stats = response?.stats;
     const pagination = response?.pagination;
+
+    const filteredBanners = useMemo(() => {
+        return banners.filter(banner => {
+            const lowerQuery = searchQuery.toLowerCase();
+            return (
+                banner.title?.toLowerCase().includes(lowerQuery) ||
+                banner.id?.toLowerCase().includes(lowerQuery) ||
+                banner.description?.toLowerCase().includes(lowerQuery) ||
+                banner.link?.toLowerCase().includes(lowerQuery)
+            );
+        });
+    }, [banners, searchQuery]);
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!hasManagePermission) return;
@@ -199,15 +217,27 @@ export default function SubAdminMarketingPage() {
 
     return (
         <div className="space-y-6 bg-white min-h-[calc(100vh-100px)] p-8 rounded-xl">
-            <div className="flex flex-wrap items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900">Marketing Management</h2>
                     <p className="text-sm text-slate-500 mt-1">Manage promotional banners and marketing content</p>
                 </div>
+                <div className="flex-1 max-w-md relative group">
+                    <input
+                        type="text"
+                        placeholder="Search banners..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-full text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1] transition-all placeholder:text-slate-400"
+                    />
+                    <div className="absolute left-1 top-1 bottom-1 w-9 h-9 flex items-center justify-center bg-[#6366F1] text-white rounded-full">
+                        <Search size={18} />
+                    </div>
+                </div>
                 {hasManagePermission && (
                     <button
                         onClick={() => handleOpenModal()}
-                        className="flex items-center gap-2 mt-4 md:mt-0 px-4 py-2.5 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#6366F1]/90 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#6366F1]/90 transition-colors"
                     >
                         <Plus size={18} />
                         Add New Banner
@@ -229,8 +259,12 @@ export default function SubAdminMarketingPage() {
                             <div key={i} className="h-40 bg-slate-50 animate-pulse rounded-xl border border-slate-200"></div>
                         ))}
                     </div>
+                ) : filteredBanners.length === 0 ? (
+                    <div className="text-center py-20 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                        <p className="text-slate-500 text-sm">No banners found matching your search.</p>
+                    </div>
                 ) : (
-                    banners.map((banner: any) => (
+                    filteredBanners.map((banner: any) => (
                         <div key={banner.id} className="flex flex-col md:flex-row gap-6 p-4 border border-slate-200 rounded-xl bg-white hover:border-slate-300 transition-colors">
                             <div className="w-full md:w-48 h-32 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 relative group">
                                 <img src={banner.image} alt={banner.title} className="w-full h-full object-cover" />

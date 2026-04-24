@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Search,
     Download,
@@ -11,22 +11,35 @@ import {
     ChevronRight,
     X
 } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import StatusBadge from "@/components/StatusBadge";
 import { useGetAllBookingsQuery } from "@/lib/features/super-admin/booking/bookingAPI";
 import { Booking } from "@/lib/features/super-admin/booking/booking.type";
 import { useAppSelector } from "@/lib/hooks";
-import { errorBarDefaultProps } from "recharts/types/cartesian/ErrorBar";
+import { useMemo } from "react";
 
 export default function BookingRequestsPage() {
     const { user } = useAppSelector((state) => state.auth);
     const hasViewPermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewBooking || user?.adminPermissions?.isManageBooking;
     const hasManagePermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isManageBooking;
 
+    const globalSearch = useAppSelector((state) => state.search.query);
     const [activeTab, setActiveTab] = useState("All Bookings");
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState(globalSearch || "");
     const [currentPage, setCurrentPage] = useState(1);
     const [paymentFilter, setPaymentFilter] = useState("");
     const [showPaymentFilter, setShowPaymentFilter] = useState(false);
+
+    // Sync local search with global search
+    useEffect(() => {
+        setSearchQuery(globalSearch);
+    }, [globalSearch]);
+
+    // Reset pagination on search
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery]);
 
     const STATUS_OPTIONS = [
         { value: "",       label: "All Status" },
@@ -48,16 +61,36 @@ export default function BookingRequestsPage() {
 
     const { data: response, isLoading, error } = useGetAllBookingsQuery({
         page: currentPage,
-        limit: 10,
+        limit: 100,
         status: paymentFilter || statusMap[activeTab],
-        search: searchQuery || undefined
     }, {
         skip: !hasViewPermission
     });
-    console.log(error);
 
     const allBookings = response?.data?.data?.data || [];
+    
+    const filteredBookings = useMemo(() => {
+        return allBookings.filter((b: any) => {
+            const searchLower = searchQuery.toLowerCase();
+            const clientName = `${b.client?.firstName || ""} ${b.client?.lastName || ""}`.toLowerCase();
+            const providerName = `${b.provider?.firstName || ""} ${b.provider?.lastName || ""}`.toLowerCase();
+            
+            return (
+                b.id.toLowerCase().includes(searchLower) ||
+                (b.bookingNumber && b.bookingNumber.toLowerCase().includes(searchLower)) ||
+                b.serviceName.toLowerCase().includes(searchLower) ||
+                clientName.includes(searchLower) ||
+                providerName.includes(searchLower) ||
+                (b.contactPhone && b.contactPhone.includes(searchQuery)) ||
+                (b.locationDetails && b.locationDetails.toLowerCase().includes(searchLower))
+            );
+        });
+    }, [allBookings, searchQuery]);
+
+    const displayedBookings = filteredBookings.slice((currentPage - 1) * 10, currentPage * 10);
     const pagination = response?.data?.data?.pagination;
+    const totalFiltered = filteredBookings.length;
+    const totalPagesFiltered = Math.ceil(totalFiltered / 10);
 
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
@@ -66,7 +99,7 @@ export default function BookingRequestsPage() {
         return null;
     };
 
-    const handleDownload = () => {
+    const handleDownloadAllCSV = () => {
         const headers = ["ID", "Booking Number", "Date", "Time", "Location", "Customer ID", "Provider ID", "Amount", "Status"];
         const csvContent = [
             headers.join(","),
@@ -93,12 +126,83 @@ export default function BookingRequestsPage() {
         document.body.removeChild(link);
     };
 
+    const handleDownloadPDF = (booking: Booking) => {
+        const doc = new jsPDF();
+        
+        // Add Header
+        doc.setFontSize(22);
+        doc.setTextColor(44, 62, 80);
+        doc.text("Protiva - Booking Details", 20, 20);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(127, 140, 141);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, 28);
+        
+        doc.setLineWidth(0.5);
+        doc.line(20, 32, 190, 32);
+
+        // Booking Info
+        doc.setFontSize(12);
+        doc.setTextColor(44, 62, 80);
+        doc.setFont("helvetica", "bold");
+        doc.text("Booking Information", 20, 45);
+        
+        const bookingData = [
+            ["Booking ID", booking.id],
+            ["Booking Number", booking.bookingNumber || "N/A"],
+            ["Service Name", booking.serviceName],
+            ["Date & Time", `${new Date(booking.preferredDate).toLocaleDateString()} at ${booking.preferredTime}`],
+            ["Location", booking.locationDetails],
+            ["Amount", `${booking.serviceAmount} BDT`],
+            ["Status", booking.status],
+            ["Payment Status", booking.paymentStatus]
+        ];
+
+        autoTable(doc, {
+            startY: 50,
+            head: [["Field", "Details"]],
+            body: bookingData,
+            theme: "striped",
+            headStyles: { fillColor: [120, 123, 235] },
+            margin: { left: 20, right: 20 }
+        });
+
+        // Client & Provider Info
+        const currentY = (doc as any).lastAutoTable.finalY + 15;
+        doc.text("Customer & Provider Details", 20, currentY);
+
+        const detailsData = [
+            ["Customer Name", booking.client ? `${booking.client.firstName} ${booking.client.lastName}` : "N/A"],
+            ["Customer Phone", booking.contactPhone || "N/A"],
+            ["Provider Name", booking.provider ? `${booking.provider.firstName} ${booking.provider.lastName}` : "N/A"],
+            ["Provider Phone", booking.provider?.phone || "N/A"]
+        ];
+
+        autoTable(doc, {
+            startY: currentY + 5,
+            head: [["Role", "Information"]],
+            body: detailsData,
+            theme: "grid",
+            headStyles: { fillColor: [52, 73, 94] },
+            margin: { left: 20, right: 20 }
+        });
+
+        // Footer
+        const finalY = (doc as any).lastAutoTable.finalY + 20;
+        doc.setFontSize(10);
+        doc.setTextColor(127, 140, 141);
+        doc.text("Thank you for using Protiva.", 20, finalY);
+        doc.text("This is a computer-generated document.", 20, finalY + 5);
+
+        doc.save(`booking_${booking.id.slice(-6)}.pdf`);
+    };
+
     const tabs = [
-        { name: "All Bookings", count: activeTab === "All Bookings" ? pagination?.total : null },
-        { name: "Pending", count: getCount("Pending") },
-        { name: "Accepted", count: getCount("Accepted") },
-        { name: "Rejected", count: getCount("Rejected") },
-        { name: "In-Progress", count: getCount("In-Progress") },
+        { name: "All Bookings", count: activeTab === "All Bookings" ? totalFiltered : null },
+        { name: "Pending", count: activeTab === "Pending" ? totalFiltered : null },
+        { name: "Accepted", count: activeTab === "Accepted" ? totalFiltered : null },
+        { name: "Rejected", count: activeTab === "Rejected" ? totalFiltered : null },
+        { name: "In-Progress", count: activeTab === "In-Progress" ? totalFiltered : null },
     ];
 
     // if (!hasViewPermission) {
@@ -152,7 +256,7 @@ export default function BookingRequestsPage() {
                     {/* Actions Bar */}
                     <div className="pb-6 flex flex-wrap items-center justify-between gap-4">
                         {/* Search Bar */}
-                        <div className="hidden sm:flex items-center flex-1 max-w-md relative group">
+                        <div className="flex-1 max-w-md relative group">
                             <input
                                 type="text"
                                 placeholder="Search by booking ID, service..."
@@ -161,17 +265,17 @@ export default function BookingRequestsPage() {
                                     setSearchQuery(e.target.value);
                                     setCurrentPage(1);
                                 }}
-                                className="w-full pl-15 px-4 py-1.5 h-[45px] bg-white border border-blue-300 rounded-[50px] text-sm font-normal text-black focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                                className="w-full pl-12 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm text-black focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
                             />
-                            <button className="absolute left-1.5 top-1.2 bottom-1.2 w-9 h-9 flex items-center justify-center bg-[#787BEB] text-white rounded-full hover:bg-blue-700 transition-colors shadow-sm">
-                                <Search size={18} />
-                            </button>
+                            <div className="absolute left-1 top-1 bottom-1 w-7.5 h-7.5 flex items-center justify-center bg-primary text-white rounded-full">
+                                <Search size={14} />
+                            </div>
                         </div>
 
                         <div className="flex items-center gap-3">
                             {hasManagePermission && (
                                 <button
-                                    onClick={handleDownload}
+                                    onClick={handleDownloadAllCSV}
                                     className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
                                     <Download size={16} />
                                     Download CSV
@@ -255,12 +359,12 @@ export default function BookingRequestsPage() {
                                     <tr>
                                         <td colSpan={9} className="py-20 text-center text-slate-400">Loading bookings...</td>
                                     </tr>
-                                ) : allBookings.length === 0 ? (
+                                ) : displayedBookings.length === 0 ? (
                                     <tr>
                                         <td colSpan={9} className="py-20 text-center text-slate-400">No bookings found.</td>
                                     </tr>
                                 ) : (
-                                    allBookings.map((booking: Booking, idx: number) => (
+                                    displayedBookings.map((booking: Booking, idx: number) => (
                                         <tr key={booking.id} className="hover:bg-slate-50/50 transition-colors">
                                             <td className="px-4 py-4 text-sm text-slate-600 border-r-2 border-slate-300">
                                                 {String(((currentPage - 1) * 10) + idx + 1).padStart(2, '0')}
@@ -296,7 +400,7 @@ export default function BookingRequestsPage() {
                                                     </button>
                                                     {hasManagePermission && (
                                                         <button 
-                                                            onClick={handleDownload}
+                                                            onClick={() => handleDownloadPDF(booking)}
                                                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                                                             <DownloadIcon size={20} />
                                                         </button>
@@ -311,7 +415,7 @@ export default function BookingRequestsPage() {
                     </div>
 
                     {/* Pagination */}
-                    {pagination && pagination.totalPages > 1 && (
+                    {totalPagesFiltered > 1 && (
                         <div className="py-6 border-t border-slate-200 flex items-center justify-center md:justify-end md:gap-3 gap-1">
                             <button 
                                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
@@ -322,7 +426,7 @@ export default function BookingRequestsPage() {
                                 Previous
                             </button>
                             <div className="flex items-center gap-1">
-                                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(i => (
+                                {Array.from({ length: totalPagesFiltered }, (_, i) => i + 1).map(i => (
                                     <button
                                         key={i}
                                         onClick={() => setCurrentPage(i)}
@@ -336,8 +440,8 @@ export default function BookingRequestsPage() {
                                 ))}
                             </div>
                             <button 
-                                onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
-                                disabled={currentPage === pagination.totalPages}
+                                onClick={() => setCurrentPage(prev => Math.min(totalPagesFiltered, prev + 1))}
+                                disabled={currentPage === totalPagesFiltered}
                                 className="flex items-center gap-1 px-4 py-2 text-sm text-slate-600 hover:text-slate-900 disabled:opacity-50 transition-colors"
                             >
                                 Next

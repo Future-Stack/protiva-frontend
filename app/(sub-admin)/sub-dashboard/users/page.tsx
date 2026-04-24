@@ -46,10 +46,16 @@ export default function UsersPage() {
 
     const LIMIT = 10;
     const [page, setPage]           = useState(1);
-    const [searchInput, setSearchInput] = useState("");
+    const globalSearch = useAppSelector((state) => state.search.query);
+    const [searchInput, setSearchInput] = useState(globalSearch || "");
     const [statusFilter, setStatusFilter] = useState("");
     const [showFilter, setShowFilter] = useState(false);
     const debouncedSearch = useDebounce(searchInput, 400);
+
+    // Sync with global search
+    useEffect(() => {
+        setSearchInput(globalSearch);
+    }, [globalSearch]);
     useEffect(() => { setPage(1); }, [debouncedSearch, statusFilter]);
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);

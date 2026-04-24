@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, User, Globe, Menu, User2Icon, Settings, LogOut, Info, CheckCircle, AlertCircle, CircleDollarSign, Clock } from "lucide-react";
+import { Bell, Search, User, Globe, Menu, User2Icon, Settings, LogOut, Info, CheckCircle, AlertCircle, CircleDollarSign, Clock, X } from "lucide-react";
 import Logo from "@/app/assets/logo";
 import { MdArrowDropDown } from "react-icons/md";
 import user1 from "@/app/assets/user1.png";
@@ -12,6 +12,7 @@ import { logout } from "@/lib/features/auth/authSlice";
 import { useRouter } from "next/navigation";
 import { useGetMeQuery } from "@/lib/features/auth/authApi";
 import { useGetNotificationsQuery, useReadNotificationMutation } from "@/lib/features/notification/notificationAPI";
+import { setSearchQuery } from "@/lib/features/search/searchSlice";
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -36,8 +37,14 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const [language, setLanguage] = useState("English");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  const searchQuery = useSelector((state: RootState) => state.search.query);
+
   const toggle = (type: ModalType) => {
     setOpenModal((prev) => (prev === type ? null : type));
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setSearchQuery(e.target.value));
   };
 
   useEffect(() => {
@@ -105,6 +112,8 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               <input
                 type="text"
                 placeholder="Search..."
+                value={searchQuery}
+                onChange={handleSearchChange}
                 className="w-full px-4 py-1.5 h-[45px] bg-white border border-[#00000024] rounded-[50px] text-sm font-normal text-black focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
               />
               <button className="absolute right-1.5 top-1 bottom-1 w-9 h-9 flex items-center justify-center bg-[#787BEB] text-white rounded-full hover:bg-blue-700 transition-colors shadow-sm">
@@ -118,26 +127,28 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               <Search size={20} />
             </button>
             {mobileSearch && (
-              <div className="fixed  bg-white z-50 p-4">
-                <div className="flex items-center gap-2">
+              <div className="fixed inset-0 bg-white z-[60] p-4 animate-in slide-in-from-top duration-300">
+                <div className="flex items-center gap-2 max-w-lg mx-auto">
                   <input
                     autoFocus
                     type="text"
                     placeholder="Search..."
-                    className="flex-1 h-10 px-4 text-black border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    className="flex-1 h-11 px-4 text-black border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
                   />
                   <button
                     onClick={() => setMobileSearch(false)}
-                    className="text-sm text-slate-600"
+                    className="p-2 text-slate-500 hover:text-slate-900 transition-colors"
                   >
-                    Cancel
+                    <X size={24} />
                   </button>
                 </div>
               </div>
             )}
           </div>
           <div className="flex items-center gap-2 md:gap-4">
-            <button
+            {/* <button
               onClick={() => toggle("language")}
               className="hidden w-[120px] md:flex items-center gap-2 text-[#09090B] hover:text-slate-900 transition-colors"
             >
@@ -171,7 +182,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                   বাংলা
                 </button>
               </div>
-            )}
+            )} */}
             <button
               onClick={() => toggle("notification")}
               className="p-2 md:p-2.5 text-slate-500 hover:bg-slate-50 rounded-full relative transition-colors"

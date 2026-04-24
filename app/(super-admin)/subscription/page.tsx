@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Trash2, ChevronLeft, ChevronRight, PencilLine, X, Camera } from "lucide-react";
+import { Camera, ChevronLeft, ChevronRight, PencilLine, Search, Trash2, X } from "lucide-react";
+import { useAppSelector } from "@/lib/hooks";
+import { useEffect, useState, useMemo, useRef } from "react";
 import DeleteModal from "@/components/DeleteModal";
 
 const SUBSCRIPTIONS = [
@@ -19,13 +20,24 @@ const SUBSCRIPTIONS = [
 
 export default function SubscriptionPage() {
     const [subscriptions, setSubscriptions] = useState(SUBSCRIPTIONS);
-    const [searchQuery, setSearchQuery] = useState("");
+    const globalSearch = useAppSelector((state) => state.search.query);
+    const [searchQuery, setSearchQuery] = useState(globalSearch || "");
 
-    const filteredSubscriptions = subscriptions.filter(sub =>
-        sub.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        sub.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        sub.phone.includes(searchQuery)
-    );
+    // Sync local search with global search
+    useEffect(() => {
+        setSearchQuery(globalSearch);
+    }, [globalSearch]);
+
+    const filteredSubscriptions = useMemo(() => {
+        return subscriptions.filter(sub =>
+            sub.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            sub.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            sub.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            sub.phone.includes(searchQuery) ||
+            sub.activeStatus.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            sub.verificationPlan.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [subscriptions, searchQuery]);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -77,6 +89,22 @@ export default function SubscriptionPage() {
             <div>
                 <h2 className="text-2xl font-bold text-slate-900">Subscription Management</h2>
                 <p className="text-sm text-slate-500 mt-1">Manage the current plan and track usage.</p>
+            </div>
+
+            {/* Actions Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-6">
+                <div className="hidden sm:flex items-center flex-1 max-w-md relative group">
+                    <input
+                        type="text"
+                        placeholder="Search by Provider, Email or ID..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-12 pr-4 py-2.5 bg-white border border-slate-200 rounded-full text-sm text-black focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
+                    />
+                    <div className="absolute left-1 top-1 bottom-1 w-9 h-9 flex items-center justify-center bg-primary text-white rounded-full">
+                        <Search size={18} />
+                    </div>
+                </div>
             </div>
 
             {/* Main Card */}

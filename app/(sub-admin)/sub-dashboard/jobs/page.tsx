@@ -45,9 +45,15 @@ export default function SubAdminJobListPage() {
     const hasManagePermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isJobManage;
 
     const [page, setPage] = useState(1);
-    const [searchQuery, setSearchQuery] = useState("");
+    const globalSearch = useAppSelector((state) => state.search.query);
+    const [searchQuery, setSearchQuery] = useState(globalSearch || "");
     const [isPopularFilter, setIsPopularFilter] = useState<boolean | undefined>(undefined);
     const debouncedSearch = useDebounce(searchQuery, 500);
+
+    // Sync with global search
+    useEffect(() => {
+        setSearchQuery(globalSearch);
+    }, [globalSearch]);
 
     // Fetch jobs from API (limit 100 for frontend filtering)
     const { data: response, isLoading, isFetching } = useGetAllJobsQuery({ 
@@ -63,9 +69,11 @@ export default function SubAdminJobListPage() {
     // FRONTEND FILTERING LOGIC
     const filteredJobs = useMemo(() => {
         return jobs.filter(job => {
+            const searchLower = debouncedSearch.toLowerCase();
             const matchesSearch = 
-                job.title?.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
-                job.id?.toLowerCase().includes(debouncedSearch.toLowerCase());
+                job.title?.toLowerCase().includes(searchLower) || 
+                job.id?.toLowerCase().includes(searchLower) ||
+                (job.createdAt && new Date(job.createdAt).toLocaleDateString().includes(debouncedSearch));
             
             const matchesPopular = isPopularFilter === undefined ? true : job.isPopuler === isPopularFilter;
             

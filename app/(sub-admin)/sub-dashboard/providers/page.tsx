@@ -42,6 +42,7 @@ interface ProviderRow {
     avatarSeed: string;
     isProviderRecomendation: boolean;
     status: string;
+    createdAt: string;
 }
 
 const VERIFICATION_OPTIONS = [
@@ -190,12 +191,18 @@ export default function SubAdminProviderListPage() {
 
     const [localRows, setLocalRows] = useState<ProviderRow[]>([]);
     const [page, setPage] = useState(1);
-    const [searchInput, setSearchInput] = useState("");
+    const globalSearch = useAppSelector((state) => state.search.query);
+    const [searchInput, setSearchInput] = useState(globalSearch || "");
     const [verificationFilter, setVerificationFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
     const [showVerifyFilter, setShowVerifyFilter] = useState(false);
 
     const debouncedSearch = useDebounce(searchInput, 400);
+
+    // Sync local search with global search
+    useEffect(() => {
+        setSearchInput(globalSearch);
+    }, [globalSearch]);
 
     const { data, isLoading, isFetching, isError, refetch } = useGetAllProvidersQuery({
         page,
@@ -228,6 +235,7 @@ export default function SubAdminProviderListPage() {
                     avatarSeed: p.id,
                     isProviderRecomendation: p.isProviderRecomendation,
                     status: p.status,
+                    createdAt: p.createdAt,
                 }))
             );
         }
@@ -236,10 +244,14 @@ export default function SubAdminProviderListPage() {
     // FRONTEND FILTERING
     const displayedRows = useMemo(() => {
         return localRows.filter((r) => {
+            const searchLower = debouncedSearch.toLowerCase();
             const matchesSearch = 
-                r.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-                r.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-                r.phone.includes(debouncedSearch);
+                r.id.toLowerCase().includes(searchLower) ||
+                r.name.toLowerCase().includes(searchLower) ||
+                r.email.toLowerCase().includes(searchLower) ||
+                r.phone.includes(debouncedSearch) ||
+                (r.status && r.status.toLowerCase().includes(searchLower)) ||
+                (r.createdAt && new Date(r.createdAt).toLocaleDateString().includes(debouncedSearch));
             
             const matchesVerification = verificationFilter ? r.verificationStatus === verificationFilter : true;
             const matchesStatus = statusFilter ? r.status === statusFilter : true;
@@ -338,9 +350,9 @@ export default function SubAdminProviderListPage() {
                             onChange={(e) => setSearchInput(e.target.value)}
                             className="w-full pl-15 px-4 py-1.5 h-[45px] bg-white border border-blue-300 rounded-[50px] text-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
                         />
-                        <button className="absolute left-1.5 top-1.2 bottom-1.2 w-9 h-9 flex items-center justify-center bg-[#787BEB] text-white rounded-full">
-                            <Search size={18} />
-                        </button>
+                        <div className="absolute left-1 top-1 bottom-1 w-7.5 h-7.5 flex items-center justify-center bg-[#787BEB] text-white rounded-full">
+                            <Search size={14} />
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -430,7 +442,7 @@ export default function SubAdminProviderListPage() {
                                                     {provider.avatar ? <img src={provider.avatar} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-500 font-bold">{provider.name.charAt(0)}</div>}
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm font-bold text-slate-900">{provider.name}</div>
+                                                    <div className="text-sm font-medium text-slate-900 capitalize">{provider.name}</div>
                                                     <div className="text-xs text-amber-500">★ <span className="text-slate-400">{provider.rating}</span></div>
                                                 </div>
                                             </div>

@@ -3,7 +3,9 @@
 import { useAppSelector } from "@/lib/hooks";
 import { useGetAllTransactionsQuery } from "@/lib/features/super-admin/transaction/transactionAPI";
 import { ChevronLeft, ChevronRight, Loader2, AlertCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Search } from "lucide-react";
+import { useMemo } from "react";
 
 const getStatusStyle = (status: string) => {
     switch (status) {
@@ -23,12 +25,31 @@ export default function TransactionsPage() {
     const hasViewPermission = user?.role === "SUPER_ADMIN" || user?.adminPermissions?.isViewTransaction;
 
     const [page, setPage] = useState(1);
-    const { data, isLoading,isError } = useGetAllTransactionsQuery({ page, limit: 10 });
-    
-    console.log(data);
+    const globalSearch = useAppSelector((state) => state.search.query);
+    const [searchQuery, setSearchQuery] = useState(globalSearch || "");
+    const { data, isLoading, isError, isFetching } = useGetAllTransactionsQuery({ page, limit: 100 });
+
+    useEffect(() => {
+        setSearchQuery(globalSearch);
+    }, [globalSearch]);
 
     const transactions = data?.data?.data || [];
     const meta         = data?.data?.meta;
+
+    const filteredTransactions = useMemo(() => {
+        return transactions.filter((t: any) => {
+            const searchLower = searchQuery.toLowerCase();
+            return (
+                t.bookingId?.toLowerCase().includes(searchLower) ||
+                t.transactionId?.toLowerCase().includes(searchLower) ||
+                t.gateway?.toLowerCase().includes(searchLower) ||
+                t.status?.toLowerCase().includes(searchLower) ||
+                t.amount?.toString().includes(searchQuery)
+            );
+        });
+    }, [transactions, searchQuery]);
+
+    const displayedTransactions = filteredTransactions.slice((page - 1) * 10, page * 10);
 
     if (!hasViewPermission) {
         return (
@@ -43,9 +64,26 @@ export default function TransactionsPage() {
 
     return (
         <div className="space-y-6 bg-white px-[26px] py-[34px] rounded-lg overflow-hidden min-h-[80vh]">
-            <div>
-                <h2 className="text-2xl font-bold text-slate-900">Transaction</h2>
-                <p className="text-sm text-slate-500 mt-1">Track all payments and refunds in one place</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-900">Transaction</h2>
+                    <p className="text-sm text-slate-500 mt-1">Track all payments and refunds in one place</p>
+                </div>
+                <div className="flex-1 max-w-md relative group">
+                    <input
+                        type="text"
+                        placeholder="Search by Booking ID or Transaction ID..."
+                        value={searchQuery}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setPage(1);
+                        }}
+                        className="w-full pl-12 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                    />
+                    <div className="absolute left-1 top-1 bottom-1 w-7.5 h-7.5 flex items-center justify-center bg-[#787BEB] text-white rounded-full">
+                        <Search size={14} />
+                    </div>
+                </div>
             </div>
 
             <div className="mt-6">
@@ -70,10 +108,10 @@ export default function TransactionsPage() {
                                         <p className="text-sm text-slate-500">Loading transactions...</p>
                                     </div>
                                 </td></tr>
-                            ) : transactions.length === 0 ? (
+                            ) : displayedTransactions.length === 0 ? (
                                 <tr><td colSpan={7} className="py-20 text-center text-slate-500 italic">No transactions found.</td></tr>
                             ) : (
-                                transactions.map((t: any, index: number) => (
+                                displayedTransactions.map((t: any, index: number) => (
                                     <tr key={t.id} className="border-t border-slate-300 hover:bg-slate-50/50 transition-colors">
                                         <td className="px-4 py-4 text-sm text-[#2C2C2C] border-r border-slate-300 text-center">{index + 1 + (page - 1) * 10}</td>
                                         <td className="px-4 py-4 text-sm text-[#0F172A] border-r border-slate-300 font-medium">{t.bookingId}</td>
@@ -94,25 +132,23 @@ export default function TransactionsPage() {
                     </table>
                 </div>
 
-                {meta && meta.totalPage > 1 && (
-                    <div className="py-4 border-t border-slate-300 flex items-center justify-end gap-3">
-                        <button disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}
-                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50">
-                            <ChevronLeft size={16} /> Previous
-                        </button>
-                        <div className="flex items-center gap-1">
-                            {Array.from({ length: Math.min(meta.totalPage, 5) }, (_, i) => i + 1).map((i) => (
-                                <button key={i} onClick={() => setPage(i)}
-                                    className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${i === page ? "bg-slate-100 text-slate-900 border border-slate-300" : "text-slate-600 hover:bg-slate-50"}`}
-                                >{i}</button>
-                            ))}
-                        </div>
-                        <button disabled={page === meta.totalPage} onClick={() => setPage(p => Math.min(meta.totalPage, p + 1))}
-                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50">
-                            Next <ChevronRight size={16} />
-                        </button>
+                <div className="py-4 border-t border-slate-300 flex items-center justify-end gap-3">
+                    <button disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50">
+                        <ChevronLeft size={16} /> Previous
+                    </button>
+                    <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.ceil(filteredTransactions.length / 10) }, (_, i) => i + 1).map((i) => (
+                            <button key={i} onClick={() => setPage(i)}
+                                className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${i === page ? "bg-slate-100 text-slate-900 border border-slate-300 shadow-sm" : "text-slate-600 hover:bg-slate-50"}`}
+                            >{i}</button>
+                        ))}
                     </div>
-                )}
+                    <button disabled={page >= Math.ceil(filteredTransactions.length / 10)} onClick={() => setPage(p => Math.min(Math.ceil(filteredTransactions.length / 10), p + 1))}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50">
+                        Next <ChevronRight size={16} />
+                    </button>
+                </div>
             </div>
         </div>
     );

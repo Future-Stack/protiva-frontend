@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
     Search,
     Download,
@@ -15,19 +15,20 @@ import {
 import DeleteModal from "@/components/DeleteModal";
 import { useGetAllUsersQuery, useDeleteUserMutation } from "@/lib/features/super-admin/user/userAPI";
 import { useGetUserTotalBookingQuery } from "@/lib/features/super-admin/booking/bookingAPI";
+import { useAppSelector } from "@/lib/hooks";
 
 /* ─── Static fallback data ───────────────────────────────────────────── */
 const STATIC_USERS = [
-    { id: "01", name: "Emir Ansal",   phone: "+65824125", email: "polo@gmail.com", totalBooking: 10,   status: "ACTIVE",   verificationStatus: "VERIFIED", },
-    { id: "02", name: "John Doe",     phone: "+65954425", email: "john@gmail.com", totalBooking: 10,   status: "PENDING",  verificationStatus: "VERIFIED" },
-    { id: "03", name: "Jane Smith",   phone: "+65734210", email: "jane@gmail.com", totalBooking: 10,   status: "PENDING",  verificationStatus: "UNVERIFIED" },
-    { id: "04", name: "Kamrul Biswas",phone: "+65612345", email: "kamrul@gmail.com", totalBooking: 10,   status: "ACTIVE",   verificationStatus: "VERIFIED" },
-    { id: "05", name: "Md Arman",     phone: "+65901234", email: "arman@gmail.com",  totalBooking: 10,   status: "PENDING",  verificationStatus: "VERIFIED" },
-    { id: "06", name: "Rosul Ahmed",  phone: "+65456789", email: "rosul@gmail.com",  totalBooking: 10,   status: "PENDING",  verificationStatus: "UNVERIFIED" },
-    { id: "07", name: "Nafis Hasan",  phone: "+65876543", email: "nafis@gmail.com", totalBooking: 10,   status: "ACTIVE",   verificationStatus: "VERIFIED" },
-    { id: "08", name: "Rafi Islam",   phone: "+65234567", email: "rafi@gmail.com", totalBooking: 10,   status: "PENDING",  verificationStatus: "UNVERIFIED" },
-    { id: "09", name: "Sara Begum",   phone: "+65345678", email: "sara@gmail.com", totalBooking: 10,   status: "ACTIVE",   verificationStatus: "VERIFIED" },
-    { id: "10", name: "Tanvir Hossain",phone: "+65123456",email: "tanvir@gmail.com", totalBooking: 10,   status: "PENDING",  verificationStatus: "UNVERIFIED" },
+    { id: "01", name: "Emir Ansal", phone: "+65824125", email: "polo@gmail.com", totalBooking: 10, status: "ACTIVE", verificationStatus: "VERIFIED", },
+    { id: "02", name: "John Doe", phone: "+65954425", email: "john@gmail.com", totalBooking: 10, status: "PENDING", verificationStatus: "VERIFIED" },
+    { id: "03", name: "Jane Smith", phone: "+65734210", email: "jane@gmail.com", totalBooking: 10, status: "PENDING", verificationStatus: "UNVERIFIED" },
+    { id: "04", name: "Kamrul Biswas", phone: "+65612345", email: "kamrul@gmail.com", totalBooking: 10, status: "ACTIVE", verificationStatus: "VERIFIED" },
+    { id: "05", name: "Md Arman", phone: "+65901234", email: "arman@gmail.com", totalBooking: 10, status: "PENDING", verificationStatus: "VERIFIED" },
+    { id: "06", name: "Rosul Ahmed", phone: "+65456789", email: "rosul@gmail.com", totalBooking: 10, status: "PENDING", verificationStatus: "UNVERIFIED" },
+    { id: "07", name: "Nafis Hasan", phone: "+65876543", email: "nafis@gmail.com", totalBooking: 10, status: "ACTIVE", verificationStatus: "VERIFIED" },
+    { id: "08", name: "Rafi Islam", phone: "+65234567", email: "rafi@gmail.com", totalBooking: 10, status: "PENDING", verificationStatus: "UNVERIFIED" },
+    { id: "09", name: "Sara Begum", phone: "+65345678", email: "sara@gmail.com", totalBooking: 10, status: "ACTIVE", verificationStatus: "VERIFIED" },
+    { id: "10", name: "Tanvir Hossain", phone: "+65123456", email: "tanvir@gmail.com", totalBooking: 10, status: "PENDING", verificationStatus: "UNVERIFIED" },
 ];
 const totalBooking = 10;
 
@@ -65,16 +66,16 @@ const BookingCountCell = ({ userId }: { userId: string }) => {
 /* ─── Status badge helper ────────────────────────────────────────────── */
 const getStatusStyles = (status: string) => {
     switch (status) {
-        case "ACTIVE":    return "text-green-500";
+        case "ACTIVE": return "text-green-500";
         case "SUSPENDED": return "text-red-500";
-        default:          return "text-yellow-500";
+        default: return "text-yellow-500";
     }
 };
 const getStatusLabel = (status: string) => {
     switch (status) {
-        case "ACTIVE":    return "Active";
+        case "ACTIVE": return "Active";
         case "SUSPENDED": return "Suspended";
-        default:          return "Pending";
+        default: return "Pending";
     }
 };
 
@@ -84,42 +85,49 @@ const getVerificationStyles = (vs: string) =>
         : "bg-slate-100 text-slate-500";
 
 const STATUS_OPTIONS = [
-    { value: "",          label: "All Status" },
-    { value: "ACTIVE",    label: "Active" },
-    { value: "PENDING",   label: "Pending" },
+    { value: "", label: "All Status" },
+    { value: "ACTIVE", label: "Active" },
+    { value: "PENDING", label: "Pending" },
     { value: "SUSPENDED", label: "Suspended" },
 ];
 
 export default function UsersPage() {
     /* ── Pagination & filter state ── */
     const LIMIT = 10;
-    const [page, setPage]               = useState(1);
-    const [searchInput, setSearchInput] = useState("");
+    const [page, setPage] = useState(1);
+    const globalSearch = useAppSelector((state) => state.search.query);
+    const [searchInput, setSearchInput] = useState(globalSearch || "");
     const [statusFilter, setStatusFilter] = useState("");
-    const [showFilter, setShowFilter]   = useState(false);
+    const [showFilter, setShowFilter] = useState(false);
 
     const debouncedSearch = useDebounce(searchInput, 400);
+
+    // Sync local search with global search
+    useEffect(() => {
+        setSearchInput(globalSearch);
+    }, [globalSearch]);
+
     useEffect(() => { setPage(1); }, [debouncedSearch, statusFilter]);
 
     /* ── Local UI state ── */
-    const [localRows, setLocalRows]               = useState<UserRow[]>([]);
+    const [localRows, setLocalRows] = useState<UserRow[]>([]);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [itemToDelete, setItemToDelete]         = useState<string | null>(null);
+    const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
     /* ── API ── */
     const queryParams = {
         page,
         limit: LIMIT,
         ...(debouncedSearch ? { search: debouncedSearch } : {}),
-        ...(statusFilter    ? { status: statusFilter }    : {}),
+        ...(statusFilter ? { status: statusFilter } : {}),
     };
     const { data, isLoading, isFetching, isError } = useGetAllUsersQuery(queryParams);
-    const [deleteUser, { isLoading: isDeleting }]  = useDeleteUserMutation();
+    const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
 
-    const apiUsers   = data?.data?.data ?? [];
+    const apiUsers = data?.data?.data ?? [];
     const pagination = data?.data?.pagination;
     const totalPages = pagination?.totalPages ?? 1;
-    const total      = pagination?.total ?? 0;
+    const total = pagination?.total ?? 0;
     const hasApiData = apiUsers.length > 0;
 
     /* ── Sync local rows ── */
@@ -127,41 +135,46 @@ export default function UsersPage() {
         if (hasApiData) {
             setLocalRows(
                 apiUsers.map((u) => ({
-                    id:                 u.id,
-                    name:               `${u.firstName} ${u.lastName}`,
-                    phone:              u.phone,
-                    email:              u.email,
-                    totalBooking:       totalBooking,
-                    status:             u.status,
+                    id: u.id,
+                    name: `${u.firstName} ${u.lastName}`,
+                    phone: u.phone,
+                    email: u.email,
+                    totalBooking: totalBooking,
+                    status: u.status,
                     verificationStatus: u.verificationStatus,
-                    emailVerified:      u.emailVerified,
-                    lastLogin:          u.lastLogin,
-                    createdAt:          u.createdAt,
-                    avatarSeed:         u.id,
+                    emailVerified: u.emailVerified,
+                    lastLogin: u.lastLogin,
+                    createdAt: u.createdAt,
+                    avatarSeed: u.id,
                 }))
             );
         } else if (!isLoading && !isFetching) {
             setLocalRows(STATIC_USERS.map((s) => ({
                 ...s,
                 emailVerified: s.verificationStatus === "VERIFIED",
-                lastLogin:     null,
-                createdAt:     new Date().toISOString(),
-                avatarSeed:    s.id,
+                lastLogin: null,
+                createdAt: new Date().toISOString(),
+                avatarSeed: s.id,
             })));
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [apiUsers, isLoading, isFetching]);
 
     /* ── Client-side filter for static fallback ── */
-    const displayedRows = hasApiData
-        ? localRows
-        : localRows
-            .filter((r) =>
-                r.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-                r.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-                r.phone.includes(debouncedSearch)
-            )
-            .filter((r) => !statusFilter || r.status === statusFilter);
+    const displayedRows = useMemo(() => {
+        const rows = hasApiData ? localRows : localRows;
+        return rows.filter((r) => {
+            const searchLower = debouncedSearch.toLowerCase();
+            const matchesSearch =
+                r.id.toLowerCase().includes(searchLower) ||
+                r.name.toLowerCase().includes(searchLower) ||
+                r.email.toLowerCase().includes(searchLower) ||
+                r.phone.includes(debouncedSearch);
+
+            const matchesStatus = statusFilter ? r.status === statusFilter : true;
+            return matchesSearch && matchesStatus;
+        });
+    }, [localRows, debouncedSearch, statusFilter, hasApiData]);
 
     /* ── Delete ── */
     const handleDelete = (id: string) => { setItemToDelete(id); setIsDeleteModalOpen(true); };
@@ -202,8 +215,8 @@ export default function UsersPage() {
             ].join(","))
         ].join("\n");
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-        const a    = document.createElement("a");
-        a.href     = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
         a.download = "users_list.csv";
         document.body.appendChild(a);
         a.click();
@@ -268,11 +281,10 @@ export default function UsersPage() {
                         <div className="relative">
                             <button
                                 onClick={() => setShowFilter((v) => !v)}
-                                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                                    showFilter || statusFilter
+                                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${showFilter || statusFilter
                                         ? "bg-[#787BEB] text-white"
                                         : "bg-slate-900 text-white hover:bg-slate-800"
-                                }`}
+                                    }`}
                             >
                                 <Filter size={16} />
                                 Filter
@@ -293,11 +305,10 @@ export default function UsersPage() {
                                             <button
                                                 key={opt.value}
                                                 onClick={() => { setStatusFilter(opt.value); setShowFilter(false); }}
-                                                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                                                    statusFilter === opt.value
+                                                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${statusFilter === opt.value
                                                         ? "bg-[#787BEB]/10 text-[#787BEB] font-medium"
                                                         : "text-slate-600 hover:bg-slate-50"
-                                                }`}
+                                                    }`}
                                             >
                                                 {opt.label}
                                             </button>
@@ -440,11 +451,10 @@ export default function UsersPage() {
                                     key={item}
                                     onClick={() => setPage(item as number)}
                                     disabled={isFetching}
-                                    className={`w-8 h-8 rounded-lg text-sm flex items-center justify-center -mt-1 font-medium transition-all ${
-                                        item === page
+                                    className={`w-8 h-8 rounded-lg text-sm flex items-center justify-center -mt-1 font-medium transition-all ${item === page
                                             ? "border border-slate-200 text-black"
                                             : "text-slate-600 hover:bg-slate-100"
-                                    }`}
+                                        }`}
                                 >
                                     {item}
                                 </button>

@@ -41,10 +41,16 @@ function useDebounce(value: string, delay: number) {
 
 export default function JobListPage() {
     const { user } = useAppSelector((state) => state.auth);
+    const globalSearch = useAppSelector((state) => state.search.query);
     const [page, setPage] = useState(1);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState(globalSearch || "");
     const [isPopularFilter, setIsPopularFilter] = useState<boolean | undefined>(undefined);
     const debouncedSearch = useDebounce(searchQuery, 500);
+
+    // Sync local search with global search
+    useEffect(() => {
+        setSearchQuery(globalSearch);
+    }, [globalSearch]);
 
     const hasViewPermission = user?.role === "SUPER_ADMIN";
 

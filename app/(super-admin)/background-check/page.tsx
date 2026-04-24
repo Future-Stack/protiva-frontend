@@ -17,6 +17,7 @@ import {
     useVerifyProviderMutation,
     useRejectProviderMutation,
 } from "@/lib/features/super-admin/provider/providerAPI";
+import { useAppSelector } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
 
 
@@ -51,8 +52,14 @@ export default function BackgroundCheckPage() {
     const router = useRouter();
     const LIMIT = 10;
     const [page, setPage] = useState(1);
-    const [searchInput, setSearchInput] = useState("");
+    const globalSearch = useAppSelector((state) => state.search.query);
+    const [searchInput, setSearchInput] = useState(globalSearch || "");
     const debouncedSearch = useDebounce(searchInput, 400);
+
+    // Sync local search with global search
+    useEffect(() => {
+        setSearchInput(globalSearch);
+    }, [globalSearch]);
 
     const [localRows, setLocalRows] = useState<CheckRow[]>([]);
     const [actionLoading, setActionLoading] = useState<string | null>(null); // provider id being actioned
@@ -91,7 +98,7 @@ export default function BackgroundCheckPage() {
                 }))
             );
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [apiProviders, isLoading, isFetching]);
 
     const displayedRows = localRows;
@@ -299,9 +306,8 @@ export default function BackgroundCheckPage() {
                                 key={i}
                                 onClick={() => setPage(i)}
                                 disabled={isFetching}
-                                className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${
-                                    i === page ? "bg-slate-100 text-slate-900" : "text-slate-600 hover:bg-slate-50"
-                                }`}
+                                className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${i === page ? "bg-slate-100 text-slate-900" : "text-slate-600 hover:bg-slate-50"
+                                    }`}
                             >
                                 {i}
                             </button>

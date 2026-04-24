@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Trash2, ChevronLeft, ChevronRight, PencilLine, X, Camera } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Trash2, ChevronLeft, ChevronRight, PencilLine, X, Camera, Search } from "lucide-react";
+import { useAppSelector } from "@/lib/hooks";
 import DeleteModal from "@/components/DeleteModal";
 
 const SUBSCRIPTIONS = [
@@ -18,8 +19,13 @@ const SUBSCRIPTIONS = [
 ];
 
 export default function SubscriptionPage() {
+    const globalSearch = useAppSelector((state) => state.search.query);
     const [subscriptions, setSubscriptions] = useState(SUBSCRIPTIONS);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState(globalSearch || "");
+
+    useEffect(() => {
+        setSearchQuery(globalSearch);
+    }, [globalSearch]);
 
     const filteredSubscriptions = subscriptions.filter(sub =>
         sub.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -74,9 +80,23 @@ export default function SubscriptionPage() {
     return (
         <div className="space-y-6 bg-white rounded-lg overflow-hidden px-[26px] py-[34px]">
             {/* Header */}
-            <div>
-                <h2 className="text-2xl font-bold text-slate-900">Subscription Management</h2>
-                <p className="text-sm text-slate-500 mt-1">Manage the current plan and track usage.</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-900">Subscription Management</h2>
+                    <p className="text-sm text-slate-500 mt-1">Manage the current plan and track usage.</p>
+                </div>
+                <div className="flex-1 max-w-md relative group">
+                    <input
+                        type="text"
+                        placeholder="Search providers..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-12 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                    />
+                    <div className="absolute left-1 top-1 bottom-1 w-9 h-9 flex items-center justify-center bg-[#787BEB] text-white rounded-full">
+                        <Search size={18} />
+                    </div>
+                </div>
             </div>
 
             {/* Main Card */}
