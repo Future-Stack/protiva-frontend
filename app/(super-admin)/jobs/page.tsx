@@ -227,7 +227,7 @@ export default function JobListPage() {
                                         user?.role === 'SUPER_ADMIN' ? (
                                             <span className="text-[11px] font-mono text-slate-500">{job.id}</span>
                                         ) : (
-                                            <span className="text-[11px] font-mono text-slate-500">{job.id.slice(0, 8)}...</span>
+                                            <span className="text-[11px] font-mono text-slate-500">***{job.id.slice(-8)}</span>
                                         )
                                     }
                                 </div>

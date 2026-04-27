@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
     Search,
     Download,
@@ -9,7 +9,8 @@ import {
     DownloadIcon,
     ChevronLeft,
     ChevronRight,
-    X
+    X,
+    Calendar
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -29,7 +30,15 @@ export default function BookingRequestsPage() {
     const [searchQuery, setSearchQuery] = useState(globalSearch || "");
     const [currentPage, setCurrentPage] = useState(1);
     const [paymentFilter, setPaymentFilter] = useState("");
+    const [selectedDate, setSelectedDate] = useState("");
     const [showPaymentFilter, setShowPaymentFilter] = useState(false);
+    const dateRef = useRef<HTMLInputElement>(null);
+
+    const formatDateDisplay = (dateStr: string) => {
+        if (!dateStr) return "";
+        const [y, m, d] = dateStr.split('-');
+        return `${d}-${m}-${y}`;
+    };
 
     // Sync local search with global search
     useEffect(() => {
@@ -42,15 +51,15 @@ export default function BookingRequestsPage() {
     }, [searchQuery]);
 
     const STATUS_OPTIONS = [
-        { value: "",       label: "All Status" },
-        { value: "PENDING",   label: "Pending" },
+        { value: "", label: "All Status" },
+        { value: "PENDING", label: "Pending" },
         { value: "ACCEPTED", label: "Accepted" },
         { value: "REJECTED", label: "Rejected" },
         { value: "IN_PROGRESS", label: "In Progress" },
         { value: "COMPLETED", label: "Completed" },
         { value: "CANCELLED", label: "Cancelled" },
     ];
-    
+
     // Map UI tabs to API statuses
     const statusMap: Record<string, any> = {
         "Pending": "PENDING",
@@ -63,19 +72,20 @@ export default function BookingRequestsPage() {
         page: currentPage,
         limit: 100,
         status: paymentFilter || statusMap[activeTab],
+        date: selectedDate,
     }, {
         skip: !hasViewPermission
     });
 
     const allBookings = response?.data?.data?.data || [];
-    
+
     const filteredBookings = useMemo(() => {
         return allBookings.filter((b: any) => {
             const searchLower = searchQuery.toLowerCase();
             const clientName = `${b.client?.firstName || ""} ${b.client?.lastName || ""}`.toLowerCase();
             const providerName = `${b.provider?.firstName || ""} ${b.provider?.lastName || ""}`.toLowerCase();
-            
-            return (
+
+            const matchesSearch = (
                 b.id.toLowerCase().includes(searchLower) ||
                 (b.bookingNumber && b.bookingNumber.toLowerCase().includes(searchLower)) ||
                 b.serviceName.toLowerCase().includes(searchLower) ||
@@ -84,8 +94,14 @@ export default function BookingRequestsPage() {
                 (b.contactPhone && b.contactPhone.includes(searchQuery)) ||
                 (b.locationDetails && b.locationDetails.toLowerCase().includes(searchLower))
             );
+
+            // Frontend date filtering fallback
+            const bookingDate = b.preferredDate ? new Date(b.preferredDate).toISOString().split('T')[0] : "";
+            const matchesDate = !selectedDate || bookingDate === selectedDate;
+
+            return matchesSearch && matchesDate;
         });
-    }, [allBookings, searchQuery]);
+    }, [allBookings, searchQuery, selectedDate]);
 
     const displayedBookings = filteredBookings.slice((currentPage - 1) * 10, currentPage * 10);
     const pagination = response?.data?.data?.pagination;
@@ -128,16 +144,16 @@ export default function BookingRequestsPage() {
 
     const handleDownloadPDF = (booking: Booking) => {
         const doc = new jsPDF();
-        
+
         // Add Header
         doc.setFontSize(22);
         doc.setTextColor(44, 62, 80);
         doc.text("Protiva - Booking Details", 20, 20);
-        
+
         doc.setFontSize(10);
         doc.setTextColor(127, 140, 141);
         doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, 28);
-        
+
         doc.setLineWidth(0.5);
         doc.line(20, 32, 190, 32);
 
@@ -146,7 +162,7 @@ export default function BookingRequestsPage() {
         doc.setTextColor(44, 62, 80);
         doc.setFont("helvetica", "bold");
         doc.text("Booking Information", 20, 45);
-        
+
         const bookingData = [
             ["Booking ID", booking.id],
             ["Booking Number", booking.bookingNumber || "N/A"],
@@ -251,7 +267,7 @@ export default function BookingRequestsPage() {
                         </button>
                     ))}
                 </div>
-                
+
                 <div className="mt-[34px] bg-white px-[26px] py-[34px] rounded-lg min-h-[400px]">
                     {/* Actions Bar */}
                     <div className="pb-6 flex flex-wrap items-center justify-between gap-4">
@@ -273,7 +289,7 @@ export default function BookingRequestsPage() {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            {hasManagePermission && (
+                             {hasManagePermission && (
                                 <button
                                     onClick={handleDownloadAllCSV}
                                     className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
@@ -281,14 +297,59 @@ export default function BookingRequestsPage() {
                                     Download CSV
                                 </button>
                             )}
+                            {/* Premium Date Picker */}
+                            <div 
+                                className="relative group cursor-pointer"
+                                onClick={() => {
+                                    try {
+                                        (dateRef.current as any)?.showPicker();
+                                    } catch (e) {
+                                        dateRef.current?.focus();
+                                    }
+                                }}
+                            >
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-hover:text-primary transition-colors pointer-events-none z-10">
+                                    <Calendar size={16} />
+                                </div>
+                                <input
+                                    type="text"
+                                    readOnly
+                                    value={selectedDate ? formatDateDisplay(selectedDate) : ""}
+                                    placeholder="DD-MM-YYYY"
+                                    className="pl-12 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all cursor-pointer w-[180px] hover:border-primary/50 "
+                                />
+                                <input
+                                    ref={dateRef}
+                                    type="date"
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                    value={selectedDate}
+                                    onChange={(e) => {
+                                        setSelectedDate(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                />
+                                {selectedDate && (
+                                    <button 
+                                        onClick={(e) => { 
+                                            e.stopPropagation();
+                                            setSelectedDate(""); 
+                                            setCurrentPage(1); 
+                                        }}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-red-500 transition-colors z-20"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                )}
+                            </div>
+
+                           
                             <div className="relative">
                                 <button
                                     onClick={() => setShowPaymentFilter((v) => !v)}
-                                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                                        showPaymentFilter || paymentFilter
-                                            ? "bg-[#787BEB] text-white"
-                                            : "bg-slate-900 text-white hover:bg-slate-800"
-                                    }`}
+                                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${showPaymentFilter || paymentFilter
+                                        ? "bg-[#787BEB] text-white"
+                                        : "bg-slate-900 text-white hover:bg-slate-800"
+                                        }`}
                                 >
                                     <Filter size={16} />
                                     Filter
@@ -309,11 +370,10 @@ export default function BookingRequestsPage() {
                                                 <button
                                                     key={opt.value}
                                                     onClick={() => { setPaymentFilter(opt.value); setShowPaymentFilter(false); setCurrentPage(1); }}
-                                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                                                        paymentFilter === opt.value
-                                                            ? "bg-[#787BEB]/10 text-[#787BEB] font-medium"
-                                                            : "text-slate-600 hover:bg-slate-50"
-                                                    }`}
+                                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${paymentFilter === opt.value
+                                                        ? "bg-[#787BEB]/10 text-[#787BEB] font-medium"
+                                                        : "text-slate-600 hover:bg-slate-50"
+                                                        }`}
                                                 >
                                                     {opt.label}
                                                 </button>
@@ -370,7 +430,7 @@ export default function BookingRequestsPage() {
                                                 {String(((currentPage - 1) * 10) + idx + 1).padStart(2, '0')}
                                             </td>
                                             <td className="px-4 py-4 text-sm font-medium text-slate-900 border-r-2 border-slate-300">
-                                                {booking.bookingNumber || booking.id.slice(-6).toUpperCase()}
+                                                {booking.bookingNumber || booking.id.slice(-8)}
                                             </td>
                                             <td className="px-4 py-4 border-r-2 border-slate-300">
                                                 <div className="text-sm text-slate-900">{new Date(booking.preferredDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
@@ -399,7 +459,7 @@ export default function BookingRequestsPage() {
                                                         <Eye size={20} />
                                                     </button>
                                                     {hasManagePermission && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleDownloadPDF(booking)}
                                                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                                                             <DownloadIcon size={20} />
@@ -417,7 +477,7 @@ export default function BookingRequestsPage() {
                     {/* Pagination */}
                     {totalPagesFiltered > 1 && (
                         <div className="py-6 border-t border-slate-200 flex items-center justify-center md:justify-end md:gap-3 gap-1">
-                            <button 
+                            <button
                                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                 disabled={currentPage === 1}
                                 className="flex items-center gap-1 px-4 py-2 text-sm text-slate-600 hover:text-slate-900 disabled:opacity-50 transition-colors"
@@ -439,7 +499,7 @@ export default function BookingRequestsPage() {
                                     </button>
                                 ))}
                             </div>
-                            <button 
+                            <button
                                 onClick={() => setCurrentPage(prev => Math.min(totalPagesFiltered, prev + 1))}
                                 disabled={currentPage === totalPagesFiltered}
                                 className="flex items-center gap-1 px-4 py-2 text-sm text-slate-600 hover:text-slate-900 disabled:opacity-50 transition-colors"

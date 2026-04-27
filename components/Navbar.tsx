@@ -12,11 +12,13 @@ import { logout } from "@/lib/features/auth/authSlice";
 import { useRouter } from "next/navigation";
 import { useGetMeQuery } from "@/lib/features/auth/authApi";
 import { useGetNotificationsQuery, useReadNotificationMutation } from "@/lib/features/notification/notificationAPI";
-import { setSearchQuery } from "@/lib/features/search/searchSlice";
+import { setSearchQuery, setDropdownOpen } from "@/lib/features/search/searchSlice";
+import SearchDropdown from "./SearchDropdown";
 
 interface NavbarProps {
   onMenuClick?: () => void;
 }
+
 type ModalType = "language" | "notification" | "user" | null;
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
@@ -37,7 +39,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const [language, setLanguage] = useState("English");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const searchQuery = useSelector((state: RootState) => state.search.query);
+  const { query: searchQuery, isDropdownOpen } = useSelector((state: RootState) => state.search);
 
   const toggle = (type: ModalType) => {
     setOpenModal((prev) => (prev === type ? null : type));
@@ -45,6 +47,25 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchQuery(e.target.value));
+    if (e.target.value) {
+      dispatch(setDropdownOpen(true));
+    } else {
+      dispatch(setDropdownOpen(false));
+    }
+  };
+
+  const handleSearchSubmit = () => {
+    if (!searchQuery.trim()) return;
+    const searchPath = user?.role === "SUPER_ADMIN" ? "/search" : "/sub-dashboard/search";
+    router.push(`${searchPath}?q=${encodeURIComponent(searchQuery)}`);
+    dispatch(setDropdownOpen(false));
+    setMobileSearch(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearchSubmit();
+    }
   };
 
   useEffect(() => {
@@ -90,17 +111,17 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   return (
     <>
       <header className="
-    h-16 md:h-20
-    bg-white border-b border-slate-100
-    flex items-center justify-between
-    mx-3 my-3 md:mx-6 md:my-5
-    px-3 md:px-5
-    sticky top-0 z-20 rounded-[10px]
-  ">
-        <div className="hidden lg:block cursor-pointer w-[100px] h-[20px] lg:w-[245px] lg:h-[57px] ">
+        h-16 md:h-20
+        bg-white border-b border-slate-100
+        flex items-center justify-between
+        mx-3 my-3 md:mx-6 md:my-5
+        px-3 md:px-5
+        sticky top-0 z-40 rounded-[10px]
+      ">
+        <div className="hidden lg:block cursor-pointer w-25 h-5 lg:w-61.25 lg:h-14.25 ">
           <Logo />
         </div>
-        <div className="flex gap-[29px] w-full md:w-fit  items-center justify-between">
+        <div className="flex gap-7.25 w-full md:w-fit  items-center justify-between">
           <div className="flex items-center gap-4 flex-1">
             <button
               onClick={onMenuClick}
@@ -108,17 +129,22 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             >
               <Menu size={24} />
             </button>
-            <div className="hidden sm:flex items-center flex-1 max-w-md relative group w-[300px] xl:w-[500px] ">
+            <div className="hidden sm:flex items-center flex-1 max-w-md relative group w-75 xl:w-125 ">
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className="w-full px-4 py-1.5 h-[45px] bg-white border border-[#00000024] rounded-[50px] text-sm font-normal text-black focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                onKeyDown={handleKeyDown}
+                className="w-full px-4 py-1.5 h-11.25 bg-white border border-[#00000024] rounded-[50px] text-sm font-normal text-black focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
               />
-              <button className="absolute right-1.5 top-1 bottom-1 w-9 h-9 flex items-center justify-center bg-[#787BEB] text-white rounded-full hover:bg-blue-700 transition-colors shadow-sm">
+              <button 
+                onClick={handleSearchSubmit}
+                className="absolute right-1.5 top-1 bottom-1 w-9 h-9 flex items-center justify-center bg-[#787BEB] text-white rounded-full hover:bg-blue-700 transition-colors shadow-sm"
+              >
                 <Search size={18} />
               </button>
+              <SearchDropdown />
             </div>
             <button
               onClick={() => setMobileSearch(true)}
@@ -127,14 +153,15 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               <Search size={20} />
             </button>
             {mobileSearch && (
-              <div className="fixed inset-0 bg-white z-[60] p-4 animate-in slide-in-from-top duration-300">
-                <div className="flex items-center gap-2 max-w-lg mx-auto">
+              <div className="fixed inset-0 bg-white z-60 p-4 animate-in slide-in-from-top duration-300">
+                <div className="flex items-center gap-2 max-w-lg mx-auto relative">
                   <input
                     autoFocus
                     type="text"
                     placeholder="Search..."
                     value={searchQuery}
                     onChange={handleSearchChange}
+                    onKeyDown={handleKeyDown}
                     className="flex-1 h-11 px-4 text-black border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
                   />
                   <button
@@ -143,6 +170,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                   >
                     <X size={24} />
                   </button>
+                  <SearchDropdown />
                 </div>
               </div>
             )}
@@ -195,7 +223,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               )}
             </button>
             {openModal === "notification" && (
-              <div ref={ref} className="absolute top-[65px] right-2 md:right-[80px] bg-white border border-slate-200 rounded-xl shadow-xl w-[320px] md:w-[380px] overflow-hidden z-50">
+              <div ref={ref} className="absolute top-16.25 right-2 md:right-20 bg-white border border-slate-200 rounded-xl shadow-xl w-[320px] md:w-95 overflow-hidden z-50">
                 <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                   <h3 className="text-sm font-bold text-slate-900">Notifications</h3>
                   {unreadCount > 0 && (
@@ -204,7 +232,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                     </button>
                   )}
                 </div>
-                <div className="max-h-[420px] overflow-y-auto divide-y divide-slate-100">
+                <div className="max-h-105 overflow-y-auto divide-y divide-slate-100">
                   {notifications.length === 0 ? (
                     <div className="py-12 text-center">
                       <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -220,7 +248,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                         onClick={() => !n.isRead && readNotification(n.id)}
                         className={`px-4 py-4 flex gap-4 cursor-pointer hover:bg-slate-50 transition-colors relative ${!n.isRead ? 'bg-indigo-50/20' : ''}`}
                       >
-                        <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center border ${!n.isRead ? 'bg-white border-indigo-100 shadow-sm' : 'bg-slate-50 border-slate-100'}`}>
+                        <div className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center border ${!n.isRead ? 'bg-white border-indigo-100 shadow-sm' : 'bg-slate-50 border-slate-100'}`}>
                           {getNotificationIcon(n.type)}
                         </div>
                         <div className="flex-1 min-w-0 mt-2">
@@ -265,7 +293,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               </div>
             </div>
             {openModal === "user" && (
-              <div className="absolute top-[60px] right-0 bg-white rounded-lg shadow-md w-[260px] overflow-hidden">
+              <div className="absolute top-15 right-0 bg-white rounded-lg shadow-md w-65 overflow-hidden">
                 <div className="flex items-center gap-3 px-4 py-3 bg-slate-50">
                   <div className="w-12 h-12 rounded-full overflow-hidden ">
                     <img
@@ -279,7 +307,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                       {user?.firstName} {user?.lastName}
                     </p>
                     <p className="text-xs text-slate-500">{user?.email}</p>
-                    <span className="inline-block mt-1 px-2 py-[2px] text-[10px] rounded-full bg-indigo-100 text-indigo-600">
+                    <span className="inline-block mt-1 px-2 py-0.5 text-[10px] rounded-full bg-indigo-100 text-indigo-600">
                       {user?.role?.replace("_", " ")}
                     </span>
                   </div>
@@ -318,7 +346,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
       {/* Logout Confirmation Modal */}
       {showLogoutModal && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-999 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-8 text-center">
               <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-50 mb-6 transition-transform hover:scale-110 duration-300">

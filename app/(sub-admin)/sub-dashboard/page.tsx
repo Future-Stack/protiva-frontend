@@ -193,11 +193,11 @@ export default function SubAdminDashboard() {
                 </div>
 
                 <div className="relative pl-2 space-y-8">
-                    <div className="absolute left-[3px] top-2 bottom-2 w-px bg-slate-100"></div>
+                    <div className="absolute left-0.75 top-2 bottom-2 w-px bg-slate-100"></div>
 
                     {activities.length > 0 ? activities.slice(currentPage * 5, currentPage * 5 + 5).map((activity) => (
                     <div key={activity.id} className="relative pl-6">
-                        <div className="absolute left-[-4px] top-1.5 w-3.5 h-3.5 rounded-full bg-[#6366F1] border-2 border-white shadow-sm z-10"></div>
+                        <div className="absolute -left-1 top-1.5 w-3.5 h-3.5 rounded-full bg-[#6366F1] border-2 border-white shadow-sm z-10"></div>
                         <div>
                         <p className="text-sm font-semibold text-slate-900">{activity.title}</p>
                         <p className="text-xs text-slate-500 mt-0.5">{activity.message}</p>

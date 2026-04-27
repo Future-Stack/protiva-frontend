@@ -350,8 +350,8 @@ export default function SubAdminProviderListPage() {
                             onChange={(e) => setSearchInput(e.target.value)}
                             className="w-full pl-15 px-4 py-1.5 h-[45px] bg-white border border-blue-300 rounded-[50px] text-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
                         />
-                        <div className="absolute left-1 top-1 bottom-1 w-7.5 h-7.5 flex items-center justify-center bg-[#787BEB] text-white rounded-full">
-                            <Search size={14} />
+                        <div className="absolute left-1 top-1 bottom-1 w-9 h-9 flex items-center justify-center bg-[#787BEB] text-white rounded-full">
+                            <Search size={18} />
                         </div>
                     </div>
 

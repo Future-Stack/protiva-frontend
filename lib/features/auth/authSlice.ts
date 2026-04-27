@@ -47,7 +47,7 @@ const getInitialUser = () => {
   try {
     return JSON.parse(user);
   } catch (e) {
-    console.error("Error parsing user from localStorage:", e);
+    console.log("Error parsing user from localStorage:", e);
     return null;
   }
 };

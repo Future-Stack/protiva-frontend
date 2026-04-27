@@ -84,7 +84,7 @@ export default function SubscriptionPage() {
         fileInputRef.current?.click();
     };
     return (
-        <div className="space-y-6 bg-white rounded-lg overflow-hidden px-[26px] py-[34px]">
+        <div className="space-y-6 bg-white rounded-lg overflow-hidden px-6.5 py-8.5">
             {/* Header */}
             <div>
                 <h2 className="text-2xl font-bold text-slate-900">Subscription Management</h2>
@@ -130,7 +130,7 @@ export default function SubscriptionPage() {
                                     <td className="px-4 py-4 text-sm text-[#64748B] border-r border-slate-300">{sub.id}</td>
                                     <td className="px-4 py-4 border-r border-slate-300">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+                                            <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden shrink-0">
                                                 <img src={sub.image} alt="" className="w-full h-full object-cover" />
                                             </div>
                                             <div>

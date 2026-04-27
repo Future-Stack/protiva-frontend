@@ -148,15 +148,7 @@ export default function UsersPage() {
                     avatarSeed: u.id,
                 }))
             );
-        } else if (!isLoading && !isFetching) {
-            setLocalRows(STATIC_USERS.map((s) => ({
-                ...s,
-                emailVerified: s.verificationStatus === "VERIFIED",
-                lastLogin: null,
-                createdAt: new Date().toISOString(),
-                avatarSeed: s.id,
-            })));
-        }
+        } 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [apiUsers, isLoading, isFetching]);
 

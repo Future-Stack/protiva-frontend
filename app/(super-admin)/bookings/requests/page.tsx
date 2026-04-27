@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
     Search,
     Download,
@@ -9,7 +9,8 @@ import {
     DownloadIcon,
     ChevronLeft,
     ChevronRight,
-    X
+    X,
+    Calendar
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -25,7 +26,15 @@ export default function BookingRequestsPage() {
     const [searchQuery, setSearchQuery] = useState(globalSearch || "");
     const [currentPage, setCurrentPage] = useState(1);
     const [paymentFilter, setPaymentFilter] = useState("");
+    const [selectedDate, setSelectedDate] = useState("");
     const [showPaymentFilter, setShowPaymentFilter] = useState(false);
+    const dateRef = useRef<HTMLInputElement>(null);
+
+    const formatDateDisplay = (dateStr: string) => {
+        if (!dateStr) return "";
+        const [y, m, d] = dateStr.split('-');
+        return `${d}-${m}-${y}`;
+    };
 
     // Sync local search with global search
     useEffect(() => {
@@ -70,6 +79,7 @@ export default function BookingRequestsPage() {
         page: currentPage,
         limit: 100,
         status: paymentFilter || statusMap[activeTab],
+        date: selectedDate,
     });
 
     const allBookings = response?.data?.data?.data || [];
@@ -80,7 +90,7 @@ export default function BookingRequestsPage() {
             const clientName = `${b.client?.firstName || ""} ${b.client?.lastName || ""}`.toLowerCase();
             const providerName = `${b.provider?.firstName || ""} ${b.provider?.lastName || ""}`.toLowerCase();
             
-            return (
+            const matchesSearch = (
                 b.id.toLowerCase().includes(searchLower) ||
                 (b.bookingNumber && b.bookingNumber.toLowerCase().includes(searchLower)) ||
                 b.serviceName.toLowerCase().includes(searchLower) ||
@@ -89,8 +99,14 @@ export default function BookingRequestsPage() {
                 (b.contactPhone && b.contactPhone.includes(searchQuery)) ||
                 (b.locationDetails && b.locationDetails.toLowerCase().includes(searchLower))
             );
+
+            // Frontend date filtering fallback
+            const bookingDate = b.preferredDate ? new Date(b.preferredDate).toISOString().split('T')[0] : "";
+            const matchesDate = !selectedDate || bookingDate === selectedDate;
+
+            return matchesSearch && matchesDate;
         });
-    }, [allBookings, searchQuery]);
+    }, [allBookings, searchQuery, selectedDate]);
 
     const displayedBookings = filteredBookings.slice((currentPage - 1) * 10, currentPage * 10);
     const pagination = response?.data?.data?.pagination;
@@ -269,12 +285,58 @@ export default function BookingRequestsPage() {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <button
+                             <button
                                 onClick={handleDownloadAllCSV}
                                 className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
                                 <Download size={16} />
                                 Download CSV
                             </button>
+                            {/* Premium Date Picker */}
+                            <div 
+                                className="relative group cursor-pointer"
+                                onClick={() => {
+                                    try {
+                                        (dateRef.current as any)?.showPicker();
+                                    } catch (e) {
+                                        dateRef.current?.focus();
+                                    }
+                                }}
+                            >
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-hover:text-primary transition-colors pointer-events-none z-10">
+                                    <Calendar size={16} />
+                                </div>
+                                <input
+                                    type="text"
+                                    readOnly
+                                    value={selectedDate ? formatDateDisplay(selectedDate) : ""}
+                                    placeholder="DD-MM-YYYY"
+                                    className="pl-12 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all cursor-pointer w-[180px] hover:border-primary/50 "
+                                />
+                                <input
+                                    ref={dateRef}
+                                    type="date"
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                    value={selectedDate}
+                                    onChange={(e) => {
+                                        setSelectedDate(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                />
+                                {selectedDate && (
+                                    <button 
+                                        onClick={(e) => { 
+                                            e.stopPropagation();
+                                            setSelectedDate(""); 
+                                            setCurrentPage(1); 
+                                        }}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-red-500 transition-colors z-20"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                )}
+                            </div>
+
+                           
                             <div className="relative">
                                 <button
                                     onClick={() => setShowPaymentFilter((v) => !v)}
@@ -364,7 +426,7 @@ export default function BookingRequestsPage() {
                                                 {String(((currentPage - 1) * 10) + idx + 1).padStart(2, '0')}
                                             </td>
                                             <td className="px-4 py-4 text-sm font-medium text-slate-900 border-r-2 border-slate-300">
-                                                {booking.bookingNumber || booking.id.slice(-6).toUpperCase()}
+                                                {booking.bookingNumber || booking.id.slice(-8)}
                                             </td>
                                             <td className="px-4 py-4 border-r-2 border-slate-300">
                                                 <div className="text-sm text-slate-900">{new Date(booking.preferredDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>

@@ -104,4 +104,5 @@ export interface AllBookingsQuery {
   page?: number;
   status?: "PENDING" | "ACCEPTED" | "REJECTED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "REFUNDED";
   search?: string;
+  date?: string;
 }

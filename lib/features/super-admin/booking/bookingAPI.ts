@@ -4,11 +4,21 @@ import { AllBookingsQuery, AllBookingsResponse, UserTotalBookingResponse } from 
 export const bookingAPI = baseAPI.injectEndpoints({
   endpoints: (build) => ({
     getAllBookings: build.query<AllBookingsResponse, AllBookingsQuery | void>({
-      query: (params) => ({
-        url: "/api/v1/bookings/all-booking",
-        method: "GET",
-        params: params || { limit: 10, page: 1 },
-      }),
+      query: (params) => {
+        const cleanParams: any = {};
+        if (params) {
+          Object.entries(params).forEach(([key, value]) => {
+            if (value !== "" && value !== undefined && value !== null) {
+              cleanParams[key] = value;
+            }
+          });
+        }
+        return {
+          url: "/api/v1/bookings/all-booking",
+          method: "GET",
+          params: Object.keys(cleanParams).length > 0 ? cleanParams : { limit: 10, page: 1 },
+        };
+      },
       providesTags: ["Bookings"] as any,
     }),
     getUserTotalBooking: build.query<UserTotalBookingResponse, string>({

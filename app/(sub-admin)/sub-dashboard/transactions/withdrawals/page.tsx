@@ -171,7 +171,7 @@ export default function WithdrawalManagementPage() {
                                     <tr key={request.id} className="hover:bg-slate-50/50 transition-colors group">
                                         <td className="px-6 py-4 cursor-pointer" onClick={() => setSelectedRequest(request)}>
                                             <div className="text-sm font-mono text-slate-700 max-w-[140px] truncate" title={request.userId}>
-                                                {request.userId.slice(0, 12)}…
+                                                ***{request.userId.slice(-8)}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-sm font-semibold text-slate-900">৳{Number(request.amount).toLocaleString()}</td>
@@ -199,8 +199,14 @@ export default function WithdrawalManagementPage() {
                                         {hasManagePermission && (
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center justify-center gap-2">
-                                                    {/* Approve / Reject only if pending */}
-                                                    {request.status === "PENDING" ? (
+                                                    <button
+                                                        onClick={() => setSelectedRequest(request)}
+                                                        title="View details"
+                                                        className="p-2 text-slate-400 hover:text-[#6366F1] hover:bg-[#EEF2FF] rounded-lg transition-colors"
+                                                    >
+                                                        <Eye size={18} />
+                                                    </button>
+                                                    {/* {request.status === "PENDING" && (
                                                         <>
                                                             <button onClick={() => handleApprove(request.id)}
                                                                 className="px-3 py-1.5 bg-[#16A34A] text-white text-xs font-medium rounded hover:bg-green-700 transition-colors">
@@ -211,9 +217,7 @@ export default function WithdrawalManagementPage() {
                                                                 Reject
                                                             </button>
                                                         </>
-                                                    ) : (
-                                                        <span className="text-xs text-slate-400 italic">No actions available</span>
-                                                    )}
+                                                    )} */}
                                                 </div>
                                             </td>
                                         )}

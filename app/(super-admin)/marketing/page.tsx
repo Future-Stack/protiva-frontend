@@ -172,7 +172,7 @@ export default function MarketingManagementPage() {
                 setIsModalOpen(false);
             }
         } catch (err: any) {
-            console.error("Failed to save banner:", err);
+            console.log("Failed to save banner:", err);
             Swal.fire({
                 icon: "error",
                 title: "Error",
@@ -218,7 +218,7 @@ export default function MarketingManagementPage() {
                 title: "Banner status updated successfully.",
             });
         } catch (err: any) {
-            console.error("Failed to update status:", err);
+            console.log("Failed to update status:", err);
             Swal.fire({
                 icon: "error",
                 title: "Failed to update banner status.",
@@ -243,7 +243,7 @@ export default function MarketingManagementPage() {
                     title: "Banner deleted successfully.",
                 });
             } catch (err: any) {
-                console.error("Failed to delete banner:", err);
+                console.log("Failed to delete banner:", err);
                 Swal.fire({
                     icon: "error",
                     title: "Failed to delete banner.",

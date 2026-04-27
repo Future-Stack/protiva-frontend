@@ -114,7 +114,7 @@ export default function TransactionsPage() {
                                 displayedTransactions.map((t: any, index: number) => (
                                     <tr key={t.id} className="border-t border-slate-300 hover:bg-slate-50/50 transition-colors">
                                         <td className="px-4 py-4 text-sm text-[#2C2C2C] border-r border-slate-300 text-center">{index + 1 + (page - 1) * 10}</td>
-                                        <td className="px-4 py-4 text-sm text-[#0F172A] border-r border-slate-300 font-medium">{t.bookingId}</td>
+                                        <td className="px-4 py-4 text-sm text-[#0F172A] border-r border-slate-300 font-medium">{t.bookingId.slice(-8)}</td>
                                         <td className="px-4 py-4 text-sm text-[#64748b] border-r border-slate-300 break-all max-w-[150px]">{t.transactionId}</td>
                                         <td className="px-4 py-4 border-r border-slate-300">
                                             <div className="text-sm text-[#0F172A] font-medium">{fmt(t.initiatedAt)}</div>
