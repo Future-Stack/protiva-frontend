@@ -2,8 +2,8 @@
 
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import PersonalDetailsForm from "@/components/profile/PersonalDetailsForm";
-// import SecurityForm from "@/components/profile/SecurityForm";
-import { useUpdateProfileMutation, useGetMeQuery, useUpdateAvatarMutation } from "@/lib/features/auth/authApi";
+import SecurityForm from "@/components/profile/SecurityForm";
+import { useUpdateProfileMutation, useGetMeQuery, useUpdateAvatarMutation, useChangePasswordMutation } from "@/lib/features/auth/authApi";
 import Swal from "sweetalert2";
 import { useState } from "react";
 import { useAppDispatch } from "@/lib/hooks";
@@ -14,7 +14,7 @@ export default function SubAdminProfile() {
   const { data: profileResponse, isLoading: isFetchingProfile } = useGetMeQuery();
   const [updateProfile] = useUpdateProfileMutation();
   const [updateAvatar] = useUpdateAvatarMutation();
-  // const [changePassword, { isLoading: isChangingPassword }] = useChangePasswordMutation();
+  const [changePassword, { isLoading: isChangingPassword }] = useChangePasswordMutation();
 
   const profile = (profileResponse?.data as any)?.user || profileResponse?.data;
   const [isUpdating, setIsUpdating] = useState(false);
@@ -64,27 +64,29 @@ export default function SubAdminProfile() {
     }
   };
 
-  // const handlePasswordChange = async (data: any) => {
-  //   try {
-  //     await changePassword({
-  //       currentPassword: data.currentPassword,
-  //       newPassword: data.newPassword,
-  //     }).unwrap();
+  const handlePasswordChange = async (data: any) => {
+    try {
+      await changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      }).unwrap();
 
-  //     Swal.fire({
-  //       icon: "success",
-  //       title: "Password Changed",
-  //       text: "Your password has been updated successfully.",
-  //       confirmButtonColor: "#4F46E5",
-  //     });
-  //   } catch (error: any) {
-  //     Swal.fire({
-  //       icon: "error",
-  //       title: "Change Failed",
-  //       text: error.data?.message || "Something went wrong while changing your password.",
-  //     });
-  //   }
-  // };
+      Swal.fire({
+        icon: "success",
+        title: "Password Changed",
+        text: "Your password has been updated successfully.",
+        confirmButtonColor: "#4F46E5",
+      });
+      return true;
+    } catch (error: any) {
+      Swal.fire({
+        icon: "error",
+        title: "Change Failed",
+        text: error.data?.message || "Something went wrong while changing your password.",
+      });
+      return false;
+    }
+  };
 
   const handleAvatarChange = async (file: File) => {
     try {
@@ -147,10 +149,10 @@ export default function SubAdminProfile() {
           isLoading={isUpdating}
         />
 
-        {/* <SecurityForm 
+        <SecurityForm 
           onSubmit={handlePasswordChange}
           isLoading={isChangingPassword}
-        /> */}
+        />
       </div>
     </div>
   );

@@ -289,6 +289,7 @@ export default function SubAdminMarketingPage() {
                                 </div>
                                 <div className="flex items-center gap-2 mt-4">
 
+                                    {hasManagePermission && (
                                         <>
                                             <button
                                                 disabled={!!updatingStatusId}
@@ -305,6 +306,7 @@ export default function SubAdminMarketingPage() {
                                                 <Edit2 size={12} /> Edit
                                             </button>
                                         </>
+                                    )}
                                     
                                     {canDelete && (
                                         <button

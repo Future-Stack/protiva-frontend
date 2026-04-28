@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { useGetMeQuery } from "@/lib/features/auth/authApi";
 import { useGetNotificationsQuery, useReadNotificationMutation } from "@/lib/features/notification/notificationAPI";
 import { setSearchQuery, setDropdownOpen } from "@/lib/features/search/searchSlice";
-import SearchDropdown from "./SearchDropdown";
+// import SearchDropdown from "./SearchDropdown";
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -144,7 +144,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               >
                 <Search size={18} />
               </button>
-              <SearchDropdown />
+              {/* <SearchDropdown /> */}
             </div>
             <button
               onClick={() => setMobileSearch(true)}
@@ -170,7 +170,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                   >
                     <X size={24} />
                   </button>
-                  <SearchDropdown />
+                  {/*<SearchDropdown />*/}
                 </div>
               </div>
             )}

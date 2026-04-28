@@ -31,7 +31,21 @@ import { baseAPI } from "@/lib/baseAPI/baseAPI";
     changePassword: build.mutation<any, any>({
       query: (body) => ({
         url: "/api/v1/auth/change-password",
-        method: "PATCH",
+        method: "POST",
+        body,
+      }),
+    }),
+    forgotPassword: build.mutation<any, any>({
+      query: (body) => ({
+        url: "/api/v1/auth/forgot-password",
+        method: "POST",
+        body,
+      }),
+    }),
+    resetPassword: build.mutation<any, any>({
+      query: (body) => ({
+        url: "/api/v1/auth/reset-password",
+        method: "POST",
         body,
       }),
     }),
@@ -51,5 +65,7 @@ export const {
   useUpdateProfileMutation,
   useGetMeQuery,
   useChangePasswordMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
   useUpdateAvatarMutation,
 } = userAPI;

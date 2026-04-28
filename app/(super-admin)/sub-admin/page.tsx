@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Search, Plus, Trash2, ChevronDown, X, Check, Loader2, ChevronLeft, ChevronRight, Edit } from "lucide-react";
 import DeleteModal from "@/components/DeleteModal";
-import { useCreateAdminMutation, useGetSubAdminsQuery, useUpdateAdminPermissionsMutation } from "@/lib/features/super-admin/admin/adminAPI";
+import { useCreateAdminMutation, useGetSubAdminsQuery, useUpdateAdminPermissionsMutation, useLazyGetSubAdminByIdQuery } from "@/lib/features/super-admin/admin/adminAPI";
 import { useAppSelector } from "@/lib/hooks";
 import Swal from "sweetalert2";
 import { useMemo } from "react";
@@ -114,6 +114,8 @@ export default function SubAdminManagementPage() {
 
     const [createAdmin, { isLoading: isCreating }] = useCreateAdminMutation();
     const [updateAdminPermissions, { isLoading: isUpdating }] = useUpdateAdminPermissionsMutation();
+    const [getSubAdminById, { isFetching: isFetchingAdminDetails }] = useLazyGetSubAdminByIdQuery();
+    console.log(getSubAdminById);
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -145,41 +147,69 @@ export default function SubAdminManagementPage() {
         return count;
     };
 
-    const handleEditAdmin = (admin: any) => {
+    const handleEditAdmin = async (admin: any) => {
         setIsEditMode(true);
         setEditAdminId(admin.id);
+        setIsModalOpen(true);
+        setActiveTab("permission");
+        setSelectedRole(admin.role || "");
 
-        const perms: string[] = [];
-        if (admin.isViewBooking) perms.push("view_bookings");
-        if (admin.isManageBooking) perms.push("manage_bookings");
-        if (admin.isViewProvider) perms.push("view_providers");
-        if (admin.isManageProvider) perms.push("manage_providers");
-        if (admin.isViewUser) perms.push("view_users");
-        if (admin.isManageUser) perms.push("manage_users");
-        if (admin.isViewCategory) perms.push("view_categories");
-        if (admin.isManageCategory) perms.push("manage_categories");
-        if (admin.isJobView) perms.push("view_jobs");
-        if (admin.isJobManage) perms.push("manage_jobs");
-        if (admin.isViewTransaction) perms.push("view_transactions");
-        if (admin.isViewWithdrawal) perms.push("view_withdrawals");
-        if (admin.isManageWithdrawal) perms.push("manage_withdrawals");
-        if (admin.isViewManageMarketing) perms.push("isViewManageMarketing");
-        if (admin.isManageMarketing) perms.push("isManageMarketing");
-        if (admin.isExportBooking) perms.push("export_bookings");
-
+        // Pre-fill with list data while fetching details
         setFormData({
             firstName: admin.firstName || "",
             lastName: admin.lastName || "",
             email: admin.email || "",
             phone: admin.phone || "",
             password: "",
-            // role: admin.role || "",
-            permissions: perms
+            permissions: []
         });
 
-        setSelectedRole(admin.role || "");
-        setActiveTab("permission");
-        setIsModalOpen(true);
+        try {
+            const response = await getSubAdminById(admin.id).unwrap();
+            console.log(response);
+            const detailedAdmin = response?.data?.user || response?.data || response;
+            console.log(detailedAdmin);
+            
+            const perms: string[] = [];
+            const permissionsObj = detailedAdmin.adminPermissions || detailedAdmin;
+
+            if (permissionsObj.isViewBooking) perms.push("view_bookings");
+            if (permissionsObj.isManageBooking) perms.push("manage_bookings");
+            if (permissionsObj.isViewProvider) perms.push("view_providers");
+            if (permissionsObj.isManageProvider) perms.push("manage_providers");
+            if (permissionsObj.isViewUser) perms.push("view_users");
+            if (permissionsObj.isManageUser) perms.push("manage_users");
+            if (permissionsObj.isViewCategory) perms.push("view_categories");
+            if (permissionsObj.isManageCategory) perms.push("manage_categories");
+            if (permissionsObj.isJobView) perms.push("view_jobs");
+            if (permissionsObj.isJobManage) perms.push("manage_jobs");
+            if (permissionsObj.isViewTransaction) perms.push("view_transactions");
+            if (permissionsObj.isViewWithdrawal) perms.push("view_withdrawals");
+            if (permissionsObj.isManageWithdrawal) perms.push("manage_withdrawals");
+            if (permissionsObj.isViewManageMarketing) perms.push("isViewManageMarketing");
+            if (permissionsObj.isManageMarketing) perms.push("isManageMarketing");
+            if (permissionsObj.isExportBooking) perms.push("export_bookings");
+
+            setFormData(prev => ({
+                ...prev,
+                firstName: detailedAdmin.firstName || prev.firstName,
+                lastName: detailedAdmin.lastName || prev.lastName,
+                email: detailedAdmin.email || prev.email,
+                phone: detailedAdmin.phone || prev.phone,
+                permissions: perms
+            }));
+            if (detailedAdmin.role) {
+                setSelectedRole(detailedAdmin.role);
+            }
+        } catch (error) {
+            console.error("Failed to fetch detailed sub-admin info", error);
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "Failed to load sub-admin details.",
+            });
+            setIsModalOpen(false);
+        }
     };
 
     const togglePermission = (permissionId: string) => {
@@ -642,11 +672,11 @@ export default function SubAdminManagementPage() {
                                     </div>
                                     <div className="pt-4 flex items-center gap-3">
                                         <button
-                                            disabled={isCreating || isUpdating}
+                                            disabled={isCreating || isUpdating || isFetchingAdminDetails}
                                             onClick={handleSaveAdmin}
                                             className="px-6 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/80 transition-colors shadow-sm shadow-blue-100 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2">
-                                            {isCreating || isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                                            {isCreating || isUpdating ? "Saving..." : (isEditMode ? "Save Changes" : "Add Admin")}
+                                            {isCreating || isUpdating || isFetchingAdminDetails ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                                            {isFetchingAdminDetails ? "Loading..." : (isCreating || isUpdating ? "Saving..." : (isEditMode ? "Save Changes" : "Add Admin"))}
                                         </button>
                                         <button
                                             onClick={() => setIsModalOpen(false)}
@@ -659,7 +689,7 @@ export default function SubAdminManagementPage() {
                             ) : (
                                 <div className="flex flex-col md:flex-row gap-8 h-full">
                                     {/* Sidebar Roles */}
-                                    <div className="w-1/3 min-w-[200px] border-r border-slate-100 pr-6 space-y-1">
+                                    <div className={`w-1/3 min-w-[200px] border-r border-slate-100 pr-6 space-y-1 ${isFetchingAdminDetails ? 'opacity-50 pointer-events-none' : ''}`}>
                                         {ROLES.map((role) => (
                                             <button
                                                 key={role}
@@ -675,7 +705,7 @@ export default function SubAdminManagementPage() {
                                     </div>
 
                                     {/* Permissions List */}
-                                    <div className="flex-1 space-y-6">
+                                    <div className={`flex-1 space-y-6 ${isFetchingAdminDetails ? 'opacity-50 pointer-events-none' : ''}`}>
                                         <div className="flex items-center justify-between mb-4">
                                             <h4 className="font-semibold text-slate-900">{selectedRole || "Select a role"}</h4>
                                             {selectedRole && PERMISSIONS_DATA[selectedRole as keyof typeof PERMISSIONS_DATA] && (
@@ -736,11 +766,11 @@ export default function SubAdminManagementPage() {
 
                                         <div className="pt-8 flex items-center gap-3">
                                             <button
-                                                disabled={isCreating || isUpdating}
+                                                disabled={isCreating || isUpdating || isFetchingAdminDetails}
                                                 onClick={handleSaveAdmin}
                                                 className="px-6 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/80 transition-colors shadow-sm shadow-blue-100 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2">
-                                                {isCreating || isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                                                {isCreating || isUpdating ? "Saving..." : (isEditMode ? "Save Changes" : "Add Admin")}
+                                                {isCreating || isUpdating || isFetchingAdminDetails ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                                                {isFetchingAdminDetails ? "Loading..." : (isCreating || isUpdating ? "Saving..." : (isEditMode ? "Save Changes" : "Add Admin"))}
                                             </button>
                                             <button
                                                 onClick={() => setIsModalOpen(false)}

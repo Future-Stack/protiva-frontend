@@ -152,7 +152,7 @@ export default function LoginPage() {
               <span className="border border-orange-500 rounded-full w-3 h-3 flex items-center justify-center text-[8px] font-bold">?</span> Having trouble logging in?
             </Link>
             <Link
-              href="#"
+              href="/forgot-password"
               className="text-blue-600 font-medium hover:underline"
             >
               Forgot password?

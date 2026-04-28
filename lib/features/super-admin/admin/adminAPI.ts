@@ -2,6 +2,7 @@ import { baseAPI } from "@/lib/baseAPI/baseAPI";
 import { CreateAdminPayload, CreateAdminResponse, GetSubAdminsParams, GetSubAdminsResponse, UpdateAdminPermissionsPayload } from "./admin.type";
 
 const adminAPI = baseAPI.injectEndpoints({
+    overrideExisting: true,
     endpoints: (build) => ({
         createAdmin: build.mutation<CreateAdminResponse, CreateAdminPayload>({
             query: (body) => ({
@@ -29,6 +30,14 @@ const adminAPI = baseAPI.injectEndpoints({
             }),
             providesTags: ["Admin"],
         }),
+
+        getSubAdminById: build.query<any, string>({
+            query: (subAdminId) => ({
+                url: `/api/v1/auth/sub_admin/${subAdminId}`,
+                method: "GET",
+            }),
+            providesTags: (id) => [{ type: "Admin", id }],
+        }),
     }),
 });
 
@@ -36,4 +45,6 @@ export const {
     useCreateAdminMutation,
     useUpdateAdminPermissionsMutation,
     useGetSubAdminsQuery,
+    useGetSubAdminByIdQuery,
+    useLazyGetSubAdminByIdQuery,
 } = adminAPI;
