@@ -189,9 +189,9 @@ export default function LoginPage() {
       </div>
 
       {/* Footer */}
-            <div className="w-full flex px-6 py-4 border-t border-[#F1F5F9] justify-between  absolute bottom-2">
-                <p className="text-sm font-semibold text-slate-600">All Right reserved by@2026</p>
-                <p className="text-sm font-medium text-blue-800">Software version 3.3</p>
+            <div className="w-full flex flex-col sm:flex-row px-4 sm:px-6 py-4 border-t border-[#F1F5F9] justify-between items-center gap-2 absolute bottom-2">
+                <p className="text-xs sm:text-sm font-semibold text-slate-600 text-center sm:text-left">All Right reserved by@2026</p>
+                <p className="text-xs sm:text-sm font-medium text-blue-800">Software version 3.3</p>
             </div>
 
       {/* <div className="flex justify-between w-full max-w-7xl absolute bottom-6 px-6 text-xs text-slate-800 font-medium">

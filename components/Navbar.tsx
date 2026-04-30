@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { useGetMeQuery } from "@/lib/features/auth/authApi";
 import { useGetNotificationsQuery, useReadNotificationMutation } from "@/lib/features/notification/notificationAPI";
 import { setSearchQuery, setDropdownOpen } from "@/lib/features/search/searchSlice";
-// import SearchDropdown from "./SearchDropdown";
+import SearchDropdown from "./SearchDropdown";
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -40,14 +40,17 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const { query: searchQuery, isDropdownOpen } = useSelector((state: RootState) => state.search);
+  console.log(searchQuery);
 
   const toggle = (type: ModalType) => {
     setOpenModal((prev) => (prev === type ? null : type));
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(setSearchQuery(e.target.value));
-    if (e.target.value) {
+    const value = e.target.value;
+    console.log("Input changed:", value);
+    dispatch(setSearchQuery(value));
+    if (value) {
       dispatch(setDropdownOpen(true));
     } else {
       dispatch(setDropdownOpen(false));
@@ -55,6 +58,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   };
 
   const handleSearchSubmit = () => {
+    console.log("Search submitted:", searchQuery);
     if (!searchQuery.trim()) return;
     const searchPath = user?.role === "SUPER_ADMIN" ? "/search" : "/sub-dashboard/search";
     router.push(`${searchPath}?q=${encodeURIComponent(searchQuery)}`);
@@ -136,6 +140,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                 value={searchQuery}
                 onChange={handleSearchChange}
                 onKeyDown={handleKeyDown}
+                onFocus={() => searchQuery && dispatch(setDropdownOpen(true))}
                 className="w-full px-4 py-1.5 h-11.25 bg-white border border-[#00000024] rounded-[50px] text-sm font-normal text-black focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
               />
               <button 
@@ -144,7 +149,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               >
                 <Search size={18} />
               </button>
-              {/* <SearchDropdown /> */}
+              <SearchDropdown />
             </div>
             <button
               onClick={() => setMobileSearch(true)}
@@ -162,6 +167,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                     value={searchQuery}
                     onChange={handleSearchChange}
                     onKeyDown={handleKeyDown}
+                    onFocus={() => searchQuery && dispatch(setDropdownOpen(true))}
                     className="flex-1 h-11 px-4 text-black border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
                   />
                   <button
@@ -170,7 +176,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                   >
                     <X size={24} />
                   </button>
-                  {/*<SearchDropdown />*/}
+                  <SearchDropdown />
                 </div>
               </div>
             )}
@@ -315,7 +321,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                 <div className="py-1">
                   <button
                     onClick={() => {
-                      const profilePath = user?.role === "SUPER_ADMIN" ? "/profile" : "/sub-dashboard/profile";
+                      const profilePath = user?.role === "SUPER_ADMIN" ? "/settings" : "/sub-dashboard/settings";
                       router.push(profilePath);
                       setOpenModal(null);
                     }}

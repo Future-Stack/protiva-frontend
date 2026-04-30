@@ -16,6 +16,7 @@ import {
     Globe,
     MonitorCheck,
     ChevronDown,
+    Settings,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import user1 from "@/app/assets/user1.png";
@@ -23,6 +24,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
 import { useGetSubAdminProfileQuery } from "@/lib/features/sub-admin/profile/profileAPI";
 import { useGetMeQuery } from "@/lib/features/auth/authApi";
+import { ShieldCheck } from "lucide-react";
 
 
 interface SidebarProps {
@@ -73,7 +75,7 @@ const SUB_ADMIN_MENU: MenuSection[] = [
                 children: [
                     { title: "Provider list", href: "/sub-dashboard/providers", icon: Users },
                     { title: "Add New Provider", href: "/sub-dashboard/providers/add", icon: UserPlus },
-                    
+
                 ]
             },
             { title: "Background check", href: "/sub-dashboard/background-check", icon: UserCheck },
@@ -107,6 +109,12 @@ const SUB_ADMIN_MENU: MenuSection[] = [
             { title: "Marketing Tool", href: "/sub-dashboard/marketing", icon: Globe },
         ]
     },
+    {
+        title: "Settings",
+        items: [
+            { title: "Settings", href: "/sub-dashboard/settings", icon: Settings }
+        ]
+    }
 ];
 
 const SUPER_ADMIN_MENU: MenuSection[] = [
@@ -177,6 +185,12 @@ const SUPER_ADMIN_MENU: MenuSection[] = [
             // { title: "System Settings", href: "/settings", icon: Settings },
             { title: "Sub-Admin Management", href: "/sub-admin", icon: MonitorCheck },
         ]
+    },
+    {
+        title: "Settings",
+        items: [
+            { title: "Settings", href: "/settings", icon: Settings },
+        ]
     }
 ];
 
@@ -184,14 +198,14 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
     const reduxUser = useSelector((state: RootState) => state.auth.user);
     const { data: meProfile } = useGetMeQuery();
     const { data: subAdminProfile } = useGetSubAdminProfileQuery();
-    
+
     // Prioritize live data from either getMe or getSubAdminProfile based on role
     const displayUser = meProfile?.data || subAdminProfile?.data?.user || reduxUser;
-    
+
     const permissions = subAdminProfile?.data?.user?.adminPermissions;
     const pathname = usePathname();
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
-    
+
 
     const toggleExpand = (title: string) => {
         setExpandedItems(prev =>
@@ -208,7 +222,8 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
         return SUB_ADMIN_MENU.map(section => {
             const filteredItems = section.items.filter(item => {
                 if (item.title === "Dashboard") return true;
-                
+                if (item.title === "Settings") return true; // Sub-admin can always view settings
+
                 // Booking Management
                 if (item.title === "Bookings") return permissions?.isViewBooking || permissions?.isManageBooking;
                 if (section.title === "Booking Management") return permissions?.isViewBooking || permissions?.isManageBooking;
@@ -231,6 +246,9 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
 
                 // Marketing
                 if (item.title === "Marketing Tool") return permissions?.isViewManageMarketing || permissions?.isManageMarketing;
+
+                // Policy Management
+                if (item.title === "Privacy Policy") return true; // Sub-admin can always view
 
                 return false;
             }).map(item => {

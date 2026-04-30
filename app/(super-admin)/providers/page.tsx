@@ -3,9 +3,9 @@
 import { useState, useEffect, useMemo } from "react";
 import {
     Search,
-    Download,
+    // Download,
     Filter,
-    Trash2,
+    // Trash2,
     ChevronLeft,
     ChevronRight,
     Loader2,
@@ -13,7 +13,7 @@ import {
     Check,
     X,
 } from "lucide-react";
-import DeleteModal from "@/components/DeleteModal";
+// import DeleteModal from "@/components/DeleteModal";
 import {
     useGetAllProvidersQuery,
     useToggleRecommendationMutation,
@@ -629,12 +629,12 @@ export default function ProviderListPage() {
                                             >
                                                 <X size={18} />
                                             </button>
-                                            <button
+                                            {/* <button
                                                 onClick={() => handleDelete(provider.id)}
                                                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                             >
                                                 <Trash2 size={18} />
-                                            </button>
+                                            </button> */}
                                         </td>
                                     </tr>
                                 ))}
@@ -683,13 +683,13 @@ export default function ProviderListPage() {
                 </div>
             </div>
 
-            <DeleteModal
+            {/* <DeleteModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={confirmDelete}
                 title="Delete Provider"
                 description="Are you sure you want to delete this provider? This action cannot be undone."
-            />
+            /> */}
 
             <ServicesModal
                 isOpen={isServicesModalOpen}

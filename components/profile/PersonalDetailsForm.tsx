@@ -26,7 +26,7 @@ export default function PersonalDetailsForm({ initialData, onSubmit, isLoading }
   }, [initialData, reset]);
 
   return (
-    <div className="bg-white rounded-[10px] border border-slate-100 p-6 md:p-8">
+    <div className="bg-white rounded-[10px] border border-slate-100 p-6 md:p-6">
       <h2 className="text-xl font-bold text-slate-900 mb-6">Personal Information</h2>
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -85,7 +85,7 @@ export default function PersonalDetailsForm({ initialData, onSubmit, isLoading }
           <button
             type="submit"
             disabled={isLoading}
-            className={`px-8 py-2.5 bg-[#4F46E5] text-white font-bold rounded-lg hover:bg-indigo-700 transition-all shadow-md ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`px-8 py-2.5 bg-blue-600 text-sm text-white font-bold rounded-lg hover:bg-blue-700 transition-all shadow-md ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             {isLoading ? 'Saving Changes...' : 'Save Changes'}
           </button>

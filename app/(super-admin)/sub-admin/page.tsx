@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { Search, Plus, Trash2, ChevronDown, X, Check, Loader2, ChevronLeft, ChevronRight, Edit } from "lucide-react";
-import DeleteModal from "@/components/DeleteModal";
+import { Search, Plus, ChevronDown, X, Check, Loader2, ChevronLeft, ChevronRight, Edit } from "lucide-react";
+// import DeleteModal from "@/components/DeleteModal";
 import { useCreateAdminMutation, useGetSubAdminsQuery, useUpdateAdminPermissionsMutation, useLazyGetSubAdminByIdQuery } from "@/lib/features/super-admin/admin/adminAPI";
 import { useAppSelector } from "@/lib/hooks";
 import Swal from "sweetalert2";
@@ -85,7 +85,7 @@ export default function SubAdminManagementPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<"basic" | "permission">("basic");
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    // const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [adminToDelete, setAdminToDelete] = useState<string | null>(null);
     const [selectedRole, setSelectedRole] = useState("Booking Manager");
 
@@ -319,19 +319,19 @@ export default function SubAdminManagementPage() {
         }
     };
 
-    const handleDeleteAdmin = (id: string) => {
-        setAdminToDelete(id);
-        setIsDeleteModalOpen(true);
-    };
+    // const handleDeleteAdmin = (id: string) => {
+    //     setAdminToDelete(id);
+    //     setIsDeleteModalOpen(true);
+    // };
 
-    const confirmDelete = () => {
-        if (adminToDelete) {
-            // No delete API provided yet based on prompt, keeping UI feedback
-            Swal.fire("Note", "Delete API not yet implemented", "info");
-            setAdminToDelete(null);
-        }
-        setIsDeleteModalOpen(false);
-    };
+    // const confirmDelete = () => {
+    //     if (adminToDelete) {
+    //         // No delete API provided yet based on prompt, keeping UI feedback
+    //         Swal.fire("Note", "Delete API not yet implemented", "info");
+    //         setAdminToDelete(null);
+    //     }
+    //     setIsDeleteModalOpen(false);
+    // };
 
     return (
         <div className="space-y-6 bg-white rounded-lg overflow-hidden px-[26px] py-[34px] min-h-[calc(100vh-140px)]">
@@ -455,11 +455,11 @@ export default function SubAdminManagementPage() {
                                                     className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                                                     <Edit size={18} />
                                                 </button>
-                                                <button
+                                                {/* <button
                                                     onClick={() => handleDeleteAdmin(admin.id)}
                                                     className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                                                     <Trash2 size={18} />
-                                                </button>
+                                                </button> */}
                                             </div>
                                         </td>
                                     </tr>
@@ -787,13 +787,13 @@ export default function SubAdminManagementPage() {
                 </div>
             )}
 
-            <DeleteModal
+            {/* <DeleteModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={confirmDelete}
                 title="Delete Sub Admin"
                 description="Are you sure you want to delete this sub-admin? This will remove their access to the platform."
-            />
+            /> */}
         </div >
     );
 }

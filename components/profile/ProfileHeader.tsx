@@ -36,7 +36,7 @@ export default function ProfileHeader({ user, onAvatarChange }: ProfileHeaderPro
         </div>
 
         <div className="text-center md:text-left">
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900">
             {user.firstName} {user.lastName}
           </h1>
           <p className="text-slate-500 font-medium mt-1">{user.email}</p>

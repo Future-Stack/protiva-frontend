@@ -50,8 +50,8 @@ export default function DashboardCard({ title, value, variant }: DashboardCardPr
             <div className={`absolute -left-32 -top-24 w-64 h-64 rounded-full ${style.shadow} opacity-30 blur-2xl pointer-events-none`} />
 
             <div className="relative z-10">
-                <h3 className={`text-[32px] font-bold ${style.text} leading-tight`}>{value}</h3>
-                <p className={`text-[17px] font-medium ${style.titleColor} mt-1`}>{title}</p>
+                <h3 className={`text-2xl sm:text-[32px] font-bold ${style.text} leading-tight truncate`}>{value}</h3>
+                <p className={`text-sm sm:text-[17px] font-medium ${style.titleColor} mt-1 truncate`}>{title}</p>
             </div>
 
             <div className="flex justify-end pr-2 pb-1 relative z-10">
