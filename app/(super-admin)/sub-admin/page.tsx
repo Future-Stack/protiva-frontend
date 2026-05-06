@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { Search, Plus, ChevronDown, X, Check, Loader2, ChevronLeft, ChevronRight, Edit } from "lucide-react";
+import { Search, Plus, ChevronDown, X, Check, Loader2, ChevronLeft, ChevronRight, Edit, Eye, EyeOff } from "lucide-react";
 // import DeleteModal from "@/components/DeleteModal";
 import { useCreateAdminMutation, useGetSubAdminsQuery, useUpdateAdminPermissionsMutation, useLazyGetSubAdminByIdQuery } from "@/lib/features/super-admin/admin/adminAPI";
 import { useAppSelector } from "@/lib/hooks";
 import Swal from "sweetalert2";
 import { useMemo } from "react";
+import { z } from "zod";
 
 /* ─── Debounce hook ──────────────────────────────────────────────────── */
 function useDebounce<T>(value: T, delay: number): T {
@@ -26,11 +27,7 @@ interface SubAdmin {
     status: "ACTIVE" | "INACTIVE";
 }
 
-// const SUB_ADMINS: SubAdmin[] = [
-//     { id: 1, name: "John Smith", email: "john.smith@example.com", role: "Booking Manager", permissions: 5, status: "Active" },
-//     { id: 2, name: "Sarah Johnson", email: "sarah.johnson@example.com", role: "User Manager", permissions: 6, status: "Active" },
-//     { id: 3, name: "Michael Brown", email: "michael.brown@example.com", role: "Business Manager", permissions: 7, status: "Active" },
-// ];
+
 
 const ROLES = ["Booking Manager", "Provider Manager", "User Manager", "Service Manager", "Business Manager", "Marketing Manager"];
 
@@ -65,11 +62,31 @@ const PERMISSIONS_DATA = {
     ],
 };
 
+const adminSchema = z.object({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    email: z.string().email("Invalid email address"),
+    phone: z.string().optional(),
+    password: z.string().min(8, "Password must be at least 8 characters long")
+        .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+        .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+        .regex(/[0-9]/, "Password must contain at least one number")
+        .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
+});
+
+const editAdminSchema = z.object({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    email: z.string().email("Invalid email address"),
+    phone: z.string().optional(),
+});
+
 export default function SubAdminManagementPage() {
     const [page, setPage] = useState(1);
     const globalSearch = useAppSelector((state) => state.search.query);
     const [searchInput, setSearchInput] = useState(globalSearch || "");
     const [status, setStatus] = useState("All");
+    const [showPassword, setShowPassword] = useState(false);
 
     // Sync with global search
     useEffect(() => {
@@ -125,6 +142,8 @@ export default function SubAdminManagementPage() {
         password: "",
         permissions: [] as string[]
     });
+
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const countPermissions = (admin: any) => {
         let count = 0;
@@ -222,12 +241,34 @@ export default function SubAdminManagementPage() {
     };
 
     const handleSaveAdmin = async () => {
-        if (!isEditMode && (!formData.firstName || !formData.lastName || !formData.email || !formData.password)) {
-            Swal.fire({
-                icon: "warning",
-                title: "Required Fields Missing",
-                text: "Please fill in all basic information fields.",
+        setErrors({});
+        
+        const schema = isEditMode ? editAdminSchema : adminSchema;
+        const validation = schema.safeParse({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            phone: formData.phone,
+            password: formData.password
+        });
+
+        if (!validation.success) {
+            const newErrors: Record<string, string> = {};
+            validation.error.issues.forEach((err) => {
+                if (err.path[0]) {
+                    newErrors[err.path[0] as string] = err.message;
+                }
             });
+            setErrors(newErrors);
+            
+            // Show first error in toast if needed, or just let the UI handle it
+            if (newErrors.password) {
+                 Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: newErrors.password,
+                });
+            }
             return;
         }
 
@@ -269,6 +310,7 @@ export default function SubAdminManagementPage() {
                 setIsEditMode(false);
                 setEditAdminId(null);
                 setFormData({ firstName: "", lastName: "", email: "", phone: "", password: "", permissions: [] });
+                setErrors({});
             } catch (err: any) {
                 Swal.fire({
                     icon: "error",
@@ -303,9 +345,9 @@ export default function SubAdminManagementPage() {
                     email: "",
                     phone: "",
                     password: "",
-
                     permissions: []
                 });
+                setErrors({});
                 setIsModalOpen(false);
                 setActiveTab("basic");
                 refetch();
@@ -346,6 +388,7 @@ export default function SubAdminManagementPage() {
                         setIsEditMode(false);
                         setEditAdminId(null);
                         setFormData({ firstName: "", lastName: "", email: "", phone: "", password: "", permissions: [] });
+                        setErrors({});
                         setActiveTab("basic");
                         setIsModalOpen(true);
                     }}
@@ -625,20 +668,22 @@ export default function SubAdminManagementPage() {
                                             <input
                                                 type="text"
                                                 placeholder="Ex. John"
-                                                className="w-full mt-2.5 px-4 py-2.5 bg-[#E8EFFC] border border-[#E8EFFC] rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1] transition-all"
+                                                className={`w-full mt-2.5 px-4 py-2.5 bg-[#E8EFFC] border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1] transition-all ${errors.firstName ? 'border-red-500' : 'border-[#E8EFFC]'}`}
                                                 value={formData.firstName}
                                                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                                             />
+                                            {errors.firstName && <p className="text-xs text-red-500 mt-1">{errors.firstName}</p>}
                                         </div>
                                         <div className="space-y-1">
                                             <label className="text-sm font-medium text-slate-700 ">Last Name</label>
                                             <input
                                                 type="text"
                                                 placeholder="Ex. Doe"
-                                                className="w-full mt-2.5 px-4 py-2.5 bg-[#E8EFFC] border border-[#E8EFFC] rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1] transition-all"
+                                                className={`w-full mt-2.5 px-4 py-2.5 bg-[#E8EFFC] border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1] transition-all ${errors.lastName ? 'border-red-500' : 'border-[#E8EFFC]'}`}
                                                 value={formData.lastName}
                                                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                                             />
+                                            {errors.lastName && <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>}
                                         </div>
                                     </div>
                                     <div className="space-y-1">
@@ -646,10 +691,11 @@ export default function SubAdminManagementPage() {
                                         <input
                                             type="email"
                                             placeholder="john.doe@email.com"
-                                            className="w-full mt-2.5 px-4 py-2.5 bg-[#E8EFFC] border border-[#E8EFFC] rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1] transition-all"
+                                            className={`w-full mt-2.5 px-4 py-2.5 bg-[#E8EFFC] border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1] transition-all ${errors.email ? 'border-red-500' : 'border-[#E8EFFC]'}`}
                                             value={formData.email}
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                         />
+                                        {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-sm font-medium text-slate-700">Phone Number</label>
@@ -663,12 +709,22 @@ export default function SubAdminManagementPage() {
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-sm font-medium text-slate-700">Password</label>
-                                        <input
-                                            type="password"
-                                            className="w-full mt-2.5 px-4 py-2.5 bg-[#E8EFFC] border border-[#E8EFFC] rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1] transition-all"
-                                            value={formData.password}
-                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                        />
+                                        <div className="relative flex items-center">
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                className={`w-full mt-2.5 px-4 py-2.5 bg-[#E8EFFC] border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1] transition-all ${errors.password ? 'border-red-500' : 'border-[#E8EFFC]'}`}
+                                                value={formData.password}
+                                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                            />
+                                            <button
+                                                type="button"
+                                                className="absolute right-3 top-5.5  text-slate-500 hover:text-slate-700 transition-colors"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                            >
+                                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                            </button>
+                                        </div>
+                                        {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
                                     </div>
                                     <div className="pt-4 flex items-center gap-3">
                                         <button
