@@ -43,7 +43,7 @@ export default function PolicySettings({ onSaveComplete }: { onSaveComplete?: ()
 
     const handleSave = async () => {
         try {
-            await updatePolicy({ content, id: policyData?.data?._id || policyData?._id }).unwrap();
+            await updatePolicy({ content }).unwrap();
             Swal.fire({
                 icon: "success",
                 title: "Updated!",
