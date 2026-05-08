@@ -77,6 +77,7 @@ export const providerAPI = baseAPI.injectEndpoints({
         formData.append("bio", payload.bio);
         formData.append("avatar", payload.avatar);
         formData.append("nidImage", payload.nidImage);
+        formData.append("nidBackImage", payload.nidBackImage);
         return {
           url: "/api/v1/auth/add-provider",
           method: "POST",

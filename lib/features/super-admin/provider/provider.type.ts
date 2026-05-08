@@ -81,6 +81,7 @@ export interface AddProviderPayload {
   bio: string;
   avatar: File;
   nidImage: File;
+  nidBackImage: File;
 }
 
 export interface AddProviderResponseData {

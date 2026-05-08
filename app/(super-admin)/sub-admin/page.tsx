@@ -110,17 +110,17 @@ export default function SubAdminManagementPage() {
     const [editAdminId, setEditAdminId] = useState<string | null>(null);
 
     const rawSubAdmins = subAdminsData?.data?.data || [];
-    
+
     /* ── Client-side Filter ── */
     const filteredSubAdmins = useMemo(() => {
         return rawSubAdmins.filter((admin: any) => {
             const s = searchInput.toLowerCase();
             const fullName = `${admin.firstName || ""} ${admin.lastName || ""}`.toLowerCase();
-            const matchesSearch = 
+            const matchesSearch =
                 fullName.includes(s) ||
                 (admin.email || "").toLowerCase().includes(s) ||
                 (admin.role || "").toLowerCase().includes(s.replace(' ', '_'));
-            
+
             return matchesSearch;
         });
     }, [rawSubAdmins, searchInput]);
@@ -188,7 +188,7 @@ export default function SubAdminManagementPage() {
             console.log(response);
             const detailedAdmin = response?.data?.user || response?.data || response;
             console.log(detailedAdmin);
-            
+
             const perms: string[] = [];
             const permissionsObj = detailedAdmin.adminPermissions || detailedAdmin;
 
@@ -242,7 +242,7 @@ export default function SubAdminManagementPage() {
 
     const handleSaveAdmin = async () => {
         setErrors({});
-        
+
         const schema = isEditMode ? editAdminSchema : adminSchema;
         const validation = schema.safeParse({
             firstName: formData.firstName,
@@ -260,10 +260,10 @@ export default function SubAdminManagementPage() {
                 }
             });
             setErrors(newErrors);
-            
+
             // Show first error in toast if needed, or just let the UI handle it
             if (newErrors.password) {
-                 Swal.fire({
+                Swal.fire({
                     icon: "error",
                     title: "Validation Error",
                     text: newErrors.password,

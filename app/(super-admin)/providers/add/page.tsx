@@ -36,11 +36,16 @@ export default function AddProviderPage() {
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [logo, setLogo] = useState<string | null>(null);
 
-    /* ── NID Image ── */
-    const idFileInputRef = useRef<HTMLInputElement | null>(null);
-    const [nidFile, setNidFile] = useState<File | null>(null);
-    const [idImage, setIdImage] = useState<string | null>(null);
-    const [idFileName, setIdFileName] = useState("No File Chosen");
+    /* ── NID Images ── */
+    const idFrontFileInputRef = useRef<HTMLInputElement | null>(null);
+    const [nidFrontFile, setNidFrontFile] = useState<File | null>(null);
+    const [idFrontImage, setIdFrontImage] = useState<string | null>(null);
+    const [idFrontFileName, setIdFrontFileName] = useState("No File Chosen");
+
+    const idBackFileInputRef = useRef<HTMLInputElement | null>(null);
+    const [nidBackFile, setNidBackFile] = useState<File | null>(null);
+    const [idBackImage, setIdBackImage] = useState<string | null>(null);
+    const [idBackFileName, setIdBackFileName] = useState("No File Chosen");
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -62,7 +67,7 @@ export default function AddProviderPage() {
         e.target.value = "";
     };
 
-    const handleIdImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleIdFrontChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
@@ -73,9 +78,26 @@ export default function AddProviderPage() {
             alert("Max file size is 2MB");
             return;
         }
-        setNidFile(file);
-        setIdImage(URL.createObjectURL(file));
-        setIdFileName(file.name);
+        setNidFrontFile(file);
+        setIdFrontImage(URL.createObjectURL(file));
+        setIdFrontFileName(file.name);
+        e.target.value = "";
+    };
+
+    const handleIdBackChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
+            alert("Only JPG, PNG, JPEG allowed");
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            alert("Max file size is 2MB");
+            return;
+        }
+        setNidBackFile(file);
+        setIdBackImage(URL.createObjectURL(file));
+        setIdBackFileName(file.name);
         e.target.value = "";
     };
 
@@ -83,9 +105,12 @@ export default function AddProviderPage() {
         setForm(INITIAL_FORM);
         setAvatarFile(null);
         setLogo(null);
-        setNidFile(null);
-        setIdImage(null);
-        setIdFileName("No File Chosen");
+        setNidFrontFile(null);
+        setIdFrontImage(null);
+        setIdFrontFileName("No File Chosen");
+        setNidBackFile(null);
+        setIdBackImage(null);
+        setIdBackFileName("No File Chosen");
         setIsCompleted(false);
     };
 
@@ -107,16 +132,25 @@ export default function AddProviderPage() {
             return;
         }
         if (!avatarFile) {
-            Swal.fire({ icon: "warning", title: "Avatar Required", text: "Please upload a profile photo." });
+            Swal.fire({ icon: "warning", title: "Profile Photo Required", text: "Please upload a profile photo." });
             return;
         }
-        if (!nidFile) {
-            Swal.fire({ icon: "warning", title: "NID Image Required", text: "Please upload the NID identification image." });
+        if (!nidFrontFile) {
+            Swal.fire({ icon: "warning", title: "NID Front Required", text: "Please upload the NID front side image." });
+            return;
+        }
+        if (!nidBackFile) {
+            Swal.fire({ icon: "warning", title: "NID Back Required", text: "Please upload the NID back side image." });
             return;
         }
 
         try {
-            await addProvider({ ...form, avatar: avatarFile, nidImage: nidFile }).unwrap();
+            await addProvider({ 
+                ...form, 
+                avatar: avatarFile!, 
+                nidImage: nidFrontFile!, 
+                nidBackImage: nidBackFile! 
+            }).unwrap();
             setIsCompleted(true);
             Swal.fire({
                 icon: "success",
@@ -286,7 +320,7 @@ export default function AddProviderPage() {
                 <div className="bg-white border border-slate-300 p-[50px] rounded-lg w-[100%] xl:w-[50%] mt-6">
                     <div className="justify-between space-y-8">
                         <h3 className="text-lg font-semibold text-slate-900 mb-4">Identity Verification</h3>
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                             {/* NID Number */}
                             <div>
                                 <label className="block text-sm font-medium text-[#666666] mb-2">NID Number</label>
@@ -300,40 +334,74 @@ export default function AddProviderPage() {
                                 />
                             </div>
 
-                            {/* NID Image */}
-                            <div>
-                                <label className="block text-sm font-medium text-[#666666] mb-2">Identification Image</label>
-                                <div className="border-2 border-slate-300 rounded-sm p-5 w-fit pb-2">
-                                    <div className="flex flex-col md:flex-row gap-5">
-                                        <div className="w-[100px] h-[100px] bg-slate-100 rounded-sm flex items-center justify-center mb-3 overflow-hidden">
-                                            {idImage ? (
-                                                <img src={idImage} alt="ID Preview" className="w-full h-full object-cover" />
-                                            ) : (
-                                                <Image src={ImageIcon} alt="" />
-                                            )}
-                                            {/* Hidden input */}
-                                            <input
-                                                type="file"
-                                                accept="image/png, image/jpeg, image/jpg"
-                                                ref={idFileInputRef}
-                                                onChange={handleIdImageChange}
-                                                className="hidden"
-                                            />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* NID Front Image */}
+                                <div>
+                                    <label className="block text-sm font-medium text-[#666666] mb-2">Front Side Image</label>
+                                    <div className="border-2 border-slate-300 rounded-sm p-5 w-full pb-2">
+                                        <div className="flex flex-col gap-3">
+                                            <div className="w-[100px] h-[100px] bg-slate-100 rounded-sm flex items-center justify-center overflow-hidden">
+                                                {idFrontImage ? (
+                                                    <img src={idFrontImage} alt="ID Front Preview" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <Image src={ImageIcon} alt="" />
+                                                )}
+                                                <input
+                                                    type="file"
+                                                    accept="image/png, image/jpeg, image/jpg"
+                                                    ref={idFrontFileInputRef}
+                                                    onChange={handleIdFrontChange}
+                                                    className="hidden"
+                                                />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-[#666666]">Square image &lt; 2MB</p>
+                                                <div className="py-2 flex gap-4 items-center">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => idFrontFileInputRef.current?.click()}
+                                                        className="px-4 py-1.5 bg-white border border-slate-800 rounded-sm text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                                                    >
+                                                        Choose Front
+                                                    </button>
+                                                    <p className="text-xs text-slate-400 truncate max-w-[100px]">{idFrontFileName}</p>
+                                                </div>
+                                            </div>
                                         </div>
+                                    </div>
+                                </div>
 
-                                        <div>
-                                            <p className="text-sm text-[#000000]">
-                                                Please upload square image less than 2MB
-                                            </p>
-                                            <div className="py-2.5 flex gap-[30px] items-center">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => idFileInputRef.current?.click()}
-                                                    className="px-5 py-2 bg-white border border-slate-800 rounded-sm text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors mt-2"
-                                                >
-                                                    Choose File
-                                                </button>
-                                                <p className="text-sm text-slate-400 mt-2">{idFileName}</p>
+                                {/* NID Back Image */}
+                                <div>
+                                    <label className="block text-sm font-medium text-[#666666] mb-2">Back Side Image</label>
+                                    <div className="border-2 border-slate-300 rounded-sm p-5 w-full pb-2">
+                                        <div className="flex flex-col gap-3">
+                                            <div className="w-[100px] h-[100px] bg-slate-100 rounded-sm flex items-center justify-center overflow-hidden">
+                                                {idBackImage ? (
+                                                    <img src={idBackImage} alt="ID Back Preview" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <Image src={ImageIcon} alt="" />
+                                                )}
+                                                <input
+                                                    type="file"
+                                                    accept="image/png, image/jpeg, image/jpg"
+                                                    ref={idBackFileInputRef}
+                                                    onChange={handleIdBackChange}
+                                                    className="hidden"
+                                                />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-[#666666]">Square image &lt; 2MB</p>
+                                                <div className="py-2 flex gap-4 items-center">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => idBackFileInputRef.current?.click()}
+                                                        className="px-4 py-1.5 bg-white border border-slate-800 rounded-sm text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                                                    >
+                                                        Choose Back
+                                                    </button>
+                                                    <p className="text-xs text-slate-400 truncate max-w-[100px]">{idBackFileName}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
