@@ -68,7 +68,7 @@ export default function LoginPage() {
     }
 
   } catch (err: any) {
-    const errorMessage = err?.data?.message || "Invalid credentials or server error";
+    const errorMessage = err?.data?.message;
     console.log("Login Error:", errorMessage);
     Swal.fire({
       icon: "error",
