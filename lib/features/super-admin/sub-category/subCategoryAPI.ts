@@ -26,7 +26,7 @@ const subCategoryAPI = baseAPI.injectEndpoints({
         // Delete sub-category
         deleteSubCategory: build.mutation<any, string>({
             query: (id) => ({
-                url: `/api/v1/sub-category/${id}/deete`,
+                url: `/api/v1/sub-category/${id}/delete`,
                 method: "DELETE",
             }),
             invalidatesTags: ["Category"],

@@ -14,7 +14,24 @@ export const policyApi = baseAPI.injectEndpoints({
       }),
       invalidatesTags: ["Policy"] as any,
     }),
+    getTerms: builder.query<any, void>({
+      query: () => "api/v1/policy/terms-condition",
+      providesTags: ["Policy"] as any,
+    }),
+    updateTerms: builder.mutation<any, { content: string }>({
+      query: (data) => ({
+        url: "api/v1/policy/terms-create",
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Policy"] as any,
+    }),
   }),
 });
 
-export const { useGetPolicyQuery, useUpdatePolicyMutation } = policyApi;
+export const { 
+  useGetPolicyQuery, 
+  useUpdatePolicyMutation,
+  useGetTermsQuery,
+  useUpdateTermsMutation
+} = policyApi;

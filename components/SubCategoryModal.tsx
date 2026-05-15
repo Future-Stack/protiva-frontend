@@ -105,22 +105,22 @@ export default function SubCategoryModal({ isOpen, onClose, categoryId, subCateg
 
                 <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Sub-category Name</label>
+                        <label className="block text-sm font-medium text-slate-900 mb-1">Sub-category Name</label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-2 placeholder:text-gray-400 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none "
+                            className="w-full px-4 py-2 text-slate-900 placeholder:text-gray-400 border border-primary/50 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none "
                             placeholder="Enter name"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                        <label className="block text-sm font-medium text-slate-900 mb-1">Description</label>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            className="w-full px-4 py-2  placeholder:text-gray-400 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none min-h-[100px] "
+                            className="w-full px-4 py-2 text-slate-900 placeholder:text-gray-400 border border-primary/50 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none min-h-[100px] "
                             placeholder="Enter description"
                         />
                     </div>
@@ -128,7 +128,7 @@ export default function SubCategoryModal({ isOpen, onClose, categoryId, subCateg
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                         {/* Image Upload */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Image</label>
+                            <label className="block text-sm font-medium text-slate-900 mb-2">Image</label>
                             <input ref={imageInputRef} type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
                             <div 
                                 onClick={() => imageInputRef.current?.click()}
@@ -150,7 +150,7 @@ export default function SubCategoryModal({ isOpen, onClose, categoryId, subCateg
 
                         {/* Icon Upload */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Icon</label>
+                            <label className="block text-sm font-medium text-slate-900 mb-2">Icon</label>
                             <input ref={iconInputRef} type="file" className="hidden" onChange={handleIconChange} accept="image/*" />
                             <div 
                                 onClick={() => iconInputRef.current?.click()}

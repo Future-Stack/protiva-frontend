@@ -462,7 +462,7 @@ export default function MarketingManagementPage() {
 
                         <div className="p-8 overflow-y-auto custom-scrollbar space-y-4">
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-700">Title *</label>
+                                <label className="text-sm font-medium text-slate-900">Title *</label>
                                 <input
                                     type="text"
                                     placeholder="Enter banner title"
@@ -473,7 +473,7 @@ export default function MarketingManagementPage() {
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-700">Description *</label>
+                                <label className="text-sm font-medium text-slate-900">Description *</label>
                                 <textarea
                                     placeholder="Enter banner description"
                                     rows={3}
@@ -484,7 +484,7 @@ export default function MarketingManagementPage() {
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-700 -mt-1">Image URL *</label>
+                                <label className="text-sm font-medium text-slate-900 -mt-1">Image URL *</label>
                                 <div className="flex gap-4">
                                     <input
                                         type="text"
@@ -516,7 +516,7 @@ export default function MarketingManagementPage() {
 
                             <div className="space-y-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-slate-700">Link *</label>
+                                    <label className="text-sm font-medium text-slate-900">Link *</label>
                                     <input
                                         type="text"
                                         placeholder="/offers/summer-sale"
@@ -527,7 +527,7 @@ export default function MarketingManagementPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-sm font-medium text-slate-700">Start Date</label>
+                                        <label className="text-sm font-medium text-slate-900">Start Date</label>
                                         <input
                                             type="date"
                                             className="mt-1 w-full px-4 py-2.5 text-black bg-[#F3F3F5] border border-transparent text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1]"
@@ -536,7 +536,7 @@ export default function MarketingManagementPage() {
                                         />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-sm font-medium text-slate-700">End Date</label>
+                                        <label className="text-sm font-medium text-slate-900">End Date</label>
                                         <input
                                             type="date"
                                             className="mt-1 text-black w-full px-4 py-2.5 bg-[#F3F3F5] border border-transparent text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:border-[#6366F1]"

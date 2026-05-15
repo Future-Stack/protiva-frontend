@@ -221,7 +221,7 @@ export default function SubAdminManagementPage() {
                 setSelectedRole(detailedAdmin.role);
             }
         } catch (error) {
-            console.error("Failed to fetch detailed sub-admin info", error);
+            console.log("Failed to fetch detailed sub-admin info", error);
             Swal.fire({
                 icon: "error",
                 title: "Error",

@@ -92,8 +92,9 @@ export default function BackgroundCheckDetailPage({ params }: { params: Promise<
     /* Derived display values */
     const name      = provider ? `${provider.firstName} ${provider.lastName}` : "—";
     const location  = [provider?.city, provider?.state, provider?.country].filter(Boolean).join(", ") || "—";
-    const nidImage  = provider?.nidImage ?? null;
-    const avatar    = provider?.avatar ?? null;
+    const nidImage      = provider?.nidImage ?? null;
+    const nidBackImage  = provider?.nidBackImage ?? null;
+    const avatar        = provider?.avatar ?? null;
 
     return (
         <div className="space-y-6">
@@ -209,23 +210,43 @@ export default function BackgroundCheckDetailPage({ params }: { params: Promise<
                                         <ImageIcon size={16} className="text-[#6366F1]" />
                                         <h4 className="text-sm font-semibold text-slate-800">Provided Documents</h4>
                                     </div>
-                                    {nidImage ? (
-                                        <button
-                                            onClick={() => setPreviewDoc({ url: nidImage, label: "NID Image" })}
-                                            className="flex items-center gap-3 py-3 px-3 hover:bg-white rounded-lg transition-colors group w-full sm:w-auto"
-                                        >
-                                            <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-                                                <ImgIcon />
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {nidImage ? (
+                                            <button
+                                                onClick={() => setPreviewDoc({ url: nidImage, label: "NID Front Image" })}
+                                                className="flex items-center gap-3 py-3 px-3 hover:bg-white rounded-lg transition-colors group w-full"
+                                            >
+                                                <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                                                    <ImgIcon />
+                                                </div>
+                                                <span className="text-sm font-medium text-slate-600 group-hover:text-[#6366F1] transition-colors">NID Front Image</span>
+                                                <span className="ml-auto text-xs text-slate-400 group-hover:text-[#6366F1] transition-colors">Preview ›</span>
+                                            </button>
+                                        ) : (
+                                            <div className="flex items-center gap-3 py-3 px-3 text-slate-400">
+                                                <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center text-lg font-semibold">—</div>
+                                                <span className="text-sm">No Front Image</span>
                                             </div>
-                                            <span className="text-sm font-medium text-slate-600 group-hover:text-[#6366F1] transition-colors">NID Image</span>
-                                            <span className="ml-auto text-xs text-slate-400 group-hover:text-[#6366F1] transition-colors">Preview ›</span>
-                                        </button>
-                                    ) : (
-                                        <div className="flex items-center gap-3 py-3 px-3 text-slate-400">
-                                            <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center text-lg font-semibold">—</div>
-                                            <span className="text-sm">No NID image available</span>
-                                        </div>
-                                    )}
+                                        )}
+
+                                        {nidBackImage ? (
+                                            <button
+                                                onClick={() => setPreviewDoc({ url: nidBackImage, label: "NID Back Image" })}
+                                                className="flex items-center gap-3 py-3 px-3 hover:bg-white rounded-lg transition-colors group w-full"
+                                            >
+                                                <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                                                    <ImgIcon />
+                                                </div>
+                                                <span className="text-sm font-medium text-slate-600 group-hover:text-[#6366F1] transition-colors">NID Back Image</span>
+                                                <span className="ml-auto text-xs text-slate-400 group-hover:text-[#6366F1] transition-colors">Preview ›</span>
+                                            </button>
+                                        ) : (
+                                            <div className="flex items-center gap-3 py-3 px-3 text-slate-400">
+                                                <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center text-lg font-semibold">—</div>
+                                                <span className="text-sm">No Back Image</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -258,23 +279,43 @@ export default function BackgroundCheckDetailPage({ params }: { params: Promise<
                                         <ImageIcon size={16} className="text-[#6366F1]" />
                                         <h4 className="text-sm font-semibold text-slate-800">Provided Documents</h4>
                                     </div>
-                                    {nidImage ? (
-                                        <button
-                                            onClick={() => setPreviewDoc({ url: nidImage, label: "NID Image" })}
-                                            className="flex items-center gap-3 py-3 px-3 hover:bg-white rounded-lg transition-colors group w-full sm:w-auto"
-                                        >
-                                            <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-                                                <ImgIcon />
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {nidImage ? (
+                                            <button
+                                                onClick={() => setPreviewDoc({ url: nidImage, label: "NID Front Image" })}
+                                                className="flex items-center gap-3 py-3 px-3 hover:bg-white rounded-lg transition-colors group w-full"
+                                            >
+                                                <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                                                    <ImgIcon />
+                                                </div>
+                                                <span className="text-sm font-medium text-slate-600 group-hover:text-[#6366F1] transition-colors">NID Front Image</span>
+                                                <span className="ml-auto text-xs text-slate-400 group-hover:text-[#6366F1] transition-colors">Preview ›</span>
+                                            </button>
+                                        ) : (
+                                            <div className="flex items-center gap-3 py-3 px-3 text-slate-400">
+                                                <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center text-lg font-semibold">—</div>
+                                                <span className="text-sm">No Front Image</span>
                                             </div>
-                                            <span className="text-sm font-medium text-slate-600 group-hover:text-[#6366F1] transition-colors">NID Image</span>
-                                            <span className="ml-auto text-xs text-slate-400 group-hover:text-[#6366F1] transition-colors">Preview ›</span>
-                                        </button>
-                                    ) : (
-                                        <div className="flex items-center gap-3 py-3 px-3 text-slate-400">
-                                            <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center text-lg font-semibold">—</div>
-                                            <span className="text-sm">No NID image available</span>
-                                        </div>
-                                    )}
+                                        )}
+
+                                        {nidBackImage ? (
+                                            <button
+                                                onClick={() => setPreviewDoc({ url: nidBackImage, label: "NID Back Image" })}
+                                                className="flex items-center gap-3 py-3 px-3 hover:bg-white rounded-lg transition-colors group w-full"
+                                            >
+                                                <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                                                    <ImgIcon />
+                                                </div>
+                                                <span className="text-sm font-medium text-slate-600 group-hover:text-[#6366F1] transition-colors">NID Back Image</span>
+                                                <span className="ml-auto text-xs text-slate-400 group-hover:text-[#6366F1] transition-colors">Preview ›</span>
+                                            </button>
+                                        ) : (
+                                            <div className="flex items-center gap-3 py-3 px-3 text-slate-400">
+                                                <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center text-lg font-semibold">—</div>
+                                                <span className="text-sm">No Back Image</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         )}

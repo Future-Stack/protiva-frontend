@@ -33,6 +33,7 @@ interface CheckRow {
     nid: string;
     // documents: { pdf: boolean; image: boolean };
     nidImage: string | null;
+    nidBackImage: string | null;
     professionalDocs: { pdf: boolean; image: boolean };
     verificationStatus: string;
     avatar: string | null;
@@ -71,6 +72,7 @@ export default function BackgroundCheckPage() {
         limit: LIMIT,
         ...(debouncedSearch ? { search: debouncedSearch } : {}),
     });
+    console.log(data);
     const [verifyProvider] = useVerifyProviderMutation();
     const [rejectProvider] = useRejectProviderMutation();
 
@@ -92,6 +94,7 @@ export default function BackgroundCheckPage() {
                     email: p.email,
                     nid: p.nidNumber || "N/A",
                     nidImage: p.nidImage,
+                    nidBackImage: p.nidBackImage,
                     professionalDocs: { pdf: false, image: false },
                     verificationStatus: p.verificationStatus,
                     avatar: p.avatar,
@@ -233,6 +236,13 @@ export default function BackgroundCheckPage() {
                                                         onClick={() => handleViewDocument(check.nidImage!)}
                                                         className={`w-8 h-8 rounded flex items-center justify-center transition-all ${check.nidImage ? "bg-green-100 cursor-pointer hover:bg-green-200" : "bg-slate-100 opacity-50 cursor-not-allowed"}`}
                                                         title={check.nidImage ? "View Document" : "No document available"}
+                                                    >
+                                                        <ImgIcon />
+                                                    </div>
+                                                     <div
+                                                        onClick={() => handleViewDocument(check.nidBackImage!)}
+                                                        className={`w-8 h-8 rounded flex items-center justify-center transition-all ${check.nidBackImage ? "bg-green-100 cursor-pointer hover:bg-green-200" : "bg-slate-100 opacity-50 cursor-not-allowed"}`}
+                                                        title={check.nidBackImage ? "View Document" : "No document available"}
                                                     >
                                                         <ImgIcon />
                                                     </div>

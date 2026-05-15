@@ -28,6 +28,7 @@ export interface Provider {
   isProviderRecomendation: boolean;
   isRecmmendation?: boolean;
   nidImage: string | null;
+  nidBackImage: string | null;
   nidNumber: string | null;
   yearsOfExprience: string | null;
   loginAttempts: number;

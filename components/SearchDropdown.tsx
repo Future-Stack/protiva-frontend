@@ -28,7 +28,7 @@ export default function SearchDropdown() {
       console.log("Search query:", query);
       if (searchResponse) console.log("Search response:", searchResponse);
       if (error) {
-        console.error("Search error detail:", error);
+        console.log("Search error detail:", error);
         if ('status' in error) console.log("Error status:", error.status);
       }
     }

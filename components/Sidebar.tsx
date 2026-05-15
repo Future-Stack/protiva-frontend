@@ -107,6 +107,7 @@ const SUB_ADMIN_MENU: MenuSection[] = [
         title: "Marketing",
         items: [
             { title: "Marketing Tool", href: "/sub-dashboard/marketing", icon: Globe },
+            { title: "Coupons", href: "/sub-dashboard/marketing/coupons", icon: CreditCard },
         ]
     },
     {
@@ -177,6 +178,7 @@ const SUPER_ADMIN_MENU: MenuSection[] = [
         title: "Marketing",
         items: [
             { title: "Marketing Tool", href: "/marketing", icon: Globe },
+            { title: "Coupons", href: "/marketing/coupons", icon: CreditCard },
         ]
     },
     {
@@ -246,6 +248,7 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
 
                 // Marketing
                 if (item.title === "Marketing Tool") return permissions?.isViewManageMarketing || permissions?.isManageMarketing;
+                if (item.title === "Coupons") return permissions?.isViewManageMarketing || permissions?.isManageMarketing;
 
                 // Policy Management
                 if (item.title === "Privacy Policy") return true; // Sub-admin can always view
@@ -280,7 +283,13 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
                 <div className="bg-[#F8FAFC] rounded-xl p-4 flex items-center gap-3">
                     <div className="relative">
                         <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
-                            <img src={displayUser?.avatar || user1.src} alt="Profile" className="w-full h-full object-cover" />
+                            {displayUser?.avatar ? (
+                                <img src={displayUser?.avatar} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full bg-primary flex items-center justify-center">
+                                    <span className="text-white text-xs font-bold">{displayUser?.firstName?.[0]?.toUpperCase()}{displayUser?.lastName?.[0]?.toUpperCase()}</span>
+                                </div>
+                            )}
                         </div>
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#22C55E] border-2 border-white rounded-full"></div>
                     </div>

@@ -335,34 +335,34 @@ export default function SubAdminMarketingPage() {
                         </div>
                         <div className="p-8 overflow-y-auto space-y-4">
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-700">Title *</label>
-                                <input type="text" className="w-full px-4 py-2.5 bg-slate-50 border border-transparent rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
+                                <label className="text-sm font-medium text-slate-900">Title *</label>
+                                <input type="text" className="w-full px-4 py-2.5 bg-slate-50 border border-transparent rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500/20" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-700">Description *</label>
-                                <textarea rows={3} className="w-full px-4 py-2.5 bg-slate-50 border border-transparent rounded-lg text-sm" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+                                <label className="text-sm font-medium text-slate-900">Description *</label>
+                                <textarea rows={3} className="w-full px-4 py-2.5 bg-slate-50 border border-transparent rounded-lg text-sm text-slate-900" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-700">Image URL / Upload *</label>
+                                <label className="text-sm font-medium text-slate-900">Image URL / Upload *</label>
                                 <div className="flex gap-4">
-                                    <input type="text" className="flex-1 px-4 py-2.5 bg-slate-50 border border-transparent rounded-lg text-sm" value={formData.image} onChange={(e) => setFormData({ ...formData, image: e.target.value })} />
+                                    <input type="text" className="flex-1 px-4 py-2.5 bg-slate-50 border border-transparent rounded-lg text-sm text-slate-900" value={formData.image} onChange={(e) => setFormData({ ...formData, image: e.target.value })} />
                                     <input type="file" accept="image/*" className="hidden" id="image-upload" onChange={handleImageUpload} />
                                     <label htmlFor="image-upload" className="px-4 py-2 bg-slate-100 rounded-lg cursor-pointer flex items-center justify-center border border-slate-200"><UploadCloud size={20} /></label>
                                 </div>
                                 {formData.image && <img src={formData.image} className="mt-2 h-32 w-full object-cover rounded-lg" />}
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-700">Link *</label>
-                                <input type="text" className="w-full px-4 py-2.5 bg-slate-50 border border-transparent rounded-lg text-sm" value={formData.link} onChange={(e) => setFormData({ ...formData, link: e.target.value })} />
+                                <label className="text-sm font-medium text-slate-900">Link *</label>
+                                <input type="text" className="w-full px-4 py-2.5 bg-slate-50 border border-transparent rounded-lg text-sm text-slate-900" value={formData.link} onChange={(e) => setFormData({ ...formData, link: e.target.value })} />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm font-medium text-slate-700">Start Date</label>
-                                    <input type="date" className="w-full px-4 py-2.5 bg-slate-50 border border-transparent rounded-lg text-sm" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} />
+                                    <label className="text-sm font-medium text-slate-900">Start Date</label>
+                                    <input type="date" className="w-full px-4 py-2.5 bg-slate-50 border border-transparent rounded-lg text-sm text-slate-900" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-slate-700">End Date</label>
-                                    <input type="date" className="w-full px-4 py-2.5 bg-slate-50 border border-transparent rounded-lg text-sm" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} />
+                                    <label className="text-sm font-medium text-slate-900">End Date</label>
+                                    <input type="date" className="w-full px-4 py-2.5 bg-slate-50 border border-transparent rounded-lg text-sm text-slate-900" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} />
                                 </div>
                             </div>
                             <div className="pt-6 flex justify-end gap-3">

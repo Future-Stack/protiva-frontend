@@ -287,14 +287,16 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                 onClick={() => toggle("user")}
                 className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 transition-colors cursor-pointer overflow-hidden"
               >
-                {user?.avatar || user1.src ? (
+                {user?.avatar ? (
                   <img
-                    src={user?.avatar || user1.src}
+                    src={user?.avatar}
                     alt="user"
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <User size={20} />
+                  <div className="w-full h-full bg-primary flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">{user?.firstName?.[0]?.toUpperCase()}{user?.lastName?.[0]?.toUpperCase()}</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -302,11 +304,17 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               <div className="absolute top-15 right-0 bg-white rounded-lg shadow-md w-65 overflow-hidden">
                 <div className="flex items-center gap-3 px-4 py-3 bg-slate-50">
                   <div className="w-12 h-12 rounded-full overflow-hidden ">
-                    <img
-                      src={user?.avatar || user1.src}
-                      alt="user"
-                      className="w-full h-full object-cover"
-                    />
+                    {user?.avatar ? (
+                      <img
+                        src={user?.avatar}
+                        alt="user"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-primary flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">{user?.firstName?.[0]?.toUpperCase()}{user?.lastName?.[0]?.toUpperCase()}</span>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-slate-900">

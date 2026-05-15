@@ -19,17 +19,24 @@ export default function SubAdminSiteSettings() {
                 >
                     Privacy Policy
                 </button>
+                <button
+                    onClick={() => setActiveMenu("terms-condition")}
+                    className={`whitespace-nowrap px-4 py-2.5 lg:py-3 rounded-lg text-sm font-semibold transition-colors ${activeMenu === "terms-condition"
+                        ? "bg-blue-50 text-blue-600"
+                        : "text-slate-600 hover:bg-slate-50"
+                        }`}
+                >
+                    Terms & Conditions
+                </button>
             </div>
 
             {/* Right Content Area */}
             <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-100 p-4 sm:p-8">
                 {activeMenu === "privacy-policy" && (
-                    <div>
-                        {/* <div className="flex items-center justify-between mb-8">
-                            <h2 className="text-xl font-bold text-slate-900">Privacy Policy</h2>
-                        </div> */}
-                        <SubAdminPolicySettings />
-                    </div>
+                    <SubAdminPolicySettings type="privacy" />
+                )}
+                {activeMenu === "terms-condition" && (
+                    <SubAdminPolicySettings type="terms" />
                 )}
             </div>
         </div>
