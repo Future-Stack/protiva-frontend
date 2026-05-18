@@ -106,19 +106,19 @@ export default function SubAdminMarketingPage() {
 
     const handleSaveBanner = async () => {
         if (!hasManagePermission) return;
-        if (!formData.title || !formData.description) {
-            Swal.fire({ icon: "warning", title: "Validation Error", text: "Title and description are required." });
+        if (!formData.imageFile && !formData.image) {
+            Swal.fire({ icon: "warning", title: "Validation Error", text: "An image is required." });
             return;
         }
 
         try {
             if (editingBanner) {
                 const data = new FormData();
-                data.append("title", formData.title);
-                data.append("description", formData.description);
-                data.append("link", formData.link);
-                data.append("startDate", formData.startDate);
-                data.append("endDate", formData.endDate);
+                data.append("title", formData.title || "");
+                data.append("description", formData.description || "");
+                data.append("link", formData.link || "");
+                data.append("startDate", formData.startDate || "");
+                data.append("endDate", formData.endDate || "");
                 if (formData.imageFile) data.append("image", formData.imageFile);
 
                 await updateBanner({ id: editingBanner.id, body: data }).unwrap();
@@ -126,16 +126,15 @@ export default function SubAdminMarketingPage() {
                 setIsModalOpen(false);
             } else {
                 const data = new FormData();
-                data.append("title", formData.title);
-                data.append("description", formData.description);
-                data.append("link", formData.link);
+                data.append("title", formData.title || "");
+                data.append("description", formData.description || "");
+                data.append("link", formData.link || "");
                 if (formData.startDate) data.append("startDate", new Date(formData.startDate).toISOString());
                 if (formData.endDate) data.append("endDate", new Date(formData.endDate).toISOString());
                 if (formData.imageFile) {
                     data.append("image", formData.imageFile);
-                } else {
-                    Swal.fire({ icon: "warning", title: "Validation Error", text: "An image is required for new banners." });
-                    return;
+                } else if (formData.image) {
+                    data.append("image", formData.image);
                 }
 
                 await createBanner(data).unwrap();
@@ -335,11 +334,11 @@ export default function SubAdminMarketingPage() {
                         </div>
                         <div className="p-8 overflow-y-auto space-y-4">
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-900">Title *</label>
+                                <label className="text-sm font-medium text-slate-900">Title</label>
                                 <input type="text" className="w-full px-4 py-2.5 bg-slate-50 border border-transparent rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500/20" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-900">Description *</label>
+                                <label className="text-sm font-medium text-slate-900">Description</label>
                                 <textarea rows={3} className="w-full px-4 py-2.5 bg-slate-50 border border-transparent rounded-lg text-sm text-slate-900" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
                             </div>
                             <div className="space-y-1.5">
@@ -352,7 +351,7 @@ export default function SubAdminMarketingPage() {
                                 {formData.image && <img src={formData.image} className="mt-2 h-32 w-full object-cover rounded-lg" />}
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-900">Link *</label>
+                                <label className="text-sm font-medium text-slate-900">Link</label>
                                 <input type="text" className="w-full px-4 py-2.5 bg-slate-50 border border-transparent rounded-lg text-sm text-slate-900" value={formData.link} onChange={(e) => setFormData({ ...formData, link: e.target.value })} />
                             </div>
                             <div className="grid grid-cols-2 gap-4">

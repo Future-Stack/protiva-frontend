@@ -38,6 +38,14 @@ const adminAPI = baseAPI.injectEndpoints({
             }),
             providesTags: (id) => [{ type: "Admin", id }],
         }),
+
+        deleteSubAdmin: build.mutation<any, string>({
+            query: (id) => ({
+                url: `/api/v1/user/permanent-delete-sub-admin/${id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: ["Admin"],
+        }),
     }),
 });
 
@@ -47,4 +55,5 @@ export const {
     useGetSubAdminsQuery,
     useGetSubAdminByIdQuery,
     useLazyGetSubAdminByIdQuery,
+    useDeleteSubAdminMutation,
 } = adminAPI;

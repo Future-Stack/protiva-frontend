@@ -4,21 +4,22 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import ProfileSettings from "@/components/settings/ProfileSettings";
 import SiteSettings from "@/components/settings/SiteSettings";
+import CommissionSettings from "@/components/settings/CommissionSettings";
 
 function SettingsPageContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const tabParam = searchParams.get("tab") as "profile" | "site";
+    const tabParam = searchParams.get("tab") as "profile" | "site" | "commission";
 
-    const [activeTab, setActiveTab] = useState<"profile" | "site">(tabParam || "profile");
+    const [activeTab, setActiveTab] = useState<"profile" | "site" | "commission">(tabParam || "profile");
 
     useEffect(() => {
-        if (tabParam && (tabParam === "profile" || tabParam === "site")) {
+        if (tabParam && (tabParam === "profile" || tabParam === "site" || tabParam === "commission")) {
             setActiveTab(tabParam);
         }
     }, [tabParam]);
 
-    const handleTabChange = (tab: "profile" | "site") => {
+    const handleTabChange = (tab: "profile" | "site" | "commission") => {
         setActiveTab(tab);
         router.replace(`?tab=${tab}`);
     };
@@ -45,14 +46,25 @@ function SettingsPageContent() {
                 >
                     Site Setting
                 </button>
+                <button
+                    onClick={() => handleTabChange("commission")}
+                    className={`px-5 py-2 rounded-full text-[13px] font-medium transition-all duration-300 ${activeTab === "commission"
+                            ? "bg-blue-600 text-white shadow-sm"
+                            : "text-slate-600 hover:text-slate-900"
+                        }`}
+                >
+                    Commission Control
+                </button>
             </div>
 
             {/* Tab Content */}
             <div className="mt-6">
                 {activeTab === "profile" ? (
                     <ProfileSettings />
-                ) : (
+                ) : activeTab === "site" ? (
                     <SiteSettings />
+                ) : (
+                    <CommissionSettings />
                 )}
             </div>
         </div>

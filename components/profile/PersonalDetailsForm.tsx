@@ -62,9 +62,11 @@ export default function PersonalDetailsForm({ initialData, onSubmit, isLoading }
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                   message: "Invalid email address"
                 }
+                 
               })}
               type="email"
-              className="w-full px-4 py-2.5 bg-slate-50 text-black border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none"
+              readOnly
+              className="w-full px-4 py-2.5 bg-slate-100 text-slate-500 cursor-not-allowed border border-slate-200 rounded-lg outline-none"
               placeholder="Enter email"
             />
             {errors.email && <p className="text-red-500 text-xs px-1">{errors.email.message}</p>}

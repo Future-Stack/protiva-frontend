@@ -107,11 +107,11 @@ export default function MarketingManagementPage() {
     };
 
     const handleSaveBanner = async () => {
-        if (!formData.title || !formData.description) {
+        if (!formData.imageFile && !formData.image) {
             Swal.fire({
                 icon: "warning",
                 title: "Validation Error",
-                text: "Title and description are required.",
+                text: "An image is required.",
             });
             return;
         }
@@ -119,11 +119,11 @@ export default function MarketingManagementPage() {
         try {
             if (editingBanner) {
                 const data = new FormData();
-                data.append("title", formData.title);
-                data.append("description", formData.description);
-                data.append("link", formData.link);
-                data.append("startDate", formData.startDate);
-                data.append("endDate", formData.endDate);
+                data.append("title", formData.title || "");
+                data.append("description", formData.description || "");
+                data.append("link", formData.link || "");
+                data.append("startDate", formData.startDate || "");
+                data.append("endDate", formData.endDate || "");
 
                 if (formData.imageFile) {
                     data.append("image", formData.imageFile);
@@ -139,9 +139,9 @@ export default function MarketingManagementPage() {
                 setIsModalOpen(false);
             } else {
                 const data = new FormData();
-                data.append("title", formData.title);
-                data.append("description", formData.description);
-                data.append("link", formData.link);
+                data.append("title", formData.title || "");
+                data.append("description", formData.description || "");
+                data.append("link", formData.link || "");
                 
                 // Format dates to ISO strings if they exist
                 if (formData.startDate) {
@@ -153,13 +153,8 @@ export default function MarketingManagementPage() {
 
                 if (formData.imageFile) {
                     data.append("image", formData.imageFile);
-                } else {
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Validation Error",
-                        text: "An image is required for new banners.",
-                    });
-                    return;
+                } else if (formData.image) {
+                    data.append("image", formData.image);
                 }
 
                 await createBanner(data).unwrap();
@@ -462,7 +457,7 @@ export default function MarketingManagementPage() {
 
                         <div className="p-8 overflow-y-auto custom-scrollbar space-y-4">
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-900">Title *</label>
+                                <label className="text-sm font-medium text-slate-900">Title</label>
                                 <input
                                     type="text"
                                     placeholder="Enter banner title"
@@ -473,7 +468,7 @@ export default function MarketingManagementPage() {
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-900">Description *</label>
+                                <label className="text-sm font-medium text-slate-900">Description</label>
                                 <textarea
                                     placeholder="Enter banner description"
                                     rows={3}
@@ -516,7 +511,7 @@ export default function MarketingManagementPage() {
 
                             <div className="space-y-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-slate-900">Link *</label>
+                                    <label className="text-sm font-medium text-slate-900">Link</label>
                                     <input
                                         type="text"
                                         placeholder="/offers/summer-sale"

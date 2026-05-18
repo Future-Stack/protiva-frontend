@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { Search, Plus, ChevronDown, X, Check, Loader2, ChevronLeft, ChevronRight, Edit, Eye, EyeOff } from "lucide-react";
-// import DeleteModal from "@/components/DeleteModal";
-import { useCreateAdminMutation, useGetSubAdminsQuery, useUpdateAdminPermissionsMutation, useLazyGetSubAdminByIdQuery } from "@/lib/features/super-admin/admin/adminAPI";
+import { Search, Plus, ChevronDown, X, Check, Loader2, ChevronLeft, ChevronRight, Edit, Eye, EyeOff, Trash2 } from "lucide-react";
+import DeleteModal from "@/components/DeleteModal";
+import { useCreateAdminMutation, useGetSubAdminsQuery, useUpdateAdminPermissionsMutation, useLazyGetSubAdminByIdQuery, useDeleteSubAdminMutation } from "@/lib/features/super-admin/admin/adminAPI";
 import { useAppSelector } from "@/lib/hooks";
 import Swal from "sweetalert2";
 import { useMemo } from "react";
@@ -102,7 +102,7 @@ export default function SubAdminManagementPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<"basic" | "permission">("basic");
-    // const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [adminToDelete, setAdminToDelete] = useState<string | null>(null);
     const [selectedRole, setSelectedRole] = useState("Booking Manager");
 
@@ -132,6 +132,7 @@ export default function SubAdminManagementPage() {
     const [createAdmin, { isLoading: isCreating }] = useCreateAdminMutation();
     const [updateAdminPermissions, { isLoading: isUpdating }] = useUpdateAdminPermissionsMutation();
     const [getSubAdminById, { isFetching: isFetchingAdminDetails }] = useLazyGetSubAdminByIdQuery();
+    const [deleteSubAdmin, { isLoading: isDeleting }] = useDeleteSubAdminMutation();
     console.log(getSubAdminById);
 
     const [formData, setFormData] = useState({
@@ -361,19 +362,33 @@ export default function SubAdminManagementPage() {
         }
     };
 
-    // const handleDeleteAdmin = (id: string) => {
-    //     setAdminToDelete(id);
-    //     setIsDeleteModalOpen(true);
-    // };
+    const handleDeleteAdmin = (id: string) => {
+        setAdminToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
 
-    // const confirmDelete = () => {
-    //     if (adminToDelete) {
-    //         // No delete API provided yet based on prompt, keeping UI feedback
-    //         Swal.fire("Note", "Delete API not yet implemented", "info");
-    //         setAdminToDelete(null);
-    //     }
-    //     setIsDeleteModalOpen(false);
-    // };
+    const confirmDelete = async () => {
+        if (!adminToDelete) return;
+        try {
+            await deleteSubAdmin(adminToDelete).unwrap();
+            Swal.fire({
+                icon: "success",
+                title: "Deleted",
+                text: "The sub-admin has been permanently deleted.",
+                timer: 2000,
+                showConfirmButton: false
+            });
+            refetch();
+        } catch (err: any) {
+            Swal.fire({
+                icon: "error",
+                title: "Delete Failed",
+                text: err?.data?.message || "Something went wrong while deleting the sub-admin.",
+            });
+        } finally {
+            setAdminToDelete(null);
+        }
+    };
 
     return (
         <div className="space-y-6 bg-white rounded-lg overflow-hidden px-[26px] py-[34px] min-h-[calc(100vh-140px)]">
@@ -498,11 +513,11 @@ export default function SubAdminManagementPage() {
                                                     className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                                                     <Edit size={18} />
                                                 </button>
-                                                {/* <button
+                                                <button
                                                     onClick={() => handleDeleteAdmin(admin.id)}
                                                     className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                                                     <Trash2 size={18} />
-                                                </button> */}
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -843,13 +858,14 @@ export default function SubAdminManagementPage() {
                 </div>
             )}
 
-            {/* <DeleteModal
+            <DeleteModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={confirmDelete}
+                loading={isDeleting}
                 title="Delete Sub Admin"
-                description="Are you sure you want to delete this sub-admin? This will remove their access to the platform."
-            /> */}
+                description="Are you sure you want to permanently delete this sub-admin? This action cannot be undone."
+            />
         </div >
     );
 }

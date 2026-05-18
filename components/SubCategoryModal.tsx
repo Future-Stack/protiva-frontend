@@ -17,7 +17,7 @@ interface SubCategoryModalProps {
 export default function SubCategoryModal({ isOpen, onClose, categoryId, subCategory }: SubCategoryModalProps) {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
-    const [imageFile, setImageFile] = useState<File | null>(null);
+    // const [imageFile, setImageFile] = useState<File | null>(null);
     const [iconFile, setIconFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [iconPreview, setIconPreview] = useState<string | null>(null);
@@ -39,20 +39,20 @@ export default function SubCategoryModal({ isOpen, onClose, categoryId, subCateg
             setDescription("");
             setImagePreview(null);
             setIconPreview(null);
-            setImageFile(null);
+            // setImageFile(null);
             setIconFile(null);
         }
     }, [subCategory, isOpen]);
 
     if (!isOpen) return null;
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setImageFile(file);
-            setImagePreview(URL.createObjectURL(file));
-        }
-    };
+    // const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     const file = e.target.files?.[0];
+    //     if (file) {
+    //         // setImageFile(file);
+    //         setImagePreview(URL.createObjectURL(file));
+    //     }
+    // };
 
     const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -73,7 +73,7 @@ export default function SubCategoryModal({ isOpen, onClose, categoryId, subCateg
         formData.append("description", description || "Sub-category description");
         formData.append("isActive", "true");
         
-        if (imageFile) formData.append("image", imageFile);
+        // if (imageFile) formData.append("image", imageFile);
         if (iconFile) formData.append("icon", iconFile);
 
         try {
@@ -127,7 +127,7 @@ export default function SubCategoryModal({ isOpen, onClose, categoryId, subCateg
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                         {/* Image Upload */}
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-medium text-slate-900 mb-2">Image</label>
                             <input ref={imageInputRef} type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
                             <div 
@@ -146,7 +146,7 @@ export default function SubCategoryModal({ isOpen, onClose, categoryId, subCateg
                                     <Pencil size={12} />
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Icon Upload */}
                         <div>

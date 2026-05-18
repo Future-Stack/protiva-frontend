@@ -272,11 +272,24 @@ export default function CouponManagement() {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={5} className="px-6 py-12 text-center">
-                                    <div className="flex flex-col items-center justify-center text-slate-500">
-                                        <Ticket size={48} className="mb-4 opacity-20" />
-                                        <p className="font-medium">No coupons found</p>
-                                        <p className="text-sm">Try adjusting your search or create a new coupon.</p>
+                                <td colSpan={isSuperAdmin ? 7 : 6} className="px-6 py-20 text-center">
+                                    <div className="flex flex-col items-center justify-center max-w-[400px] mx-auto">
+                                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+                                            <Ticket size={40} className="text-slate-300" />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-slate-900 mb-2">No coupons found</h3>
+                                        <p className="text-slate-500 mb-8 leading-relaxed text-sm">
+                                            Try adjusting your search or create a new coupon.
+                                        </p>
+                                        {isSuperAdmin && (
+                                            <button
+                                                onClick={() => handleOpenModal()}
+                                                className="flex items-center gap-2 px-6 py-3 bg-[#6366F1] text-white rounded-xl text-sm font-semibold hover:bg-[#6366F1]/90 shadow-lg shadow-indigo-200 transition-all active:scale-95"
+                                            >
+                                                <Plus size={20} />
+                                                Create New Coupon
+                                            </button>
+                                        )}
                                     </div>
                                 </td>
                             </tr>
