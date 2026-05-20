@@ -87,9 +87,9 @@ export default function SiteSettings() {
                                 <div>
                                     <h3 className="text-sm font-semibold text-slate-700 mb-4">{activeMenu === "privacy-policy" ? "Privacy Policy" : "Terms & Conditions"} Sections</h3>
 
-                                    <div className="border border-slate-200 rounded-lg flex items-center justify-between p-4 group hover:border-blue-200 transition-colors">
+                                    <div className="h-auto border border-slate-200 rounded-lg flex items-start justify-between p-4 group hover:border-blue-200 transition-colors">
                                         <div 
-                                            className="text-sm text-slate-600 prose prose-sm max-w-none line-clamp-3"
+                                            className="text-sm text-slate-600 prose prose-sm max-w-none"
                                             dangerouslySetInnerHTML={{ __html: content }}
                                         />
                                         {isSuperAdmin && (

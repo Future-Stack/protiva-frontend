@@ -141,9 +141,9 @@ export default function BackgroundCheckPage() {
         }
     };
 
-    const handleViewDocument = (url: string) => {
+    const handleViewDocument = (url: string, label: string = "NID Document") => {
         if (url) {
-            setPreviewDoc({ url, label: "NID Document" });
+            setPreviewDoc({ url, label });
         }
     };
 
@@ -223,7 +223,7 @@ export default function BackgroundCheckPage() {
                                             </td>
                                             <td className="px-4 py-4 border-r border-slate-300">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+                                                    <div onClick={() => handleViewDocument(check.avatar!, "Avatar Preview")} className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all">
                                                         {check.avatar ? (
                                                             <img src={check.avatar} alt={check.name} className="w-full h-full object-cover" />
                                                         ) : (

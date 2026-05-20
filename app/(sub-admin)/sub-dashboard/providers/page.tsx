@@ -297,6 +297,12 @@ export default function SubAdminProviderListPage() {
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
     const [isServicesModalOpen, setIsServicesModalOpen] = useState(false);
     const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
+    const [previewDoc, setPreviewDoc] = useState<{ url: string; label: string } | null>(null);
+    const handleViewDocument = (url: string, label: string = "Document Preview") => {
+        if (url) {
+            setPreviewDoc({ url, label });
+        }
+    };
 
     const handleDelete = (id: string) => { setItemToDelete(id); setIsDeleteModalOpen(true); };
     const confirmDelete = async () => {
@@ -438,7 +444,7 @@ export default function SubAdminProviderListPage() {
                                         <td className="px-4 py-4 text-sm text-slate-500 border-r-2 border-slate-300">{(page-1)*10 + index + 1}</td>
                                         <td className="px-4 py-4 border-r-2 border-slate-300">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
+                                                <div onClick={() => handleViewDocument(provider.avatar!, "Avatar Preview")} className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden border border-slate-200 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all">
                                                     {provider.avatar ? <img src={provider.avatar} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-500 font-bold">{provider.name.charAt(0)}</div>}
                                                 </div>
                                                 <div>
@@ -479,6 +485,49 @@ export default function SubAdminProviderListPage() {
 
             <DeleteModal isOpen={isDeleteModalOpen} onClose={() => { setIsDeleteModalOpen(false); setItemToDelete(null); }} onConfirm={confirmDelete} title="Delete Provider" description="Are you sure?" />
             <ServicesModal isOpen={isServicesModalOpen} onClose={() => setIsServicesModalOpen(false)} providerId={selectedProviderId} />
+            
+            {/* Avatar Image Preview Modal */}
+            {previewDoc && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setPreviewDoc(null)} />
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                            <div className="flex items-center gap-2">
+                                <Search size={18} className="text-blue-500" />
+                                <span className="text-sm font-semibold text-slate-800">{previewDoc.label}</span>
+                            </div>
+                            <button
+                                onClick={() => setPreviewDoc(null)}
+                                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        {/* Body */}
+                        <div className="flex items-center justify-center bg-slate-50 min-h-[420px]">
+                            {previewDoc.url ? (
+                                <img
+                                    src={previewDoc.url}
+                                    alt={previewDoc.label}
+                                    className="max-w-full max-h-[60vh] object-contain rounded shadow-sm"
+                                />
+                            ) : (
+                                <div className="text-slate-400 text-sm">No image available</div>
+                            )}
+                        </div>
+                        {/* Footer */}
+                        <div className="px-6 py-4 border-t border-slate-100 flex justify-end">
+                            <button
+                                onClick={() => setPreviewDoc(null)}
+                                className="px-5 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

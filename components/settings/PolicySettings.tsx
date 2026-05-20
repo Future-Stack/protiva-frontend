@@ -215,15 +215,15 @@ export default function PolicySettings({
                             if (editorRef.current) editorRef.current.innerHTML = e.target.value;
                         }}
                         placeholder="Write your HTML or plain text here..."
-                        className="w-full min-h-[350px] p-6 outline-none resize-y text-slate-600 font-mono text-sm leading-relaxed bg-slate-800 text-slate-300 rounded-md border border-transparent focus:border-slate-500 transition-colors"
+                        className="w-full h-auto p-6 outline-none resize-y text-slate-600 font-mono text-sm leading-relaxed bg-slate-800 text-slate-300 rounded-md border border-transparent focus:border-slate-500 transition-colors"
+                        rows={15}
                     />
                 ) : (
                     <div
                         ref={editorRef}
                         contentEditable={!readOnly}
                         onInput={handleEditorInput}
-                        className={`w-full min-h-[350px] p-6 outline-none text-slate-700 text-[15px] leading-relaxed rounded-md border border-transparent transition-colors prose prose-sm max-w-none ${readOnly ? "bg-slate-50 cursor-not-allowed" : "bg-[#f1f5f9] focus:border-blue-200"}`}
-                        style={{ minHeight: '350px' }}
+                        className={`w-full h-auto min-h-[250px] p-6 outline-none text-slate-700 text-[15px] leading-relaxed rounded-md border border-transparent transition-colors prose prose-sm max-w-none ${readOnly ? "bg-slate-50 cursor-not-allowed" : "bg-[#f1f5f9] focus:border-blue-200"}`}
                     />
                 )}
             </div>

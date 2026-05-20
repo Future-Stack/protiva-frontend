@@ -57,20 +57,20 @@ export default function SubCategoryRowList({ categoryId, onEdit, onDelete }: Sub
                         {subCategories.map((sub: SubCategoryItem) => (
                             <tr key={sub.id} className="hover:bg-slate-50/50 transition-colors">
                                 <td className="px-4 py-3 text-sm font-medium text-slate-900 border-r border-slate-200">{sub.name}</td>
-                                <td className="px-4 py-3 text-center border-r border-slate-200">
+                                {/* <td className="px-4 py-3 text-center border-r border-slate-200">
                                     {sub.image ? (
                                         <img src={sub.image} alt="" className="w-8 h-8 rounded object-cover mx-auto border border-slate-200" />
                                     ) : (
                                         <span className="text-slate-300 text-xs">-</span>
                                     )}
-                                </td>
-                                {/* <td className="px-4 py-3 text-center border-r border-slate-200">
+                                </td> */}
+                                <td className="px-4 py-3 text-center border-r border-slate-200">
                                     {sub.icon ? (
                                         <img src={sub.icon} alt="" className="w-6 h-6 object-contain mx-auto" />
                                     ) : (
                                         <span className="text-slate-300 text-xs">-</span>
-                                    )} */}
-                                {/* </td> */}
+                                    )}
+                                </td>
                                 <td className="px-4 py-3 text-center border-r border-slate-200 text-sm text-slate-600">
                                     {sub._count?.jobs || 0}
                                 </td>

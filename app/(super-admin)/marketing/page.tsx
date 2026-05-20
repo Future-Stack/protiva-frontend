@@ -80,11 +80,11 @@ export default function MarketingManagementPage() {
     
     const filteredBanners = useMemo(() => {
         return banners.filter((b: any) => {
-            const searchLower = searchQuery.toLowerCase();
+            const searchLower = (searchQuery || "").toLowerCase();
             return (
-                b.title.toLowerCase().includes(searchLower) ||
-                b.description.toLowerCase().includes(searchLower) ||
-                (b.link && b.link.toLowerCase().includes(searchLower))
+                (b.title || "").toLowerCase().includes(searchLower) ||
+                (b.description || "").toLowerCase().includes(searchLower) ||
+                (b.link || "").toLowerCase().includes(searchLower)
             );
         });
     }, [banners, searchQuery]);
@@ -479,7 +479,7 @@ export default function MarketingManagementPage() {
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-900 -mt-1">Image URL *</label>
+                                <label className="text-sm font-medium text-slate-900 -mt-1">Image *</label>
                                 <div className="flex gap-4">
                                     <input
                                         type="text"
