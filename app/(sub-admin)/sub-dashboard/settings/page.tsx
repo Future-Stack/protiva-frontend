@@ -4,21 +4,24 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import ProfileSettings from "@/components/settings/ProfileSettings";
 import SubAdminSiteSettings from "@/components/settings/SubAdminSiteSettings";
+import VersionControlSettings from "@/components/settings/VersionControlSettings";
+
+type SubAdminSettingTab = "profile" | "site" | "version-control";
 
 function SubAdminSettingsPageContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const tabParam = searchParams.get("tab") as "profile" | "site";
+    const tabParam = searchParams.get("tab") as SubAdminSettingTab;
 
-    const [activeTab, setActiveTab] = useState<"profile" | "site">(tabParam || "profile");
+    const [activeTab, setActiveTab] = useState<SubAdminSettingTab>(tabParam || "profile");
 
     useEffect(() => {
-        if (tabParam && (tabParam === "profile" || tabParam === "site")) {
+        if (tabParam && (tabParam === "profile" || tabParam === "site" || tabParam === "version-control")) {
             setActiveTab(tabParam);
         }
     }, [tabParam]);
 
-    const handleTabChange = (tab: "profile" | "site") => {
+    const handleTabChange = (tab: SubAdminSettingTab) => {
         setActiveTab(tab);
         router.replace(`?tab=${tab}`);
     };
@@ -45,14 +48,25 @@ function SubAdminSettingsPageContent() {
                 >
                     Site Setting
                 </button>
+                <button
+                    onClick={() => handleTabChange("version-control")}
+                    className={`px-5 py-2 rounded-full text-[13px] font-medium transition-all duration-300 ${activeTab === "version-control"
+                            ? "bg-blue-600 text-white shadow-sm"
+                            : "text-slate-600 hover:text-slate-900"
+                        }`}
+                >
+                    Version Control
+                </button>
             </div>
 
             {/* Tab Content */}
             <div className="mt-6">
                 {activeTab === "profile" ? (
                     <ProfileSettings />
-                ) : (
+                ) : activeTab === "site" ? (
                     <SubAdminSiteSettings />
+                ) : (
+                    <VersionControlSettings />
                 )}
             </div>
         </div>

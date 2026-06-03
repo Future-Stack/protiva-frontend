@@ -2,24 +2,46 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
+import { RootState } from "@/lib/store";
+import { useGetMeQuery } from "@/lib/features/auth/authApi";
 import ProfileSettings from "@/components/settings/ProfileSettings";
 import SiteSettings from "@/components/settings/SiteSettings";
 import CommissionSettings from "@/components/settings/CommissionSettings";
+import VersionControlSettings from "@/components/settings/VersionControlSettings";
+
+type SettingTab = "profile" | "site" | "commission" | "version-control";
 
 function SettingsPageContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const tabParam = searchParams.get("tab") as "profile" | "site" | "commission";
+    const tabParam = searchParams.get("tab") as SettingTab;
 
-    const [activeTab, setActiveTab] = useState<"profile" | "site" | "commission">(tabParam || "profile");
+    const [activeTab, setActiveTab] = useState<SettingTab>(tabParam || "profile");
+
+    const { data: profileResponse } = useGetMeQuery();
+    const reduxUser = useSelector((state: RootState) => state.auth.user);
+    const user = profileResponse?.data || reduxUser;
+    const isSuperAdmin = user?.role === "SUPER_ADMIN";
 
     useEffect(() => {
-        if (tabParam && (tabParam === "profile" || tabParam === "site" || tabParam === "commission")) {
-            setActiveTab(tabParam);
+        if (tabParam) {
+            if (tabParam === "profile" || tabParam === "site" || tabParam === "commission") {
+                setActiveTab(tabParam);
+            } else if (tabParam === "version-control") {
+                if (user) {
+                    if (isSuperAdmin) {
+                        setActiveTab("version-control");
+                    } else {
+                        setActiveTab("profile");
+                        router.replace("?tab=profile");
+                    }
+                }
+            }
         }
-    }, [tabParam]);
+    }, [tabParam, user, isSuperAdmin, router]);
 
-    const handleTabChange = (tab: "profile" | "site" | "commission") => {
+    const handleTabChange = (tab: SettingTab) => {
         setActiveTab(tab);
         router.replace(`?tab=${tab}`);
     };
@@ -55,6 +77,17 @@ function SettingsPageContent() {
                 >
                     Commission Control
                 </button>
+                {isSuperAdmin && (
+                    <button
+                        onClick={() => handleTabChange("version-control")}
+                        className={`px-5 py-2 rounded-full text-[13px] font-medium transition-all duration-300 ${activeTab === "version-control"
+                                ? "bg-blue-600 text-white shadow-sm"
+                                : "text-slate-600 hover:text-slate-900"
+                            }`}
+                    >
+                        Version Control
+                    </button>
+                )}
             </div>
 
             {/* Tab Content */}
@@ -63,8 +96,10 @@ function SettingsPageContent() {
                     <ProfileSettings />
                 ) : activeTab === "site" ? (
                     <SiteSettings />
-                ) : (
+                ) : activeTab === "commission" ? (
                     <CommissionSettings />
+                ) : (
+                    isSuperAdmin && <VersionControlSettings />
                 )}
             </div>
         </div>
