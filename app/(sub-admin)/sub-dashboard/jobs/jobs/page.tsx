@@ -55,7 +55,7 @@ export default function JobListPage() {
         setSearchQuery(globalSearch);
     }, [globalSearch]);
 
-    const hasViewPermission = user?.role === "SUPER_ADMIN";
+    const hasViewPermission = user?.role === "SUB_ADMIN" || user?.role === "SUPER_ADMIN";
 
     // Fetch jobs from API (without frontend filters)
     const { data: response, isLoading, isFetching } = useGetAllJobsQuery({ 

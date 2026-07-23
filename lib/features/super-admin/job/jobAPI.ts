@@ -2,6 +2,7 @@ import { baseAPI } from "@/lib/baseAPI/baseAPI";
 import { GetAllJobsParams, GetAllJobsResponse } from "./job.type";
 
 export const jobAPI = baseAPI.injectEndpoints({
+  overrideExisting: true,
   endpoints: (build) => ({
     getAllJobs: build.query<GetAllJobsResponse, GetAllJobsParams | void>({
       query: (params) => ({
@@ -26,10 +27,20 @@ export const jobAPI = baseAPI.injectEndpoints({
       }),
       invalidatesTags: ["Job"],
     }),
+
+    createJob: build.mutation<any, FormData>({
+      query: (formData) => ({
+        url: "/api/v1/job/admin-create-job",
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: ["Job"],
+    }),
   }),
 });
 
 export const {
   useGetAllJobsQuery,
   useMakePopularJobMutation,
+  useCreateJobMutation,
 } = jobAPI;
