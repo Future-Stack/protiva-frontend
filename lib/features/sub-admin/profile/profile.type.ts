@@ -31,9 +31,30 @@ export interface SubAdminProfile {
   adminPermissions: AdminPermissions;
 }
 
+// export interface AdminProfile {
+//   id: string;
+//   email: string;
+//   firstName: string;
+//   lastName: string;
+//   role: string;
+//   avatar: string | null;
+//   status: string;
+//   emailVerified: boolean;
+//   phoneVerified: boolean;
+//   verificationStatus: string;
+//   adminPermissions: AdminPermissions;
+// }
+
 export interface SubAdminProfileResponse {
   data: {
     user: SubAdminProfile;
   };
   status: string;
 }
+
+// export interface AdminProfileResponse {
+//   data: {
+//     user: SubAdminProfile;
+//   };
+//   status: string;
+// }

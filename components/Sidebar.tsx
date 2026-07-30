@@ -25,6 +25,7 @@ import { RootState } from "@/lib/store";
 import { useGetSubAdminProfileQuery } from "@/lib/features/sub-admin/profile/profileAPI";
 import { useGetMeQuery } from "@/lib/features/auth/authApi";
 import { ShieldCheck } from "lucide-react";
+import Image from "next/image";
 
 
 interface SidebarProps {
@@ -198,11 +199,38 @@ const SUPER_ADMIN_MENU: MenuSection[] = [
 
 export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
     const reduxUser = useSelector((state: RootState) => state.auth.user);
-    const { data: meProfile } = useGetMeQuery();
+    const { data: adminProfile } = useGetMeQuery();
     const { data: subAdminProfile } = useGetSubAdminProfileQuery();
 
     // Prioritize live data from either getMe or getSubAdminProfile based on role
-    const displayUser = meProfile?.data || subAdminProfile?.data?.user || reduxUser;
+    const displayUser = role === "sub-admin" ? subAdminProfile?.data?.user : (adminProfile?.data || reduxUser);
+    const [imgError, setImgError] = useState(false);
+
+    useEffect(() => {
+        setImgError(false);
+    }, [displayUser?.avatar]);
+
+    const getInitials = (userObj: any) => {
+        if (!userObj) return "U";
+        const firstName = userObj.firstName?.trim() || "";
+        const lastName = userObj.lastName?.trim() || "";
+        if (firstName || lastName) {
+            const f = firstName ? firstName[0].toUpperCase() : "";
+            const l = lastName ? lastName[0].toUpperCase() : "";
+            return `${f}${l}` || "U";
+        }
+        if (userObj.name?.trim()) {
+            const parts = userObj.name.trim().split(/\s+/);
+            if (parts.length >= 2) {
+                return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+            }
+            return userObj.name.trim().slice(0, 2).toUpperCase();
+        }
+        if (userObj.email?.trim()) {
+            return userObj.email.trim().slice(0, 2).toUpperCase();
+        }
+        return "U";
+    };
 
     const permissions = subAdminProfile?.data?.user?.adminPermissions;
     const pathname = usePathname();
@@ -281,19 +309,29 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
             {/* User Profile Card */}
             <div className="px-6 pt-8 pb-4 ">
                 <div className="bg-[#F8FAFC] rounded-xl p-4 flex items-center gap-3">
-                    <div className="relative">
+                    <div className="relative shrink-0">
                         <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
-                            {displayUser?.avatar ? (
-                                <img src={displayUser?.avatar} alt="Profile" className="w-full h-full object-cover" />
+                            {displayUser?.avatar && !imgError ? (
+                                <img
+                                    src={displayUser?.avatar}
+                                    alt=""
+                                    className="w-full h-full object-cover"
+                                    onError={() => setImgError(true)}
+                                />
                             ) : (
                                 <div className="w-full h-full bg-primary flex items-center justify-center">
-                                    <span className="text-white text-xs font-bold">{displayUser?.firstName?.[0]?.toUpperCase()}{displayUser?.lastName?.[0]?.toUpperCase()}</span>
+                                    <span className="text-white text-xs font-bold">
+                                        {getInitials(displayUser)}
+                                    </span>
                                 </div>
                             )}
                         </div>
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#22C55E] border-2 border-white rounded-full"></div>
                     </div>
                     <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-900">
+                            {displayUser?.firstName} {displayUser?.lastName}
+                        </p>
                         <p className="text-[12px] text-slate-500 truncate">{displayUser?.email}</p>
                         <p className="text-[14px] font-semibold text-slate-900 truncate capitalize">{displayUser?.role?.replace("_", " ")}</p>
                     </div>

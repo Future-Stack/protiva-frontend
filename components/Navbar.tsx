@@ -38,6 +38,37 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const [mobileSearch, setMobileSearch] = useState(false);
   const [language, setLanguage] = useState("English");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [user?.avatar]);
+
+  const getInitials = (userObj: any) => {
+    if (!userObj) return "U";
+    const firstName = userObj.firstName?.trim() || "";
+    const lastName = userObj.lastName?.trim() || "";
+
+    if (firstName || lastName) {
+      const f = firstName ? firstName[0].toUpperCase() : "";
+      const l = lastName ? lastName[0].toUpperCase() : "";
+      return `${f}${l}` || "U";
+    }
+
+    if (userObj.name?.trim()) {
+      const parts = userObj.name.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+      }
+      return userObj.name.trim().slice(0, 2).toUpperCase();
+    }
+
+    if (userObj.email?.trim()) {
+      return userObj.email.trim().slice(0, 2).toUpperCase();
+    }
+
+    return "U";
+  };
 
   const { query: searchQuery, isDropdownOpen } = useSelector((state: RootState) => state.search);
   console.log(searchQuery);
@@ -287,15 +318,16 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                 onClick={() => toggle("user")}
                 className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 transition-colors cursor-pointer overflow-hidden"
               >
-                {user?.avatar ? (
+                {user?.avatar && !imgError ? (
                   <img
                     src={user?.avatar}
                     alt="user"
                     className="w-full h-full object-cover"
+                    onError={() => setImgError(true)}
                   />
                 ) : (
                   <div className="w-full h-full bg-primary flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">{user?.firstName?.[0]?.toUpperCase()}{user?.lastName?.[0]?.toUpperCase()}</span>
+                    <span className="text-white text-xs font-bold">{getInitials(user)}</span>
                   </div>
                 )}
               </div>
@@ -303,16 +335,17 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             {openModal === "user" && (
               <div className="absolute top-15 right-0 bg-white rounded-lg shadow-md w-65 overflow-hidden">
                 <div className="flex items-center gap-3 px-4 py-3 bg-slate-50">
-                  <div className="w-12 h-12 rounded-full overflow-hidden ">
-                    {user?.avatar ? (
+                  <div className="w-12 h-12 rounded-full overflow-hidden shrink-0">
+                    {user?.avatar && !imgError ? (
                       <img
                         src={user?.avatar}
                         alt="user"
                         className="w-full h-full object-cover"
+                        onError={() => setImgError(true)}
                       />
                     ) : (
                       <div className="w-full h-full bg-primary flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">{user?.firstName?.[0]?.toUpperCase()}{user?.lastName?.[0]?.toUpperCase()}</span>
+                        <span className="text-white text-sm font-bold">{getInitials(user)}</span>
                       </div>
                     )}
                   </div>

@@ -10,6 +10,13 @@ export const profileAPI = baseAPI.injectEndpoints({
       }),
       providesTags: ["User"],
     }),
+    // getAdminProfile: build.query<SubAdminProfileResponse, void>({
+    //   query: () => ({
+    //     url: "/api/v1/auth/profile",
+    //     method: "GET",
+    //   }),
+    //   providesTags: ["User"],
+    // }),
   }),
 });
 
