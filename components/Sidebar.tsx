@@ -305,7 +305,7 @@ export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
     const sections = role === "super-admin" ? SUPER_ADMIN_MENU : getFilteredSubAdminMenu();
 
     return (
-        <aside className={`fixed lg:sticky top-0 left-0 bottom-0 z-40 w-[280px] bg-white  flex flex-col transition-transform duration-300 transform ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} border-r border-[#F1F5F9] mb-6`}>
+        <aside className={`fixed lg:sticky top-0 left-0 bottom-0 z-40 w-[280px] bg-white  flex flex-col transition-transform duration-300 transform ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} border-r border-[#F1F5F9] lg:mb-6`}>
             {/* User Profile Card */}
             <div className="px-6 pt-8 pb-4 ">
                 <div className="bg-[#F8FAFC] rounded-xl p-4 flex items-center gap-3">

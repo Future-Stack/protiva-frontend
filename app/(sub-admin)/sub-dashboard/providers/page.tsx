@@ -242,7 +242,7 @@ export default function SubAdminProviderListPage() {
     }, [apiProviders, isLoading, isFetching]);
 
     // FRONTEND FILTERING
-    const displayedRows = useMemo(() => {
+    const filteredRows = useMemo(() => {
         return localRows.filter((r) => {
             const searchLower = debouncedSearch.toLowerCase();
             const matchesSearch = 
@@ -259,6 +259,9 @@ export default function SubAdminProviderListPage() {
             return matchesSearch && matchesVerification && matchesStatus;
         });
     }, [localRows, debouncedSearch, verificationFilter, statusFilter]);
+
+    const totalPagesFiltered = Math.max(1, Math.ceil(filteredRows.length / 10));
+    const displayedRows = filteredRows.slice((page - 1) * 10, page * 10);
 
     /* ── Handlers ── */
     const toggleAvailability = async (id: string, currentStatus: boolean) => {
@@ -420,13 +423,13 @@ export default function SubAdminProviderListPage() {
                     </div>
                 )}
 
-                <div className="overflow-x-auto">
+                <div className="w-full overflow-x-auto rounded-xl border border-slate-200 scrollbar-hide">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-24 gap-3 text-slate-400"><Loader2 size={28} className="animate-spin" /><span>Loading providers…</span></div>
                     ) : isError ? (
                         <div className="text-center py-20 text-red-500"><AlertCircle size={36} className="mx-auto mb-2" /><p>Failed to load data.</p></div>
                     ) : (
-                        <table className={`w-full text-left border ${isFetching ? "opacity-60" : ""}`}>
+                        <table className={`w-full text-left border min-w-[900px] ${isFetching ? "opacity-60" : ""}`}>
                             <thead>
                                 <tr className="bg-blue-50 border-r border-b border-slate-300">
                                     <th className="px-4 py-3 text-sm font-bold text-slate-600 border-r-2 border-slate-300">SL</th>
@@ -481,6 +484,42 @@ export default function SubAdminProviderListPage() {
                         </table>
                     )}
                 </div>
+
+                {/* Pagination */}
+                {totalPagesFiltered > 1 && (
+                    <div className="py-4 border-t border-slate-300 flex items-center justify-end gap-3 px-4">
+                        <button
+                            disabled={page === 1}
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
+                        >
+                            <ChevronLeft size={16} /> Previous
+                        </button>
+                        <div className="flex items-center gap-1">
+                            {Array.from({ length: Math.min(totalPagesFiltered, 5) }, (_, i) => {
+                                let pageNum = i + 1;
+                                if (totalPagesFiltered > 5 && page > 3) {
+                                    pageNum = page - 3 + i;
+                                    if (pageNum + (5 - i) > totalPagesFiltered) pageNum = totalPagesFiltered - 5 + i + 1;
+                                }
+                                return (
+                                    <button key={pageNum} onClick={() => setPage(pageNum)}
+                                        className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${
+                                            pageNum === page ? 'bg-slate-100 text-slate-900 border border-slate-300 shadow-sm' : 'text-slate-600 hover:bg-slate-50 border border-transparent'
+                                        }`}
+                                    >{pageNum}</button>
+                                );
+                            })}
+                        </div>
+                        <button
+                            disabled={page >= totalPagesFiltered}
+                            onClick={() => setPage(p => Math.min(totalPagesFiltered, p + 1))}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
+                        >
+                            Next <ChevronRight size={16} />
+                        </button>
+                    </div>
+                )}
             </div>
 
             <DeleteModal isOpen={isDeleteModalOpen} onClose={() => { setIsDeleteModalOpen(false); setItemToDelete(null); }} onConfirm={confirmDelete} title="Delete Provider" description="Are you sure?" />

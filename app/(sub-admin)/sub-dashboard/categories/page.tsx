@@ -79,6 +79,9 @@ export default function CategoriesPage() {
         });
     }, [categories, searchQuery]);
 
+    const totalPagesFiltered = Math.max(1, Math.ceil(filteredCategories.length / 10));
+    const displayedCategories = filteredCategories.slice((page - 1) * 10, page * 10);
+
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -173,7 +176,7 @@ export default function CategoriesPage() {
             {/* Create / Edit form — only visible if manage permission */}
             {hasManagePermission && (
                 <div className="bg-white rounded-lg overflow-hidden">
-                    <div className="px-[55px] py-[41px] space-y-6">
+                    <div className="p-4 sm:px-[55px] sm:py-[41px] space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-black mb-1">Category Name(Default)</label>
                             <input type="text" value={categoryName} onChange={(e) => setCategoryName(e.target.value)}
@@ -188,7 +191,7 @@ export default function CategoriesPage() {
                         </div>
                         <div className="mt-6 flex flex-wrap gap-8">
                             {/* Image upload */}
-                            <div>
+                            {/* <div>
                                 <input ref={imageInputRef} type="file" accept="image/png, image/jpeg, image/jpg" className="hidden" onChange={handleImageChange} />
                                 <div onClick={() => imageInputRef.current?.click()}
                                     className="w-fit border-2 border-dashed border-slate-300 rounded-lg px-10 py-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
@@ -206,7 +209,7 @@ export default function CategoriesPage() {
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> */}
                             {/* Icon upload */}
                             <div>
                                 <input ref={iconInputRef} type="file" accept="image/png, image/jpeg, image/jpg, image/svg+xml" className="hidden" onChange={handleIconChange} />
@@ -258,8 +261,8 @@ export default function CategoriesPage() {
                             </div>
                         </div>
                     </div>
-                    <div className="overflow-x-auto border border-slate-300">
-                        <table className="w-full text-left">
+                    <div className="w-full overflow-x-auto rounded-xl border border-slate-300 scrollbar-hide">
+                        <table className="w-full text-left min-w-[650px]">
                             <thead>
                                 <tr className="bg-[#EFF6FF]">
                                     <th className="px-4 py-3.5 text-sm font-semibold text-[#475569] border-r border-slate-300 text-center">SL</th>
@@ -277,7 +280,7 @@ export default function CategoriesPage() {
                                 ) : filteredCategories.length === 0 ? (
                                     <tr><td colSpan={4} className="py-10 text-center text-slate-500">No categories found.</td></tr>
                                 ) : (
-                                    filteredCategories.map((cat: CategoryItem, index: number) => (
+                                    displayedCategories.map((cat: CategoryItem, index: number) => (
                                         <Fragment key={cat.id}>
                                             <tr className={`border-t border-slate-300 hover:bg-slate-50/50 transition-colors ${expandedCategoryId === cat.id ? "bg-slate-50" : ""}`}>
                                                 <td className="px-4 py-4 text-sm text-[#2C2C2C] border-r border-slate-300 text-center">{index + 1 + (page - 1) * 10}</td>
@@ -338,13 +341,20 @@ export default function CategoriesPage() {
                             <ChevronLeft size={16} /> Previous
                         </button>
                         <div className="flex items-center gap-1">
-                            {Array.from({ length: meta?.totalPages || 0 }, (_, i) => i + 1).map(i => (
-                                <button key={i} onClick={() => setPage(i)}
-                                    className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${i === page ? "bg-slate-100 text-slate-900 border border-slate-300" : "text-slate-600 hover:bg-slate-50"}`}
-                                >{i}</button>
-                            ))}
+                            {Array.from({ length: Math.min(totalPagesFiltered, 5) }, (_, i) => {
+                                let pageNum = i + 1;
+                                if (totalPagesFiltered > 5 && page > 3) {
+                                    pageNum = page - 3 + i;
+                                    if (pageNum + (5 - i) > totalPagesFiltered) pageNum = totalPagesFiltered - 5 + i + 1;
+                                }
+                                return (
+                                    <button key={pageNum} onClick={() => setPage(pageNum)}
+                                        className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${pageNum === page ? "bg-slate-100 text-slate-900 border border-slate-300" : "text-slate-600 hover:bg-slate-50"}`}
+                                    >{pageNum}</button>
+                                );
+                            })}
                         </div>
-                        <button disabled={page === meta?.totalPages} onClick={() => setPage(p => p + 1)}
+                        <button disabled={page >= totalPagesFiltered} onClick={() => setPage(p => Math.min(totalPagesFiltered, p + 1))}
                             className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50">
                             Next <ChevronRight size={16} />
                         </button>

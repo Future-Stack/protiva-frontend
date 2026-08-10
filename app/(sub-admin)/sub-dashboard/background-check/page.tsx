@@ -168,10 +168,10 @@ export default function BackgroundCheckPage() {
             </div>
 
             {/* Main Card */}
-            <div className="bg-white px-[26px] py-[34px] rounded-lg">
+            <div className="bg-white p-4 sm:px-[26px] sm:py-[34px] rounded-lg">
                 {/* Search bar */}
                 <div className="pb-6 flex">
-                    <div className="hidden sm:flex items-center flex-1 max-w-md relative">
+                    <div className="flex items-center w-full max-w-md relative">
                         <input
                             type="text"
                             placeholder="Search providers..."
@@ -186,7 +186,7 @@ export default function BackgroundCheckPage() {
                 </div>
 
                 {/* Table */}
-                <div className="overflow-x-auto">
+                <div className="w-full overflow-x-auto rounded-xl border border-slate-300 scrollbar-hide">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-24 gap-3 text-slate-400">
                             <Loader2 size={28} className="animate-spin" />
@@ -200,7 +200,7 @@ export default function BackgroundCheckPage() {
                     ) : (localRows.length === 0 && !isFetching) ? (
                         <div className="py-20 text-center text-slate-400 text-sm">No providers found.</div>
                     ) : (
-                        <table className={`w-full text-left border border-slate-300 transition-opacity ${isFetching ? "opacity-60" : "opacity-100"}`}>
+                        <table className={`w-full text-left border border-slate-300 min-w-[850px] transition-opacity ${isFetching ? "opacity-60" : "opacity-100"}`}>
                             <thead>
                                 <tr className="bg-[#EFF6FF]">
                                     <th className="px-4 py-3.5 text-sm font-semibold text-[#475569] border-r border-slate-300">SL</th>

@@ -57,11 +57,16 @@ export default function JobListPage() {
 
     const hasViewPermission = user?.role === "SUPER_ADMIN";
 
-    // Fetch jobs from API (without frontend filters)
+    // Fetch jobs from API (fetch 100 for frontend pagination & filtering)
     const { data: response, isLoading, isFetching } = useGetAllJobsQuery({ 
-        page, 
-        limit: 100 // Increased limit to make frontend filtering meaningful
+        page: 1, 
+        limit: 100 
     }, { skip: !hasViewPermission });
+
+    // Reset page to 1 when search or filter changes
+    useEffect(() => {
+        setPage(1);
+    }, [debouncedSearch, isPopularFilter]);
 
     const [makePopular] = useMakePopularJobMutation();
 
@@ -80,6 +85,9 @@ export default function JobListPage() {
             return matchesSearch && matchesPopular;
         });
     }, [jobs, debouncedSearch, isPopularFilter]);
+
+    const totalPagesFiltered = Math.ceil(filteredJobs.length / 10);
+    const displayedJobs = filteredJobs.slice((page - 1) * 10, page * 10);
 
     const handleTogglePopular = async (id: string, currentStatus: boolean) => {
         try {
@@ -112,12 +120,12 @@ export default function JobListPage() {
     };
 
     return (
-        <div className="space-y-6 bg-white min-h-[calc(100vh-100px)] p-8 rounded-xl">
+        <div className="space-y-6 bg-white min-h-[calc(100vh-100px)] p-4 sm:p-8 rounded-xl">
             {/* Header */}
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900 uppercase tracking-tight">Job Management</h2>
-                    <p className="text-sm text-slate-500 mt-1">Monitor and manage all service listings and featured jobs</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 uppercase tracking-tight">Job Management</h2>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">Monitor and manage all service listings and featured jobs</p>
                 </div>
                 <button
                     onClick={() => setIsCreateModalOpen(true)}
@@ -129,8 +137,8 @@ export default function JobListPage() {
             </div>
 
             {/* Actions Bar */}
-            <div className="pb-6 flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-100">
-                <div className="hidden sm:flex items-center flex-1 max-w-md relative group">
+            <div className="pb-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-b border-slate-100">
+                <div className="flex items-center w-full md:flex-1 md:max-w-md relative group">
                     <input
                         type="text"
                         placeholder="Search by ID or service title..."
@@ -182,7 +190,7 @@ export default function JobListPage() {
                         ))}
                     </div>
                 ) : (
-                    filteredJobs.map((job) => (
+                    displayedJobs.map((job) => (
                         <div key={job.id} className="flex flex-col md:flex-row gap-6 p-5 border border-slate-200 rounded-xl bg-white hover:border-slate-300 transition-all hover:shadow-sm">
                             <div className="w-full md:w-52 h-36 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 relative group">
                                 {job.images && job.images.length > 0 ? (
@@ -257,8 +265,8 @@ export default function JobListPage() {
                 )}
             </div>
 
-            {/* Pagination (Still using API pagination for the raw data) */}
-            {meta && meta.totalPage > 1 && (
+            {/* Pagination */}
+            {totalPagesFiltered > 1 && (
                 <div className="py-6 border-t border-slate-300 flex items-center justify-end gap-3">
                     <button
                         disabled={page === 1 || isLoading || isFetching}
@@ -269,12 +277,12 @@ export default function JobListPage() {
                         Previous
                     </button>
                     <div className="flex items-center gap-1">
-                        {Array.from({ length: Math.min(meta.totalPage, 5) }, (_, i) => {
+                        {Array.from({ length: Math.min(totalPagesFiltered, 5) }, (_, i) => {
                             let pageNum = i + 1;
-                            if (meta.totalPage > 5 && page > 3) {
+                            if (totalPagesFiltered > 5 && page > 3) {
                                 pageNum = page - 3 + i;
-                                if (pageNum + (5 - i) > meta.totalPage) {
-                                    pageNum = meta.totalPage - 5 + i + 1;
+                                if (pageNum + (5 - i) > totalPagesFiltered) {
+                                    pageNum = totalPagesFiltered - 5 + i + 1;
                                 }
                             }
                             return (
@@ -283,7 +291,7 @@ export default function JobListPage() {
                                     onClick={() => setPage(pageNum)}
                                     className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${pageNum === page
                                         ? 'bg-slate-100 text-slate-900 border border-slate-300 shadow-sm'
-                                        : 'text-slate-600 hover:bg-slate-50'
+                                        : 'text-slate-600 hover:bg-slate-50 border border-transparent'
                                         }`}
                                 >
                                     {pageNum}
@@ -292,8 +300,8 @@ export default function JobListPage() {
                         })}
                     </div>
                     <button
-                        disabled={page === meta.totalPage || isLoading || isFetching}
-                        onClick={() => setPage((p) => Math.min(meta.totalPage, p + 1))}
+                        disabled={page >= totalPagesFiltered || isLoading || isFetching}
+                        onClick={() => setPage((p) => Math.min(totalPagesFiltered, p + 1))}
                         className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
                     >
                         Next

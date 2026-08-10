@@ -247,7 +247,7 @@ export default function BookingRequestsPage() {
             {/* Main Card */}
             <div className="overflow-hidden">
                 {/* Tabs */}
-                <div className="flex overflow-x-auto">
+                <div className="flex overflow-x-auto scrollbar-hide space-x-1 border-b border-slate-200 pb-1">
                     {tabs.map(tab => (
                         <button
                             key={tab.name}
@@ -255,7 +255,7 @@ export default function BookingRequestsPage() {
                                 setActiveTab(tab.name);
                                 setCurrentPage(1);
                             }}
-                            className={`py-3 px-4 text-sm font-medium transition-all relative ${activeTab === tab.name
+                            className={`py-3 px-4 text-sm font-medium transition-all relative shrink-0 whitespace-nowrap ${activeTab === tab.name
                                 ? "text-slate-900 bg-slate-200 rounded-sm"
                                 : "text-slate-500 hover:text-slate-700"
                                 }`}
@@ -268,11 +268,11 @@ export default function BookingRequestsPage() {
                     ))}
                 </div>
 
-                <div className="mt-[34px] bg-white px-[26px] py-[34px] rounded-lg min-h-[400px]">
+                <div className="mt-6 bg-white p-4 sm:px-[26px] sm:py-[34px] rounded-lg min-h-[400px]">
                     {/* Actions Bar */}
-                    <div className="pb-6 flex flex-wrap items-center justify-between gap-4">
+                    <div className="pb-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
                         {/* Search Bar */}
-                        <div className="flex-1 max-w-md relative group">
+                        <div className="w-full md:flex-1 md:max-w-md relative group">
                             <input
                                 type="text"
                                 placeholder="Search by booking ID, service..."
@@ -283,23 +283,23 @@ export default function BookingRequestsPage() {
                                 }}
                                 className="w-full pl-12 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm text-black focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
                             />
-                            <div className="absolute left-1 top-1 bottom-1 w-7.5 h-7.5 flex items-center justify-center bg-primary text-white rounded-full">
-                                <Search size={14} />
+                            <div className="absolute left-1 top-1 bottom-1 w-8 h-8 flex items-center justify-center bg-primary text-white rounded-full">
+                                <Search size={16} />
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                             {hasManagePermission && (
+                        <div className="flex flex-wrap items-center gap-3">
+                            {hasManagePermission && (
                                 <button
                                     onClick={handleDownloadAllCSV}
-                                    className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
                                     <Download size={16} />
                                     Download CSV
                                 </button>
                             )}
                             {/* Premium Date Picker */}
                             <div 
-                                className="relative group cursor-pointer"
+                                className="relative group cursor-pointer flex-1 sm:flex-none"
                                 onClick={() => {
                                     try {
                                         (dateRef.current as any)?.showPicker();
@@ -316,7 +316,7 @@ export default function BookingRequestsPage() {
                                     readOnly
                                     value={selectedDate ? formatDateDisplay(selectedDate) : ""}
                                     placeholder="DD-MM-YYYY"
-                                    className="pl-12 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all cursor-pointer w-[180px] hover:border-primary/50 "
+                                    className="pl-12 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all cursor-pointer w-full sm:w-[180px] hover:border-primary/50 "
                                 />
                                 <input
                                     ref={dateRef}
@@ -347,7 +347,7 @@ export default function BookingRequestsPage() {
                                 <button
                                     onClick={() => setShowPaymentFilter((v) => !v)}
                                     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${showPaymentFilter || paymentFilter
-                                        ? "bg-[#787BEB] text-white"
+                                        ? "bg-[#787BEB] text-[#fff]"
                                         : "bg-slate-900 text-white hover:bg-slate-800"
                                         }`}
                                 >
@@ -399,8 +399,8 @@ export default function BookingRequestsPage() {
                     )}
 
                     {/* Table */}
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border">
+                    <div className="w-full overflow-x-auto border border-slate-200 rounded-xl scrollbar-hide">
+                        <table className="w-full text-left border min-w-[900px]">
                             <thead>
                                 <tr className="bg-blue-50 border-r border-b border-slate-300">
                                     <th className="px-4 py-3 text-base font-semibold text-slate-600 capitalize border-r-2 border-slate-300">SL</th>

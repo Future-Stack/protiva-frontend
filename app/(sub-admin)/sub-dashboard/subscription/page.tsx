@@ -32,6 +32,10 @@ export default function SubscriptionPage() {
         sub.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
         sub.phone.includes(searchQuery)
     );
+    const [currentPage, setCurrentPage] = useState(1);
+    const PAGE_SIZE = 10;
+    const totalPagesFiltered = Math.ceil(filteredSubscriptions.length / PAGE_SIZE);
+    const displayedSubscriptions = filteredSubscriptions.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -78,14 +82,14 @@ export default function SubscriptionPage() {
         fileInputRef.current?.click();
     };
     return (
-        <div className="space-y-6 bg-white rounded-lg overflow-hidden px-[26px] py-[34px]">
+        <div className="space-y-6 bg-white rounded-lg overflow-hidden p-4 sm:px-[26px] sm:py-[34px]">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900">Subscription Management</h2>
                     <p className="text-sm text-slate-500 mt-1">Manage the current plan and track usage.</p>
                 </div>
-                <div className="flex-1 max-w-md relative group">
+                <div className="w-full md:flex-1 md:max-w-md relative group">
                     <input
                         type="text"
                         placeholder="Search providers..."
@@ -103,8 +107,8 @@ export default function SubscriptionPage() {
             <div className="mt-5">
 
                 {/* Table */}
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border border-slate-300">
+                <div className="w-full overflow-x-auto rounded-xl border border-slate-300 scrollbar-hide">
+                    <table className="w-full text-left border border-slate-300 min-w-[750px]">
                         <thead>
                             <tr className="bg-[#EFF6FF]">
                                 <th className="px-4 py-3.5 text-sm font-semibold text-[#475569] border-r border-slate-300">SL</th>
@@ -117,7 +121,7 @@ export default function SubscriptionPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredSubscriptions.map((sub) => (
+                            {displayedSubscriptions.map((sub) => (
                                 <tr key={sub.id} className="border-t border-slate-300 hover:bg-slate-50/50 transition-colors">
                                     <td className="px-4 py-4 text-sm text-[#64748B] border-r border-slate-300">{sub.id}</td>
                                     <td className="px-4 py-4 border-r border-slate-300">
@@ -167,30 +171,40 @@ export default function SubscriptionPage() {
                 </div>
 
                 {/* Pagination */}
-                <div className="py-4 border-t border-slate-300 flex items-center justify-end gap-3">
-                    <button className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors">
-                        <ChevronLeft size={16} />
-                        Previous
-                    </button>
-                    <div className="flex items-center gap-1">
-                        {[1, 2, 3].map(i => (
-                            <button
-                                key={i}
-                                className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${i === 1
-                                    ? 'bg-slate-100 text-slate-900'
-                                    : 'text-slate-600 hover:bg-slate-50'
-                                    }`}
-                            >
-                                {i}
-                            </button>
-                        ))}
-                        <span className="px-1 text-slate-400">...</span>
+                {totalPagesFiltered > 1 && (
+                    <div className="py-4 border-t border-slate-300 flex items-center justify-end gap-3">
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
+                        >
+                            <ChevronLeft size={16} /> Previous
+                        </button>
+                        <div className="flex items-center gap-1">
+                            {Array.from({ length: Math.min(totalPagesFiltered, 5) }, (_, i) => {
+                                let pageNum = i + 1;
+                                if (totalPagesFiltered > 5 && currentPage > 3) {
+                                    pageNum = currentPage - 3 + i;
+                                    if (pageNum + (5 - i) > totalPagesFiltered) pageNum = totalPagesFiltered - 5 + i + 1;
+                                }
+                                return (
+                                    <button key={pageNum} onClick={() => setCurrentPage(pageNum)}
+                                        className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${
+                                            pageNum === currentPage ? 'bg-slate-100 text-slate-900 border border-slate-300 shadow-sm' : 'text-slate-600 hover:bg-slate-50 border border-transparent'
+                                        }`}
+                                    >{pageNum}</button>
+                                );
+                            })}
+                        </div>
+                        <button
+                            disabled={currentPage >= totalPagesFiltered}
+                            onClick={() => setCurrentPage(p => Math.min(totalPagesFiltered, p + 1))}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
+                        >
+                            Next <ChevronRight size={16} />
+                        </button>
                     </div>
-                    <button className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors">
-                        Next
-                        <ChevronRight size={16} />
-                    </button>
-                </div>
+                )}
 
                 <DeleteModal
                     isOpen={isDeleteModalOpen}

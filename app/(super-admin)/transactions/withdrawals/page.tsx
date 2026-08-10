@@ -129,7 +129,7 @@ export default function WithdrawalManagementPage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <StatsCard value={meta?.totalPending ?? 0} subtext="Pending Requests"    icon={Clock}             colorClass="text-amber-500" bgClass="bg-amber-100" />
                 <StatsCard value={meta?.todayApproved ?? 0} subtext="Approved Today"    icon={CheckCircle}       colorClass="text-green-500" bgClass="bg-green-100" />
                 <StatsCard value={`৳${Number(meta?.totalPendingAmount ?? 0).toLocaleString()}`} subtext="Total Pending Amount" icon={CircleDollarSign} colorClass="text-blue-500" bgClass="bg-blue-100" />
@@ -137,19 +137,19 @@ export default function WithdrawalManagementPage() {
 
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 {/* Filter + Search */}
-                <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex bg-slate-100 p-1 rounded-lg">
+                <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                    <div className="flex overflow-x-auto scrollbar-hide bg-slate-100 p-1 rounded-lg shrink-0">
                         {["All", "Pending", "Approved", "Rejected"].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => { setFilter(tab); setCurrentPage(1); }}
-                                className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${filter === tab ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                                className={`px-4 py-2 text-sm font-medium rounded-md transition-all shrink-0 whitespace-nowrap ${filter === tab ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                             >
                                 {tab}
                             </button>
                         ))}
                     </div>
-                    <div className="relative w-full max-w-xs">
+                    <div className="relative w-full md:max-w-xs">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input
                             type="text"
@@ -162,8 +162,8 @@ export default function WithdrawalManagementPage() {
                 </div>
 
                 {/* Table */}
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border border-slate-200">
+                <div className="w-full overflow-x-auto rounded-xl border border-slate-200 scrollbar-hide">
+                    <table className="w-full text-left border border-slate-200 min-w-[850px]">
                         <thead>
                             <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm font-semibold">
                                 <th className="px-6 py-4 border-r border-slate-200">SL</th>

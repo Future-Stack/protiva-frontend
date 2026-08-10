@@ -49,10 +49,10 @@ function SettingsPageContent() {
     return (
         <div className="space-y-6">
             {/* Top Tabs Container */}
-            <div className="flex items-center gap-1 bg-slate-100/80 rounded-full p-1 w-fit border border-slate-200">
+            <div className="flex items-center gap-1 bg-slate-100/80 rounded-full p-1 border border-slate-200 overflow-x-auto scrollbar-hide w-full sm:w-fit">
                 <button
                     onClick={() => handleTabChange("profile")}
-                    className={`px-5 py-2 rounded-full text-[13px] font-medium transition-all duration-300 ${activeTab === "profile"
+                    className={`px-4 sm:px-5 py-2 rounded-full text-[13px] font-medium transition-all duration-300 whitespace-nowrap shrink-0 ${activeTab === "profile"
                             ? "bg-blue-600 text-white shadow-sm"
                             : "text-slate-600 hover:text-slate-900"
                         }`}
@@ -61,7 +61,7 @@ function SettingsPageContent() {
                 </button>
                 <button
                     onClick={() => handleTabChange("site")}
-                    className={`px-5 py-2 rounded-full text-[13px] font-medium transition-all duration-300 ${activeTab === "site"
+                    className={`px-4 sm:px-5 py-2 rounded-full text-[13px] font-medium transition-all duration-300 whitespace-nowrap shrink-0 ${activeTab === "site"
                             ? "bg-blue-600 text-white shadow-sm"
                             : "text-slate-600 hover:text-slate-900"
                         }`}
@@ -70,7 +70,7 @@ function SettingsPageContent() {
                 </button>
                 <button
                     onClick={() => handleTabChange("commission")}
-                    className={`px-5 py-2 rounded-full text-[13px] font-medium transition-all duration-300 ${activeTab === "commission"
+                    className={`px-4 sm:px-5 py-2 rounded-full text-[13px] font-medium transition-all duration-300 whitespace-nowrap shrink-0 ${activeTab === "commission"
                             ? "bg-blue-600 text-white shadow-sm"
                             : "text-slate-600 hover:text-slate-900"
                         }`}
@@ -80,7 +80,7 @@ function SettingsPageContent() {
                 {isSuperAdmin && (
                     <button
                         onClick={() => handleTabChange("version-control")}
-                        className={`px-5 py-2 rounded-full text-[13px] font-medium transition-all duration-300 ${activeTab === "version-control"
+                        className={`px-4 sm:px-5 py-2 rounded-full text-[13px] font-medium transition-all duration-300 whitespace-nowrap shrink-0 ${activeTab === "version-control"
                                 ? "bg-blue-600 text-white shadow-sm"
                                 : "text-slate-600 hover:text-slate-900"
                             }`}
