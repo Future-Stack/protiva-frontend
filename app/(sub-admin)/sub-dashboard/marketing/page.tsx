@@ -91,6 +91,10 @@ export default function SubAdminMarketingPage() {
         });
     }, [banners, searchQuery]);
 
+    const PAGE_SIZE = 10;
+    const totalPagesFiltered = Math.ceil(filteredBanners.length / PAGE_SIZE);
+    const displayedBanners = filteredBanners.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!hasManagePermission) return;
         const file = e.target.files?.[0];
@@ -215,13 +219,13 @@ export default function SubAdminMarketingPage() {
     }
 
     return (
-        <div className="space-y-6 bg-white min-h-[calc(100vh-100px)] p-8 rounded-xl">
-            <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="space-y-6 bg-white min-h-[calc(100vh-100px)] p-4 sm:p-8 rounded-xl">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900">Marketing Management</h2>
                     <p className="text-sm text-slate-500 mt-1">Manage promotional banners and marketing content</p>
                 </div>
-                <div className="flex-1 max-w-md relative group">
+                <div className="w-full md:flex-1 md:max-w-md relative group">
                     <input
                         type="text"
                         placeholder="Search banners..."
@@ -244,7 +248,7 @@ export default function SubAdminMarketingPage() {
                 )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
                 <StatsCard title="Total Banners" value={stats?.total || 0} isLoading={isFetching} />
                 <StatsCard title="Active Now" value={stats?.active || 0} isLoading={isFetching} />
                 <StatsCard title="Scheduled" value={stats?.scheduled || 0} isLoading={isFetching} />
@@ -263,7 +267,7 @@ export default function SubAdminMarketingPage() {
                         <p className="text-slate-500 text-sm">No banners found matching your search.</p>
                     </div>
                 ) : (
-                    filteredBanners.map((banner: any) => (
+                    displayedBanners.map((banner: any) => (
                         <div key={banner.id} className="flex flex-col md:flex-row gap-6 p-4 border border-slate-200 rounded-xl bg-white hover:border-slate-300 transition-colors">
                             <div className="w-full md:w-48 h-32 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 relative group">
                                 <img src={banner.image} alt={banner.title} className="w-full h-full object-cover" />
@@ -321,6 +325,42 @@ export default function SubAdminMarketingPage() {
                     ))
                 )}
             </div>
+
+            {/* Pagination */}
+            {totalPagesFiltered > 1 && (
+                <div className="py-4 border-t border-slate-200 flex items-center justify-end gap-3">
+                    <button
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
+                    >
+                        <ChevronLeft size={16} /> Previous
+                    </button>
+                    <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(totalPagesFiltered, 5) }, (_, i) => {
+                            let pageNum = i + 1;
+                            if (totalPagesFiltered > 5 && currentPage > 3) {
+                                pageNum = currentPage - 3 + i;
+                                if (pageNum + (5 - i) > totalPagesFiltered) pageNum = totalPagesFiltered - 5 + i + 1;
+                            }
+                            return (
+                                <button key={pageNum} onClick={() => setCurrentPage(pageNum)}
+                                    className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${
+                                        pageNum === currentPage ? 'bg-slate-100 text-slate-900 border border-slate-300 shadow-sm' : 'text-slate-600 hover:bg-slate-50 border border-transparent'
+                                    }`}
+                                >{pageNum}</button>
+                            );
+                        })}
+                    </div>
+                    <button
+                        disabled={currentPage >= totalPagesFiltered}
+                        onClick={() => setCurrentPage(p => Math.min(totalPagesFiltered, p + 1))}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
+                    >
+                        Next <ChevronRight size={16} />
+                    </button>
+                </div>
+            )}
 
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

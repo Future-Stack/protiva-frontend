@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Trash2, Edit2, X, Search, Ticket, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Trash2, Edit2, X, Search, Ticket, CheckCircle2, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import DeleteModal from "@/components/DeleteModal";
 import { 
@@ -28,6 +28,8 @@ export default function CouponManagement() {
     const user = useAppSelector((state) => state.auth.user);
     const isSuperAdmin = user?.role === "SUPER_ADMIN";
     const [searchQuery, setSearchQuery] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const PAGE_SIZE = 10;
     const { data: response, isLoading: isFetching } = useGetCouponsQuery();
     const [createCoupon, { isLoading: isCreating }] = useCreateCouponMutation();
     const [updateCoupon, { isLoading: isUpdating }] = useUpdateCouponMutation();
@@ -53,6 +55,9 @@ export default function CouponManagement() {
             c.couponCode.toLowerCase().includes(searchQuery.toLowerCase())
         );
     }, [coupons, searchQuery]);
+
+    const totalPagesFiltered = Math.ceil(filteredCoupons.length / PAGE_SIZE);
+    const displayedCoupons = filteredCoupons.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
     const stats = useMemo(() => {
         return {
@@ -147,15 +152,15 @@ export default function CouponManagement() {
     };
 
     return (
-        <div className="space-y-6 bg-white min-h-[calc(100vh-100px)] p-8 rounded-xl">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex-1 min-w-[300px]">
-                    <h2 className="text-2xl font-bold text-slate-900">Coupon Management</h2>
-                    <p className="text-sm text-slate-500 mt-1">Create and manage discount coupons for your customers</p>
+        <div className="space-y-6 bg-white p-4 sm:p-8 rounded-xl min-h-[calc(100vh-100px)]">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                <div className="flex-1 min-w-[250px]">
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Coupon Management</h2>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">Create and manage discount coupons for your customers</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4 flex-1 justify-end">
-                    <div className="flex-1 max-w-md relative group">
+                    <div className="w-full md:flex-1 md:max-w-md relative group">
                         <input
                             type="text"
                             placeholder="Search coupons..."
@@ -171,7 +176,7 @@ export default function CouponManagement() {
                     {isSuperAdmin && (
                         <button
                             onClick={() => handleOpenModal()}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#6366F1]/90 transition-colors whitespace-nowrap"
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#6366F1] text-white rounded-lg text-sm font-medium hover:bg-[#6366F1]/90 transition-colors whitespace-nowrap"
                         >
                             <Plus size={18} />
                             Add New Coupon
@@ -181,15 +186,15 @@ export default function CouponManagement() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                 <StatsCard title="Total Coupons" value={stats.total} isLoading={isFetching} />
                 <StatsCard title="Active Coupons" value={stats.active} isLoading={isFetching} />
                 <StatsCard title="Inactive Coupons" value={stats.inactive} isLoading={isFetching} />
             </div>
 
             {/* Coupon List */}
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-left border-collapse">
+            <div className="w-full overflow-x-auto rounded-xl border border-slate-200 scrollbar-hide">
+                <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead>
                         <tr className="bg-slate-50 border-b border-slate-200">
                             <th className="px-6 py-4 text-sm font-semibold text-slate-700">Coupon Code</th>
@@ -211,7 +216,7 @@ export default function CouponManagement() {
                                 </tr>
                             ))
                         ) : filteredCoupons.length > 0 ? (
-                            filteredCoupons.map((coupon) => (
+                            displayedCoupons.map((coupon) => (
                                 <tr key={coupon.id} className="hover:bg-slate-50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
@@ -297,6 +302,46 @@ export default function CouponManagement() {
                     </tbody>
                 </table>
             </div>
+
+            {/* Pagination */}
+            {totalPagesFiltered > 1 && (
+                <div className="py-4 border-t border-slate-200 flex items-center justify-end gap-3">
+                    <button
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
+                    >
+                        <ChevronLeft size={16} /> Previous
+                    </button>
+                    <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(totalPagesFiltered, 5) }, (_, i) => {
+                            let pageNum = i + 1;
+                            if (totalPagesFiltered > 5 && currentPage > 3) {
+                                pageNum = currentPage - 3 + i;
+                                if (pageNum + (5 - i) > totalPagesFiltered) pageNum = totalPagesFiltered - 5 + i + 1;
+                            }
+                            return (
+                                <button
+                                    key={pageNum}
+                                    onClick={() => setCurrentPage(pageNum)}
+                                    className={`w-8 h-8 rounded text-sm flex items-center justify-center font-medium transition-all ${
+                                        pageNum === currentPage
+                                            ? 'bg-slate-100 text-slate-900 border border-slate-300 shadow-sm'
+                                            : 'text-slate-600 hover:bg-slate-50 border border-transparent'
+                                    }`}
+                                >{pageNum}</button>
+                            );
+                        })}
+                    </div>
+                    <button
+                        disabled={currentPage >= totalPagesFiltered}
+                        onClick={() => setCurrentPage(p => Math.min(totalPagesFiltered, p + 1))}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50"
+                    >
+                        Next <ChevronRight size={16} />
+                    </button>
+                </div>
+            )}
 
             {/* Modal */}
             {isModalOpen && (

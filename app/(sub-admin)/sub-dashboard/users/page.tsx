@@ -127,7 +127,7 @@ export default function UsersPage() {
 
             <div className="bg-white px-[26px] py-[34px] rounded-lg">
                 <div className="pb-6 flex flex-wrap items-center justify-between gap-4">
-                    <div className="hidden sm:flex items-center flex-1 max-w-md relative group">
+                    <div className="flex items-center w-full md:flex-1 md:max-w-md relative group">
                         <input
                             type="text"
                             placeholder="Search by name, email or phone…"
@@ -167,7 +167,7 @@ export default function UsersPage() {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
+                <div className="w-full overflow-x-auto rounded-xl border border-slate-200 scrollbar-hide">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-24 gap-3 text-slate-400">
                             <Loader2 size={28} className="animate-spin" /><span className="text-sm">Loading users…</span>
@@ -177,7 +177,7 @@ export default function UsersPage() {
                             <AlertCircle size={36} /><p className="text-sm font-medium">Failed to load users.</p>
                         </div>
                     ) : (
-                        <table className={`w-full text-left border transition-opacity ${isFetching ? "opacity-60" : "opacity-100"}`}>
+                        <table className={`w-full text-left border min-w-[850px] transition-opacity ${isFetching ? "opacity-60" : "opacity-100"}`}>
                             <thead>
                                 <tr className="bg-blue-50 border-r border-b border-slate-300">
                                     <th className="px-4 py-3 text-base font-semibold text-slate-600 border-r-2 border-slate-300">SL</th>

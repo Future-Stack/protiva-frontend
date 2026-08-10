@@ -391,7 +391,7 @@ export default function SubAdminManagementPage() {
     };
 
     return (
-        <div className="space-y-6 bg-white rounded-lg overflow-hidden px-[26px] py-[34px] min-h-[calc(100vh-140px)]">
+        <div className="space-y-6 bg-white rounded-lg overflow-hidden p-4 sm:px-[26px] sm:py-[34px] min-h-[calc(100vh-140px)]">
             {/* Header */}
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
@@ -417,8 +417,8 @@ export default function SubAdminManagementPage() {
             {/* Main Content */}
             <div className="mt-8">
                 {/* Search Bar */}
-                <div className="pb-6 flex flex-wrap items-center gap-4">
-                    <div className="hidden sm:flex items-center flex-1 relative group">
+                <div className="pb-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                    <div className="flex items-center w-full md:flex-1 relative group">
                         <input
                             type="text"
                             placeholder="Search sub admin by name or email..."
@@ -430,7 +430,7 @@ export default function SubAdminManagementPage() {
                             <Search size={18} />
                         </div>
                     </div>
-                    <div className="relative min-w-[240px]">
+                    <div className="relative min-w-[200px]">
                         <select
                             className="w-full appearance-none px-4 py-2.5 pr-10 text-black border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent bg-white text-sm"
                             value={status}
@@ -445,8 +445,8 @@ export default function SubAdminManagementPage() {
                 </div>
 
                 {/* Table */}
-                <div className="overflow-x-auto rounded-lg border border-slate-200">
-                    <table className="w-full text-left">
+                <div className="w-full overflow-x-auto rounded-xl border border-slate-200 scrollbar-hide">
+                    <table className="w-full text-left min-w-[700px]">
                         <thead>
                             <tr className="bg-slate-50 border-b border-slate-200">
                                 <th className="px-6 py-4 text-sm font-semibold text-slate-600">User</th>
@@ -566,11 +566,11 @@ export default function SubAdminManagementPage() {
 
             {/* Create New Sub Admin Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 overflow-y-auto">
+                <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-16 overflow-y-auto">
                     <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setIsModalOpen(false)}></div>
-                    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-[800px] flex flex-col max-h-[85vh]">
+                    <div className="relative bg-white rounded-2xl shadow-xl w-[95vw] max-w-[800px] flex flex-col max-h-[90vh]">
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between px-8 py-6">
+                        <div className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-6">
                             <div>
                                 <h3 className="text-xl font-bold text-slate-900">{isEditMode ? "Edit Sub Admin Permissions" : "Create New Sub Admin"}</h3>
                                 <p className="text-sm text-slate-500 mt-1.5">{isEditMode ? "Modify permissions for the selected sub admin" : "Add a new sub admin and assign roles and permissions"}</p>
@@ -584,7 +584,7 @@ export default function SubAdminManagementPage() {
                         </div>
 
                         {/* Modal Tabs */}
-                        <div className="px-8 w-full">
+                        <div className="px-4 sm:px-8 w-full">
                             <div className="grid grid-cols-2 gap-4 px-3.5 py-3 bg-blue-50 rounded-[50px] w-full">
                                 <button
                                     disabled={isEditMode}
@@ -674,10 +674,10 @@ export default function SubAdminManagementPage() {
                         </div>
 
                         {/* Modal Body */}
-                        <div className="p-8 overflow-y-auto custom-scrollbar">
+                        <div className="p-4 sm:p-8 overflow-y-auto custom-scrollbar">
                             {activeTab === "basic" ? (
                                 <div className="space-y-5">
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="space-y-1">
                                             <label className="text-sm font-medium text-slate-700 ">First Name</label>
                                             <input
@@ -758,9 +758,9 @@ export default function SubAdminManagementPage() {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="flex flex-col md:flex-row gap-8 h-full">
+                                <div className="flex flex-col md:flex-row gap-6 md:gap-8 h-full">
                                     {/* Sidebar Roles */}
-                                    <div className={`w-1/3 min-w-[200px] border-r border-slate-100 pr-6 space-y-1 ${isFetchingAdminDetails ? 'opacity-50 pointer-events-none' : ''}`}>
+                                    <div className={`w-full md:w-1/3 md:min-w-[200px] md:border-r border-b md:border-b-0 border-slate-100 md:pr-6 pb-4 md:pb-0 space-y-1 ${isFetchingAdminDetails ? 'opacity-50 pointer-events-none' : ''}`}>
                                         {ROLES.map((role) => (
                                             <button
                                                 key={role}

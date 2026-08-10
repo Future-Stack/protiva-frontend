@@ -5,6 +5,7 @@ import { X, Upload, Pencil, Loader2, Plus, Minus, ChevronDownIcon } from "lucide
 import Swal from "sweetalert2";
 import { useCreateJobMutation } from "@/lib/features/super-admin/job/jobAPI";
 import { useGetAllCategoriesQuery, useGetSubCategoriesQuery } from "@/lib/features/super-admin/category/categoryAPI";
+import { useGetAllProvidersQuery } from "@/lib/features/super-admin/provider/providerAPI";
 
 interface CreateJobModalProps {
     isOpen: boolean;
@@ -14,6 +15,7 @@ interface CreateJobModalProps {
 export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps) {
     const [categoryId, setCategoryId] = useState("");
     const [subCategoryId, setSubCategoryId] = useState("");
+    const [providerId, setProviderId] = useState("");
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [basePrice, setBasePrice] = useState("");
@@ -26,9 +28,12 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
 
     const { data: categoriesData, isLoading: isLoadingCategories } = useGetAllCategoriesQuery({ limit: 100, page: 1 });
     const { data: subCategoriesData, isLoading: isLoadingSubCategories } = useGetSubCategoriesQuery({ categoryId: categoryId, limit: 100, page: 1 }, { skip: !categoryId });
+    const { data: providersData, isLoading: isLoadingProviders } = useGetAllProvidersQuery({ limit: 100, page: 1 });
 
     const categories = categoriesData?.data?.data?.data || [];
     const subCategories = subCategoriesData?.data?.data?.data || [];
+    const allProviders = providersData?.data?.data || providersData?.data || [];
+    const verifiedProviders = (Array.isArray(allProviders) ? allProviders : []).filter((p: any) => p.verificationStatus === "VERIFIED");
 
     const [createJob, { isLoading: isCreating }] = useCreateJobMutation();
 
@@ -36,6 +41,7 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
         if (!isOpen) {
             setCategoryId("");
             setSubCategoryId("");
+            setProviderId("");
             setTitle("");
             setDescription("");
             setBasePrice("");
@@ -87,6 +93,7 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
         const formData = new FormData();
         formData.append("categoryId", categoryId);
         formData.append("subCategoryId", subCategoryId);
+        if (providerId) formData.append("providerId", providerId);
         formData.append("title", title);
         formData.append("description", description);
         formData.append("basePrice", basePrice);
@@ -109,7 +116,7 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-white rounded-xl shadow-xl w-[95vw] max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
                 <div className="flex items-center justify-between p-6 border-b shrink-0">
                     <h3 className="text-xl font-bold text-slate-900">
                         Create New Job
@@ -160,6 +167,25 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                     </div>
 
                     <div>
+                        <label className="block text-sm font-medium text-slate-900 mb-1">Select Verified Provider</label>
+                        <div className="relative">
+                            <select
+                                value={providerId}
+                                onChange={(e) => setProviderId(e.target.value)}
+                                className="w-full px-4 py-2 text-slate-900 border border-primary/50 rounded-lg focus:ring-2 focus:ring-primary/20 appearance-none outline-none"
+                            >
+                                <option value="">Select Verified Provider (Optional)</option>
+                                {verifiedProviders.map((provider: any) => (
+                                    <option key={provider.id} value={provider.id}>
+                                        {provider.firstName} {provider.lastName} {provider.email ? `(${provider.email})` : ''}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronDownIcon className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                        </div>
+                    </div>
+
+                    <div>
                         <label className="block text-sm font-medium text-slate-900 mb-1">Job Title</label>
                         <input
                             type="text"
@@ -193,14 +219,17 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-slate-900 mb-1">Price Type</label>
+                            <div className="relative">
                             <select
                                 value={priceType}
                                 onChange={(e) => setPriceType(e.target.value as "FIXED" | "HOURLY")}
-                                className="w-full px-4 py-2 text-slate-900 border border-primary/50 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"
+                                className="w-full px-4 py-2 text-slate-900 border border-primary/50 rounded-lg appearance-none focus:ring-2 focus:ring-primary/20 outline-none"
                             >
                                 <option value="FIXED">Fixed</option>
                                 <option value="HOURLY">Hourly</option>
                             </select>
+                            <ChevronDownIcon className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                            </div>
                         </div>
                     </div>
 

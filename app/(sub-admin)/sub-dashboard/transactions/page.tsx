@@ -11,7 +11,7 @@ const getStatusStyle = (status: string) => {
     switch (status) {
         case "COMPLETED": return "text-green-600 bg-green-50";
         case "FAILED":    return "text-red-600 bg-red-50";
-        case "CANCELLED": return "text-slate-600 bg-slate-50";
+        case "CANCELLED": return "text-red-600 bg-red-50";
         case "PENDING":   return "text-amber-600 bg-amber-50";
         default:          return "text-blue-600 bg-blue-50";
     }
@@ -63,13 +63,13 @@ export default function TransactionsPage() {
     }
 
     return (
-        <div className="space-y-6 bg-white px-[26px] py-[34px] rounded-lg overflow-hidden min-h-[80vh]">
+        <div className="space-y-6 bg-white p-4 sm:px-[26px] sm:py-[34px] rounded-lg overflow-hidden min-h-[80vh]">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900">Transaction</h2>
                     <p className="text-sm text-slate-500 mt-1">Track all payments and refunds in one place</p>
                 </div>
-                <div className="flex-1 max-w-md relative group">
+                <div className="w-full md:flex-1 md:max-w-md relative group">
                     <input
                         type="text"
                         placeholder="Search by Booking ID or Transaction ID..."
@@ -87,8 +87,8 @@ export default function TransactionsPage() {
             </div>
 
             <div className="mt-6">
-                <div className="overflow-x-auto border border-slate-300 rounded-sm">
-                    <table className="w-full text-left">
+                <div className="w-full overflow-x-auto rounded-xl border border-slate-300 scrollbar-hide">
+                    <table className="w-full text-left min-w-[750px]">
                         <thead>
                             <tr className="bg-[#EFF6FF]">
                                 <th className="px-4 py-3.5 text-sm font-semibold text-[#475569] border-r border-slate-300 text-center">SL</th>

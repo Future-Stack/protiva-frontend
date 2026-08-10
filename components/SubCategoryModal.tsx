@@ -93,7 +93,7 @@ export default function SubCategoryModal({ isOpen, onClose, categoryId, subCateg
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden">
+            <div className="bg-white rounded-xl shadow-xl w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col">
                 <div className="flex items-center justify-between p-6 border-b">
                     <h3 className="text-xl font-bold text-slate-900">
                         {subCategory ? "Edit Sub-category" : "Add New Sub-category"}
@@ -127,7 +127,7 @@ export default function SubCategoryModal({ isOpen, onClose, categoryId, subCateg
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                         {/* Image Upload */}
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-medium text-slate-900 mb-2">Image</label>
                             <input ref={imageInputRef} type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
                             <div 
@@ -146,7 +146,7 @@ export default function SubCategoryModal({ isOpen, onClose, categoryId, subCateg
                                     <Pencil size={12} />
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Icon Upload */}
                         <div>

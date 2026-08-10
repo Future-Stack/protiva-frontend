@@ -212,7 +212,7 @@ export default function CategoriesPage() {
 
             {/* Main Card */}
             <div className="bg-white rounded-lg overflow-hidden">
-                <div className="px-[55px] py-[41px] space-y-6">
+                <div className="p-4 sm:px-[55px] sm:py-[41px] space-y-6">
                     {/* Category Name Input */}
                     <div>
                         <label className="block text-sm font-medium text-black mb-1">
@@ -242,7 +242,7 @@ export default function CategoriesPage() {
 
                     {/* Upload Image and Icon */}
                     <div className="mt-6 flex flex-wrap gap-8">
-                        <div>
+                        {/* <div>
                             <input
                                 ref={imageInputRef}
                                 type="file"
@@ -300,7 +300,7 @@ export default function CategoriesPage() {
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
 
                         <div>
                             <input
@@ -403,8 +403,8 @@ export default function CategoriesPage() {
                     </div>
 
                     {/* Table */}
-                    <div className="overflow-x-auto border border-slate-300">
-                        <table className="w-full text-left ">
+                    <div className="w-full overflow-x-auto rounded-xl border border-slate-300 scrollbar-hide">
+                        <table className="w-full text-left min-w-[650px]">
                             <thead>
                                 <tr className="bg-[#EFF6FF]">
                                     <th className="px-4 py-3.5 text-sm font-semibold text-[#475569] border-r border-slate-300 text-center">SL</th>

@@ -183,7 +183,7 @@ export default function AddProviderPage() {
 
             <form onSubmit={handleSubmit}>
                 {/* ── Card 1: General Information + Company Logo ── */}
-                <div className="bg-white border border-slate-300 p-[50px] rounded-lg">
+                <div className="bg-white border border-slate-300 p-4 sm:p-8 lg:p-[50px] rounded-lg">
                     {/* Progress Steps */}
                     <div className="flex flex-col md:flex-row items-center gap-4 mb-[26px]">
                         <div className="flex items-center gap-2">
@@ -317,7 +317,7 @@ export default function AddProviderPage() {
                 </div>
 
                 {/* ── Card 2: Identity Verification ── */}
-                <div className="bg-white border border-slate-300 p-[50px] rounded-lg w-[100%] xl:w-[50%] mt-6">
+                <div className="bg-white border border-slate-300 p-4 sm:p-8 lg:p-[50px] rounded-lg w-full xl:w-[50%] mt-6">
                     <div className="justify-between space-y-8">
                         <h3 className="text-lg font-semibold text-slate-900 mb-4">Identity Verification</h3>
                         <div className="space-y-6">

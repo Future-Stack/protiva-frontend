@@ -45,17 +45,17 @@ export default function DashboardCard({ title, value, variant }: DashboardCardPr
     const style = variants[variant];
 
     return (
-        <div className={`relative overflow-hidden ${style.bg} border border-slate-100 pt-8 pl-6 pr-3 pb-3 rounded-[15px] transition-all hover:shadow-md h-[170px] flex flex-col justify-between`}>
+        <div className={`relative overflow-hidden ${style.bg} border border-slate-100 p-4 sm:pt-8 sm:pl-6 sm:pr-3 sm:pb-3 rounded-[15px] transition-all hover:shadow-md min-h-[140px] sm:h-[170px] flex flex-col justify-between`}>
             {/* Decorative background element - matches the soft shape in the top-left corner */}
             <div className={`absolute -left-32 -top-24 w-64 h-64 rounded-full ${style.shadow} opacity-30 blur-2xl pointer-events-none`} />
 
             <div className="relative z-10">
-                <h3 className={`text-2xl sm:text-[32px] font-bold ${style.text} leading-tight truncate`}>{value}</h3>
-                <p className={`text-sm sm:text-[17px] font-medium ${style.titleColor} mt-1 truncate`}>{title}</p>
+                <h3 className={`text-xl sm:text-2xl lg:text-[32px] font-bold ${style.text} leading-tight truncate`}>{value}</h3>
+                <p className={`text-xs sm:text-sm lg:text-[17px] font-medium ${style.titleColor} mt-1 truncate`}>{title}</p>
             </div>
 
-            <div className="flex justify-end pr-2 pb-1 relative z-10">
-                <div className="w-[52px] h-[52px] flex items-center justify-center">
+            <div className="flex justify-end pr-1 sm:pr-2 pb-1 relative z-10">
+                <div className="w-10 h-10 sm:w-[52px] sm:h-[52px] flex items-center justify-center">
                     {style.icon}
                 </div>
             </div>

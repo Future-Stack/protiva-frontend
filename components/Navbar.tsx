@@ -149,15 +149,15 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
         h-16 md:h-20
         bg-white border-b border-slate-100
         flex items-center justify-between
-        mx-3 my-3 md:mx-6 md:my-5
+        mx-2 my-2 sm:mx-4 sm:my-3 md:mx-6 md:my-5
         px-3 md:px-5
         sticky top-0 z-40 rounded-[10px]
       ">
-        <div className="hidden lg:block cursor-pointer w-25 h-5 lg:w-61.25 lg:h-14.25 ">
+        <div className="cursor-pointer w-24 h-5 sm:w-32 lg:w-[245px] lg:h-[57px] shrink-0 flex items-center">
           <Logo />
         </div>
-        <div className="flex gap-7.25 w-full md:w-fit  items-center justify-between">
-          <div className="flex items-center gap-4 flex-1">
+        <div ref={ref} className="flex gap-2 sm:gap-4 md:gap-7.25 w-auto items-center justify-end">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={onMenuClick}
               className="lg:hidden p-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
@@ -212,42 +212,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2 md:gap-4">
-            {/* <button
-              onClick={() => toggle("language")}
-              className="hidden w-[120px] md:flex items-center gap-2 text-[#09090B] hover:text-slate-900 transition-colors"
-            >
-              <Globe size={20} />
-              <span className="text-base font-medium text-[#18181A]">
-                {language}
-              </span>
-              <MdArrowDropDown size={24} className="text-[#000]" />
-            </button>
-            {openModal === "language" && (
-              <div
-                ref={ref}
-                className="absolute top-[60px] right-[180px] bg-white border border-slate-200 rounded-md shadow-md w-[140px]"
-              >
-                <button
-                  onClick={() => {
-                    setLanguage("English");
-                    setOpenModal(null);
-                  }}
-                  className="w-full text-left text-black cursor-pointer duration-300 px-4 py-2.5 text-sm hover:bg-slate-100"
-                >
-                  English
-                </button>
-                <button
-                  onClick={() => {
-                    setLanguage("বাংলা");
-                    setOpenModal(null);
-                  }}
-                  className="w-full text-left text-black cursor-pointer duration-300 px-4 py-2.5 text-sm hover:bg-slate-100"
-                >
-                  বাংলা
-                </button>
-              </div>
-            )} */}
+          <div ref={ref} className="flex items-center gap-2 md:gap-4 relative">
             <button
               onClick={() => toggle("notification")}
               className="p-2 md:p-2.5 text-slate-500 hover:bg-slate-50 rounded-full relative transition-colors"
@@ -260,7 +225,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               )}
             </button>
             {openModal === "notification" && (
-              <div ref={ref} className="absolute top-16.25 right-2 md:right-20 bg-white border border-slate-200 rounded-xl shadow-xl w-[320px] md:w-95 overflow-hidden z-50">
+              <div className="absolute top-16 right-0 sm:right-4 md:right-20 bg-white border border-slate-200 rounded-xl shadow-xl w-[calc(100vw-2rem)] max-w-sm sm:w-95 overflow-hidden z-50">
                 <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                   <h3 className="text-sm font-bold text-slate-900">Notifications</h3>
                   {unreadCount > 0 && (
@@ -333,7 +298,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               </div>
             </div>
             {openModal === "user" && (
-              <div className="absolute top-15 right-0 bg-white rounded-lg shadow-md w-65 overflow-hidden">
+              <div className="absolute top-15 right-0 bg-white rounded-lg shadow-md w-[calc(100vw-2rem)] max-w-xs sm:w-65 overflow-hidden z-50">
                 <div className="flex items-center gap-3 px-4 py-3 bg-slate-50">
                   <div className="w-12 h-12 rounded-full overflow-hidden shrink-0">
                     {user?.avatar && !imgError ? (

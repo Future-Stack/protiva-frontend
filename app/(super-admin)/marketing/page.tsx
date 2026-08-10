@@ -274,7 +274,7 @@ export default function MarketingManagementPage() {
     // }
 
     return (
-        <div className="space-y-6 bg-white min-h-[calc(100vh-100px)] p-8 rounded-xl">
+        <div className="space-y-6 bg-white min-h-[calc(100vh-100px)] p-4 sm:p-8 rounded-xl">
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex-1 min-w-[300px]">
                     <h2 className="text-2xl font-bold text-slate-900">Marketing Management</h2>
@@ -307,7 +307,7 @@ export default function MarketingManagementPage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
                 <StatsCard title="Total Banners" value={stats?.total || 0} isLoading={isFetching} />
                 <StatsCard title="Active Now" value={stats?.active || 0} isLoading={isFetching} />
                 <StatsCard title="Scheduled" value={stats?.scheduled || 0} isLoading={isFetching} />
