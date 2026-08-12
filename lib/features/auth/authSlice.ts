@@ -66,28 +66,34 @@ const authSlice = createSlice({
     setCredentials: (state, action: PayloadAction<any>) => {
       const { user, accessToken, refreshToken } = action.payload;
 
-      state.user = user;
-      state.accessToken = accessToken;
-      state.refreshToken = refreshToken;
-      state.isAuthenticated = true;
+      if (user !== undefined) {
+        state.user = user;
+        if (user) {
+          localStorage.setItem("user", JSON.stringify(user));
+        } else {
+          localStorage.removeItem("user");
+        }
+      }
 
-      if (user) {
-        localStorage.setItem("user", JSON.stringify(user));
-      } else {
-        localStorage.removeItem("user");
+      if (accessToken !== undefined) {
+        state.accessToken = accessToken;
+        if (accessToken) {
+          localStorage.setItem("accessToken", accessToken);
+        } else {
+          localStorage.removeItem("accessToken");
+        }
       }
-      
-      if (accessToken) {
-        localStorage.setItem("accessToken", accessToken);
-      } else {
-        localStorage.removeItem("accessToken");
+
+      if (refreshToken !== undefined) {
+        state.refreshToken = refreshToken;
+        if (refreshToken) {
+          localStorage.setItem("refreshToken", refreshToken);
+        } else {
+          localStorage.removeItem("refreshToken");
+        }
       }
-      
-      if (refreshToken) {
-        localStorage.setItem("refreshToken", refreshToken);
-      } else {
-        localStorage.removeItem("refreshToken");
-      }
+
+      state.isAuthenticated = !!state.accessToken;
     },
 
     logout: (state) => {
@@ -96,7 +102,11 @@ const authSlice = createSlice({
       state.refreshToken = null;
       state.isAuthenticated = false;
 
-      localStorage.clear();
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("user");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+      }
     },
 
     updateUser: (state, action: PayloadAction<Partial<User>>) => {

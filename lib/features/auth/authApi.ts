@@ -57,6 +57,13 @@ import { baseAPI } from "@/lib/baseAPI/baseAPI";
       }),
       invalidatesTags: ["User"],
     }),
+    refreshToken: build.mutation<any, { refreshToken: string }>({
+      query: (body) => ({
+        url: "/api/v1/auth/refresh",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -68,4 +75,5 @@ export const {
   useForgotPasswordMutation,
   useResetPasswordMutation,
   useUpdateAvatarMutation,
+  useRefreshTokenMutation,
 } = userAPI;
