@@ -16,7 +16,7 @@ import {
 import { useGetAllJobsQuery, useMakePopularJobMutation } from "@/lib/features/super-admin/job/jobAPI";
 import Swal from "sweetalert2";
 import { useAppSelector } from "@/lib/hooks";
-import CreateJobModal from "@/components/CreateJobModal";
+// import CreateJobModal from "@/components/CreateJobModal";
 
 const StatsCard = ({ title, value, subtext, isLoading }: any) => (
     <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex-1">
@@ -127,13 +127,13 @@ export default function JobListPage() {
                     <h2 className="text-xl sm:text-2xl font-bold text-slate-900 uppercase tracking-tight">Job Management</h2>
                     <p className="text-xs sm:text-sm text-slate-500 mt-1">Monitor and manage all service listings and featured jobs</p>
                 </div>
-                <button
+                {/* <button
                     onClick={() => setIsCreateModalOpen(true)}
                     className="px-4 py-2 bg-primary text-white rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-sm"
                 >
                     <Plus size={18} />
                     Create Job
-                </button>
+                </button> */}
             </div>
 
             {/* Actions Bar */}
@@ -310,10 +310,10 @@ export default function JobListPage() {
                 </div>
             )}
 
-            <CreateJobModal 
+            {/* <CreateJobModal 
                 isOpen={isCreateModalOpen} 
                 onClose={() => setIsCreateModalOpen(false)} 
-            />
+            /> */}
         </div>
     );
 }
