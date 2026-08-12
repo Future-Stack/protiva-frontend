@@ -242,7 +242,7 @@ export default function CategoriesPage() {
 
                     {/* Upload Image and Icon */}
                     <div className="mt-6 flex flex-wrap gap-8">
-                        {/* <div>
+                        <div>
                             <input
                                 ref={imageInputRef}
                                 type="file"
@@ -300,7 +300,7 @@ export default function CategoriesPage() {
                                     </div>
                                 </div>
                             </div>
-                        </div> */}
+                        </div>
 
                         <div>
                             <input
