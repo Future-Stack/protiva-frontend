@@ -191,7 +191,7 @@ export default function CategoriesPage() {
                         </div>
                         <div className="mt-6 flex flex-wrap gap-8">
                             {/* Image upload */}
-                            {/* <div>
+                            <div>
                                 <input ref={imageInputRef} type="file" accept="image/png, image/jpeg, image/jpg" className="hidden" onChange={handleImageChange} />
                                 <div onClick={() => imageInputRef.current?.click()}
                                     className="w-fit border-2 border-dashed border-slate-300 rounded-lg px-10 py-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
@@ -209,7 +209,7 @@ export default function CategoriesPage() {
                                         </div>
                                     </div>
                                 </div>
-                            </div> */}
+                            </div>
                             {/* Icon upload */}
                             <div>
                                 <input ref={iconInputRef} type="file" accept="image/png, image/jpeg, image/jpg, image/svg+xml" className="hidden" onChange={handleIconChange} />
